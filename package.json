@@ -1,0 +1,34 @@
+{
+  "name": "oss-adonisjs-starter-examples",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "assemble": "node --import=@poppinss/ts-exec --enable-source-maps bin/assemble.ts",
+    "resolve": "node --import=@poppinss/ts-exec --enable-source-maps bin/resolve.ts",
+    "test:app": "node --import=@poppinss/ts-exec --enable-source-maps bin/test_app.ts",
+    "test": "node --import=@poppinss/ts-exec --enable-source-maps bin/test.ts",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "@adonisjs/eslint-config": "^3.0.0",
+    "@adonisjs/prettier-config": "^1.4.5",
+    "@adonisjs/tsconfig": "^2.0.0",
+    "@japa/assert": "^4.2.0",
+    "@japa/runner": "^5.3.0",
+    "@poppinss/ts-exec": "^1.5.1",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.14.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@adonisjs/prettier-config"
+}
