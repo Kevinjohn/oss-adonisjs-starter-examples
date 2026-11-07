@@ -121,6 +121,7 @@ router
         router
           .post('admissions/:id/revoke', [controllers.Admissions, 'revoke'])
           .use(middleware.admittedAccount())
+        router.delete('/', [controllers.AccountDeletion, 'destroy'])
       })
       .prefix('account')
       .as('account')
@@ -146,5 +147,14 @@ router
       .use(middleware.auth())
       .use(middleware.admittedAccount())
       .use(middleware.scope())
+
+    router
+      .group(() => {
+        router.get('/', [controllers.DeletedUsers, 'index'])
+        router.post(':id/restore', [controllers.DeletedUsers, 'restore'])
+      })
+      .prefix('admin/deleted-users')
+      .as('deleted_users')
+      .use(middleware.auth())
   })
   .prefix('/api/v1')

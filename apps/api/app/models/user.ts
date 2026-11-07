@@ -3,13 +3,14 @@ import { UserSchema } from '#database/schema'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import { SoftDeletes } from '@kevinjohn/adonisjs-lucid-soft-delete'
 import { type AccessToken, DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { beforeCreate, beforeSave } from '@adonisjs/lucid/orm'
 import env from '#start/env'
 
 const idType = env.get('ACCOUNT_KIT_USER_ID_TYPE') ?? 'integer'
 
-export default class User extends compose(UserSchema, withAuthFinder(hash)) {
+export default class User extends compose(UserSchema, withAuthFinder(hash), SoftDeletes) {
   static table = env.get('ACCOUNT_KIT_USERS_TABLE') ?? 'users'
   static selfAssignPrimaryKey = idType !== 'integer'
   static accessTokens = DbAccessTokensProvider.forModel(User)

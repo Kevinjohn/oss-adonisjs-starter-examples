@@ -4,7 +4,9 @@
  */
 
 export const controllers = {
+  AccountDeletion: () => import('#controllers/account_deletion_controller'),
   Dashboard: () => import('#controllers/dashboard_controller'),
+  DeletedUsers: () => import('#controllers/deleted_users_controller'),
   EmailChanges: () => import('#controllers/email_changes_controller'),
   EmailVerifications: () => import('#controllers/email_verifications_controller'),
   Invitations: () => import('#controllers/invitations_controller'),
