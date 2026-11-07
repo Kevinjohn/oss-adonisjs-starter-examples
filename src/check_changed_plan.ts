@@ -64,7 +64,20 @@ export function planChecks(
     lintFiles.length > 0 || wholeLint,
     wholeLint
       ? ['pnpm', 'lint']
-      : ['pnpm', 'exec', 'eslint', '--max-warnings', '0', '--no-warn-ignored', '--', ...lintFiles],
+      : // ESLint looks up the config nearest each named file, so an app's own config (and its
+        // uninstalled plugins) would load. The root config ignores the apps, as `pnpm lint` does.
+        [
+          'pnpm',
+          'exec',
+          'eslint',
+          '--config',
+          'eslint.config.js',
+          '--max-warnings',
+          '0',
+          '--no-warn-ignored',
+          '--',
+          ...lintFiles,
+        ],
     { skip: 'no changed source files' }
   )
   step('typecheck', any(typed), ['pnpm', 'typecheck'], {
