@@ -1,4 +1,4 @@
-import { rmSync } from 'node:fs'
+import { lstatSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { SandboxError } from './errors.ts'
 import { listFiles } from './file_tree.ts'
@@ -21,7 +21,10 @@ export function isRuntimePath(path: string): boolean {
  */
 export function filterTree(directory: string, source: string, exclude: string[] = []): void {
   for (const path of ['pnpm-lock.yaml', 'README.md', ...exclude]) {
-    rmSync(join(directory, path.replace(/\/$/, '')), { recursive: true, force: true })
+    const target = join(directory, path.replace(/\/$/, ''))
+    // A trailing `/` excludes a directory only (specification 5.1).
+    if (path.endsWith('/') && !lstatSync(target, { throwIfNoEntry: false })?.isDirectory()) continue
+    rmSync(target, { recursive: true, force: true })
   }
   for (const entry of listFiles(directory)) {
     if (entry.kind === 'symlink') {

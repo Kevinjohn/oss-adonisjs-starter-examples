@@ -24,7 +24,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
     const keys = Object.keys(a)
     return (
       keys.length === Object.keys(b).length &&
-      keys.every((key) => key in b && deepEqual(a[key], b[key]))
+      keys.every((key) => Object.hasOwn(b, key) && deepEqual(a[key], b[key]))
     )
   }
   return false
@@ -54,19 +54,28 @@ function mergeValue(
   if (isPlainObject(a) && isPlainObject(b) && (o === MISSING || isPlainObject(o))) {
     const base = isPlainObject(o) ? o : {}
     const keys = [...Object.keys(a)]
-    for (const key of Object.keys(b)) if (!(key in a)) keys.push(key)
-    for (const key of Object.keys(base)) if (!(key in a) && !(key in b)) keys.push(key)
+    for (const key of Object.keys(b)) if (!Object.hasOwn(a, key)) keys.push(key)
+    for (const key of Object.keys(base))
+      if (!Object.hasOwn(a, key) && !Object.hasOwn(b, key)) keys.push(key)
 
     const merged: Record<string, unknown> = {}
     for (const key of keys) {
       const value = mergeValue(
         [...path, key],
-        key in base ? base[key] : MISSING,
-        key in a ? a[key] : MISSING,
-        key in b ? b[key] : MISSING,
+        Object.hasOwn(base, key) ? base[key] : MISSING,
+        Object.hasOwn(a, key) ? a[key] : MISSING,
+        Object.hasOwn(b, key) ? b[key] : MISSING,
         conflicts
       )
-      if (value !== MISSING) merged[key] = value
+      // defineProperty keeps a `__proto__` key as data instead of changing the prototype.
+      if (value !== MISSING) {
+        Object.defineProperty(merged, key, {
+          value,
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        })
+      }
     }
     return merged
   }

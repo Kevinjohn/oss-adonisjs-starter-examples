@@ -7,6 +7,7 @@ import {
   constructedEnvironment,
 } from './command_runner.ts'
 import { SandboxError } from './errors.ts'
+import { SUPPORTED_KITS } from './sandbox_config.ts'
 
 export interface AppTestOptions {
   root: string
@@ -49,15 +50,13 @@ export async function waitForUrl(url: string, timeoutMs: number): Promise<void> 
  * `tmp/test-app/<kit>/`, which is deleted afterwards.
  */
 export async function testApp(options: AppTestOptions): Promise<void> {
+  if (!(SUPPORTED_KITS as readonly string[]).includes(options.kit)) {
+    throw new SandboxError(`Unknown kit ${options.kit}`)
+  }
   const source = resolve(options.root, options.directory, options.kit)
   if (!existsSync(join(source, 'package.json'))) throw new SandboxError(`No app at ${source}`)
   const app = join(options.root, 'tmp', 'test-app', options.kit)
   rmSync(app, { recursive: true, force: true })
-  cpSync(source, app, {
-    recursive: true,
-    verbatimSymlinks: true,
-    filter: (path) => !path.split('/').includes('node_modules'),
-  })
 
   const env = constructedEnvironment({
     // Lets an old locked Playwright run on a host it does not recognise; CI never sets it.
@@ -69,6 +68,11 @@ export async function testApp(options: AppTestOptions): Promise<void> {
   }
   let vite: BackgroundProcess | undefined
   try {
+    cpSync(source, app, {
+      recursive: true,
+      verbatimSymlinks: true,
+      filter: (path) => !path.split('/').includes('node_modules'),
+    })
     const frozen = existsSync(join(app, 'vendor')) ? '--no-frozen-lockfile' : '--frozen-lockfile'
     await run('pnpm', ['install', frozen])
     copyFileSync(join(app, '.env.example'), join(app, '.env'))

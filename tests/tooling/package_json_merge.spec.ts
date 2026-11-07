@@ -67,4 +67,17 @@ test.group('package.json structural merge', () => {
     const result = mergePackageJson(MISSING, { name: 'a', x: 1 }, { name: 'a', y: 2 })
     assert.deepEqual(result.value, { name: 'a', x: 1, y: 2 })
   })
+
+  test('merges keys named like Object properties as plain keys', ({ assert }) => {
+    const ours = { ...base, scripts: { ...base.scripts, test: 'node ace test --a' } }
+    const theirs = JSON.parse(
+      JSON.stringify(base).replace('"lint"', '"constructor":"build","__proto__":"p","lint"')
+    )
+    const result = mergePackageJson(base, ours, theirs)
+    assert.deepEqual(result.conflicts, [])
+    const scripts = (result.value as any).scripts
+    assert.deepEqual(Object.keys(scripts), ['test', 'lint', 'constructor', '__proto__'])
+    assert.equal(scripts.constructor, 'build')
+    assert.equal(Object.getPrototypeOf(scripts), Object.prototype)
+  })
 })

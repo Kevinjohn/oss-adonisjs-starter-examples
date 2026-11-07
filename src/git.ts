@@ -116,7 +116,9 @@ export class Git {
  */
 export function extractArchive(git: Git, treeish: string, destination: string): void {
   const archive = git.run(['archive', '--format=tar', treeish]).stdout
+  // A minimal environment, so options such as TAR_OPTIONS cannot change what is extracted.
   const tar = spawnSync('tar', ['-x', '-C', destination], {
+    env: { PATH: process.env.PATH ?? '', LC_ALL: 'C' },
     input: archive,
     maxBuffer: 1024 * 1024 * 1024,
   })

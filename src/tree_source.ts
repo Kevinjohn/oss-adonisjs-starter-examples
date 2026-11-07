@@ -9,7 +9,8 @@ import {
   symlinkSync,
 } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { Git, extractArchive, initRepository } from './git.ts'
+import { SandboxError } from './errors.ts'
+import { Git, GitCommandError, extractArchive, initRepository } from './git.ts'
 
 /** Maps a GitHub repository such as `adonisjs/starter-kits` to the URL to fetch it from. */
 export type RemoteUrlFor = (repository: string) => string
@@ -46,13 +47,22 @@ export class RepositoryCache {
     return git
   }
 
-  /** The bare clone with the tag `v<version>` present. */
+  /**
+   * The bare clone with the tag `v<version>` fetched. The tag is fetched on every run, so a tag
+   * moved upstream fails the fetch instead of assembling the cached release.
+   */
   withTag(repository: string, version: string): Git {
     const git = this.repository(repository)
     const tag = `refs/tags/v${version}`
-    if (!git.succeeds(['rev-parse', '-q', '--verify', tag])) {
-      git.run(['fetch', '-q', '--depth=1', 'origin', `${tag}:${tag}`])
+    const result = git.run(['fetch', '--depth=1', 'origin', `${tag}:${tag}`], {
+      allowFailure: true,
+    })
+    if (result.code !== 0 && result.stderr.includes('would clobber existing tag')) {
+      throw new SandboxError(
+        `v${version} of ${repository} moved since it was cached. Releases must not move; if this one had to, delete tmp/cache/repos and run again.`
+      )
     }
+    if (result.code !== 0) throw new GitCommandError(['fetch', 'origin', tag], result)
     return git
   }
 }

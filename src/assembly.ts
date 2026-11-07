@@ -45,6 +45,7 @@ export interface AssemblyOptions {
  * the sandbox's `tmp/` after following symlinks (specification 6.8).
  */
 export function resolveOutDirectory(root: string, out: string, option = '--out'): string {
+  mkdirSync(join(root, 'tmp'), { recursive: true })
   const tmp = realpathSync(join(root, 'tmp'))
   let existing = resolve(out)
   const rest: string[] = []
@@ -146,10 +147,19 @@ async function packLocalPackage(options: AssemblyOptions, name: string): Promise
   const archive = join(folder, unversionedAssetName(name))
   const commandOptions = { cwd: local.root, env: constructedEnvironment() }
   options.log(`packing ${name} from ${local.root}`)
-  await options.runner.run('pnpm', ['--dir', local.root, 'build'], commandOptions)
-  await options.runner.run('pnpm', ['--dir', local.root, 'pack', '--out', archive], commandOptions)
-  if (!existsSync(archive)) throw new SandboxError(`pnpm pack did not write ${archive}`)
-  return archive
+  try {
+    await options.runner.run('pnpm', ['--dir', local.root, 'build'], commandOptions)
+    await options.runner.run(
+      'pnpm',
+      ['--dir', local.root, 'pack', '--out', archive],
+      commandOptions
+    )
+    if (!existsSync(archive)) throw new SandboxError(`pnpm pack did not write ${archive}`)
+    return archive
+  } catch (error) {
+    rmSync(folder, { recursive: true, force: true })
+    throw error
+  }
 }
 
 async function assembleKit(
@@ -243,11 +253,7 @@ async function assembleKit(
     })
 
     if (options.mode === 'check') {
-      const differences = compareOutput(
-        regenerated.files,
-        join(root, 'apps', kit),
-        regenerated.ignoredPaths
-      )
+      const differences = compareOutput(regenerated.files, join(root, 'apps', kit))
       for (const difference of differences) log(`${difference.kind} apps/${kit}/${difference.path}`)
       if (differences.length > 0) {
         log(`apps/${kit} differs from the assembled app; run pnpm assemble --kit ${kit}`)

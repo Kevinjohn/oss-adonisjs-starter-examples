@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { existsSync, readFileSync } from 'node:fs'
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { testApp } from '../../src/app_test.ts'
 import { listFiles } from '../../src/file_tree.ts'
@@ -121,6 +121,47 @@ test.group('test:app', (group) => {
     )
     assert.deepEqual(fake.stopped, fake.started)
     assert.lengthOf(fake.started, 1)
+    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+  })
+
+  test('refuses an unknown kit before touching any folder', async ({ assert }) => {
+    writeApp(world.sandboxRoot)
+    await assert.rejects(
+      () =>
+        testApp({
+          root: world.sandboxRoot,
+          kit: '../../apps/inertia-react',
+          directory: 'tmp/test-app',
+          installBrowsers: false,
+          runner: fakeRunner().runner,
+          waitForUrl: async () => {},
+          log: () => {},
+        }),
+      exactly('Unknown kit ../../apps/inertia-react')
+    )
+    assert.isTrue(existsSync(join(world.sandboxRoot, 'apps/inertia-react/package.json')))
+  })
+
+  test('deletes a partial copy when copying fails', async ({ assert }) => {
+    writeApp(world.sandboxRoot)
+    const unreadable = join(world.sandboxRoot, 'apps/inertia-react/zz-unreadable.ts')
+    writeFileSync(unreadable, 'x\n')
+    chmodSync(unreadable, 0o000)
+    try {
+      await assert.rejects(() =>
+        testApp({
+          root: world.sandboxRoot,
+          kit: 'inertia-react',
+          directory: 'apps',
+          installBrowsers: false,
+          runner: fakeRunner().runner,
+          waitForUrl: async () => {},
+          log: () => {},
+        })
+      )
+    } finally {
+      chmodSync(unreadable, 0o644)
+    }
     assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
   })
 })

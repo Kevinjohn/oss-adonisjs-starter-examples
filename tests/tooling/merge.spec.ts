@@ -331,4 +331,20 @@ test.group('merging', (group) => {
     if (!outcome.ok) assert.include(outcome.report, 'package.json (keys: scripts.test)')
     assert.deepEqual(pending(fixture, 'package.json').inputs.conflictingKeys, ['scripts.test'])
   })
+
+  test('writes a pending conflict for a path with a tab', ({ assert }) => {
+    twoPackages(fixture, { 'app/a\tb.ts': 'ak\n' }, { 'app/a\tb.ts': 'sd\n' })
+    assert.isFalse(merge(fixture).outcome.ok)
+    assert.isNotNull(pending(fixture, 'app/a\tb.ts').inputs)
+  })
+
+  test('fails on a conflict whose path ends in .inputs.json', ({ assert }) => {
+    twoPackages(fixture, { 'data/x.inputs.json': '1\n' }, { 'data/x.inputs.json': '2\n' })
+    assert.throws(
+      () => merge(fixture),
+      exactly(
+        'Unsupported conflict (name ends in .inputs.json) on data/x.inputs.json while merging lucid-soft-delete@0.1.4. Change the package example so it does not conflict, then run again.'
+      )
+    )
+  })
 })

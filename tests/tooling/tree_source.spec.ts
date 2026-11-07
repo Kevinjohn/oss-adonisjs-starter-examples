@@ -8,6 +8,7 @@ import {
   readBaseKit,
   taggedPackageSource,
 } from '../../src/tree_source.ts'
+import { exactly } from '../helpers/exact_message.ts'
 import { FixtureWorld, kitFiles, temporaryDirectory, writeFiles } from '../helpers/fixture_repos.ts'
 
 test.group('tree sources', (group) => {
@@ -106,5 +107,47 @@ test.group('tree sources', (group) => {
       ]
     )
     rmSync(root, { recursive: true, force: true })
+  })
+
+  test('fetches the tag on every run, so a moved tag fails', ({ assert }) => {
+    world.publishPackage({
+      name: '@kevinjohn/adonisjs-account-kit',
+      repository: 'Kevinjohn/oss-adonisjs-account-kit',
+      version: '0.3.1',
+      examples: { api: { path: 'examples/api', files: kitFiles('api') } },
+    })
+    const read = () => {
+      const destination = temporaryDirectory()
+      try {
+        taggedPackageSource(cache, 'Kevinjohn/oss-adonisjs-account-kit', '0.3.1').copyFolder(
+          'examples/api',
+          destination
+        )
+      } finally {
+        rmSync(destination, { recursive: true, force: true })
+      }
+    }
+    read()
+    world.commit('Kevinjohn/oss-adonisjs-account-kit', { 'examples/api/moved.ts': 'moved\n' })
+    world.tag('Kevinjohn/oss-adonisjs-account-kit', 'v0.3.1')
+    assert.throws(
+      read,
+      exactly(
+        'v0.3.1 of Kevinjohn/oss-adonisjs-account-kit moved since it was cached. Releases must not move; if this one had to, delete tmp/cache/repos and run again.'
+      )
+    )
+  })
+
+  test('extraction ignores TAR_OPTIONS', ({ assert }) => {
+    const commit = world.publishBase({ api: kitFiles('api') })
+    const destination = join(world.directory, 'out')
+    mkdirSync(destination)
+    process.env.TAR_OPTIONS = '--exclude=package.json'
+    try {
+      readBaseKit(cache, { repository: 'adonisjs/starter-kits', commit }, 'api', destination)
+    } finally {
+      delete process.env.TAR_OPTIONS
+    }
+    assert.isTrue(existsSync(join(destination, 'package.json')))
   })
 })

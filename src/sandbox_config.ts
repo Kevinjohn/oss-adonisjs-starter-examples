@@ -35,10 +35,11 @@ function isRecord(value: unknown): value is Record<string, any> {
 function isSafeRelativePath(value: unknown): value is string {
   return (
     typeof value === 'string' &&
-    value !== '' &&
-    !value.startsWith('/') &&
     !value.includes('\\') &&
-    !value.split('/').includes('..')
+    value
+      .replace(/\/$/, '')
+      .split('/')
+      .every((segment) => segment !== '' && segment !== '.' && segment !== '..')
   )
 }
 

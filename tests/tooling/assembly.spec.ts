@@ -4,6 +4,8 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  realpathSync,
+  rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
@@ -267,5 +269,29 @@ test.group('assembly', (group) => {
         ),
       exactly('Add @kevinjohn/adonisjs-other to config/sandbox.json in the sandbox first')
     )
+  })
+
+  test('--out works before tmp/ exists', ({ assert }) => {
+    rmSync(join(fixture.root, 'tmp'), { recursive: true, force: true })
+    assert.equal(
+      resolveOutDirectory(fixture.root, join(fixture.root, 'tmp/preview')),
+      join(realpathSync(fixture.root), 'tmp/preview')
+    )
+  })
+
+  test('a failed local build leaves no scratch folder', async ({ assert }) => {
+    publishAccountKit(fixture)
+    const localRoot = fixture.world.workPath('Kevinjohn/oss-adonisjs-account-kit')
+    const fake = fakeRunner({
+      build: () => {
+        throw new Error('build failed')
+      },
+    })
+    const run = options(fixture, {
+      local: { root: localRoot, out: join(fixture.root, 'tmp/combined') },
+      runner: fake.runner,
+    })
+    await assert.rejects(() => runAssembly(run.value), exactly('build failed'))
+    assert.deepEqual(readdirSync(join(fixture.root, 'tmp/work')), [])
   })
 })

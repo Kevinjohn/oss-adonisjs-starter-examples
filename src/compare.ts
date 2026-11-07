@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { listFiles } from './file_tree.ts'
 import type { OutputFile } from './regenerate.ts'
@@ -14,11 +14,7 @@ export interface Difference {
  * bytes. `added` means the output has a file the folder lacks. Files in the folder that the app
  * ignores, or that are runtime files, are not differences.
  */
-export function compareOutput(
-  output: OutputFile[],
-  directory: string,
-  ignoredPaths: (paths: string[]) => Set<string>
-): Difference[] {
+export function compareOutput(output: OutputFile[], directory: string): Difference[] {
   const differences: Difference[] = []
   const expected = new Set(output.map((file) => file.path))
 
@@ -28,8 +24,13 @@ export function compareOutput(
       differences.push({ path: file.path, kind: 'added' })
       continue
     }
-    const executable = (statSync(path).mode & 0o111) !== 0
-    if (executable !== file.executable || !readFileSync(path).equals(file.bytes)) {
+    const stats = lstatSync(path)
+    const executable = (stats.mode & 0o111) !== 0
+    if (
+      !stats.isFile() ||
+      executable !== file.executable ||
+      !readFileSync(path).equals(file.bytes)
+    ) {
       differences.push({ path: file.path, kind: 'changed' })
     }
   }
@@ -40,10 +41,7 @@ export function compareOutput(
     })
       .map((entry) => entry.path)
       .filter((path) => !expected.has(path) && !isRuntimePath(path))
-    const ignored = ignoredPaths(extra)
-    for (const path of extra) {
-      if (!ignored.has(path)) differences.push({ path, kind: 'removed' })
-    }
+    for (const path of extra) differences.push({ path, kind: 'removed' })
   }
 
   return differences.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))

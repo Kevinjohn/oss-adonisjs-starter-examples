@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { constructedEnvironment } from '../../src/command_runner.ts'
 import { compareOutput } from '../../src/compare.ts'
@@ -147,6 +147,26 @@ test.group('regenerate', (group) => {
       delete process.env.ACCOUNT_KIT_AUTH_STRATEGY
     }
   })
+
+  test('restores a deleted .env.example', async ({ assert }) => {
+    const { runner } = fakeRunner({
+      '--force': ({ cwd }) => rmSync(join(cwd, '.env.example'), { force: true }),
+    })
+    const logged: string[] = []
+    await regenerateApp({
+      git: context.git,
+      commit: context.commit,
+      kit: 'api',
+      directory: context.t,
+      seedLockfile: null,
+      frozenLockfile: false,
+      includeVendor: false,
+      runner,
+      env: constructedEnvironment(),
+      log: (line) => logged.push(line),
+    })
+    assert.deepEqual(logged, ['restored .env.example (api)'])
+  })
 })
 
 test.group('compare', (group) => {
@@ -171,15 +191,15 @@ test.group('compare', (group) => {
       { path: 'bytes.ts', executable: false, bytes: Buffer.from('new\n') },
       { path: 'mode.ts', executable: true, bytes: Buffer.from('mode\n') },
       { path: 'missing.ts', executable: false, bytes: Buffer.from('missing\n') },
+      { path: 'link.ts', executable: true, bytes: Buffer.from('same\n') },
     ]
-    const differences = compareOutput(
-      output,
-      directory,
-      (paths) => new Set(paths.filter((path) => path.endsWith('.log')))
-    )
+    symlinkSync('same.ts', join(directory, 'link.ts'))
+    const differences = compareOutput(output, directory)
     assert.deepEqual(differences, [
       { path: 'bytes.ts', kind: 'changed' },
       { path: 'extra.ts', kind: 'removed' },
+      { path: 'ignored.log', kind: 'removed' },
+      { path: 'link.ts', kind: 'changed' },
       { path: 'missing.ts', kind: 'added' },
       { path: 'mode.ts', kind: 'changed' },
     ])

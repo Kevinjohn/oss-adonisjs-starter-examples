@@ -52,4 +52,13 @@ test.group('tree filter', (group) => {
       assert.throws(() => filterTree(directory, 'example'), exactly(message))
     })
   }
+
+  test('a trailing / excludes a directory, not a file of that name', ({ assert }) => {
+    writeFiles(directory, { compatibility: 'a file\n' })
+    filterTree(directory, 'example', ['compatibility/'])
+    assert.include(
+      listFiles(directory).map((entry) => entry.path),
+      'compatibility'
+    )
+  })
 })

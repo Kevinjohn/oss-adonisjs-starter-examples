@@ -95,6 +95,17 @@ test.group('sandbox config validation', () => {
       'Invalid kit path /examples/api',
     ],
     [
+      'kit path with a . segment',
+      (v) => (v.packages[0].kits.api = './examples/api'),
+      'Invalid kit path ./examples/api',
+    ],
+    ['kit path .', (v) => (v.packages[0].kits.api = '.'), 'Invalid kit path .'],
+    [
+      'kit path with an empty segment',
+      (v) => (v.packages[0].kits.api = 'examples//api'),
+      'Invalid kit path examples//api',
+    ],
+    [
       'kit path backslash',
       (v) => (v.packages[0].kits.api = 'examples\\api'),
       'Invalid kit path examples\\api',

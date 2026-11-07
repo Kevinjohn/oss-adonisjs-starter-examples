@@ -32,8 +32,6 @@ export interface RegenerateOptions {
 
 export interface RegeneratedApp {
   files: OutputFile[]
-  /** Answers "does the app's own `.gitignore` ignore this path?" inside `<T>`. */
-  ignoredPaths: (paths: string[]) => Set<string>
 }
 
 /** `database/schema.ts` and `.adonisjs/`, which regeneration writes (specification 5.2). */
@@ -90,7 +88,11 @@ export async function regenerateApp(options: RegenerateOptions): Promise<Regener
   await runner.run('pnpm', ['exec', 'node', 'ace', 'codegen'], commandOptions)
   await runner.run('pnpm', ['exec', 'node', 'ace', 'migration:run', '--force'], commandOptions)
 
-  if (envExample && !readFileSync(join(t, '.env.example')).equals(envExample)) {
+  const envExamplePath = join(t, '.env.example')
+  if (
+    envExample &&
+    (!existsSync(envExamplePath) || !readFileSync(envExamplePath).equals(envExample))
+  ) {
     writeFileSync(join(t, '.env.example'), envExample)
     options.log(`restored .env.example (${options.kit})`)
   }
@@ -152,5 +154,5 @@ export async function regenerateApp(options: RegenerateOptions): Promise<Regener
     executable: (statSync(join(t, path)).mode & 0o111) !== 0,
     bytes: readFileSync(join(t, path)),
   }))
-  return { files, ignoredPaths }
+  return { files }
 }

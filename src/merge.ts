@@ -154,7 +154,9 @@ interface Stage {
 function conflictedPaths(git: Git): Map<string, Partial<Record<1 | 2 | 3, Stage>>> {
   const paths = new Map<string, Partial<Record<1 | 2 | 3, Stage>>>()
   for (const line of git.list(['ls-files', '-u', '-z'])) {
-    const [info, path] = line.split('\t')
+    const tab = line.indexOf('\t')
+    const info = line.slice(0, tab)
+    const path = line.slice(tab + 1)
     const [mode, blob, stage] = info.split(' ')
     const stages = paths.get(path) ?? {}
     stages[Number(stage) as 1 | 2 | 3] = { mode, blob }
@@ -211,7 +213,10 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
     const codes = statusCodes(git)
     for (const [path, stages] of conflictedPaths(git)) {
       if (path === 'package.json') continue
-      const reason = unsupportedReason(git, codes.get(path), stages)
+      // A resolution's inputs file is `<path>.inputs.json`, so such a path would collide with one.
+      const reason = path.endsWith('.inputs.json')
+        ? 'name ends in .inputs.json'
+        : unsupportedReason(git, codes.get(path), stages)
       if (reason) {
         git.run(['merge', '--abort'])
         // Git moves one side of a file/directory conflict to `<path>~<branch>` and reports it as
