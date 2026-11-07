@@ -21,6 +21,10 @@ Node 24 (`.nvmrc`) and pnpm 11.23.0 (`packageManager`) for every command. Run `n
 - `pnpm test` runs the Japa specs in `tests/tooling/`.
 - `pnpm lint`, `pnpm typecheck`, `pnpm format`, `pnpm format:check`.
 - `pnpm check` runs formatting, lint, types and tests.
+- `pnpm check:changed [--static] [base]` runs the checks for files changed since `base` (default
+  `origin/main`): formatting and lint on the changed files, types, changed specs, the full suite
+  when the tooling changed, and `pnpm assemble --check` when anything assembly reads changed.
+  `--static` leaves out the full suite and the assembly check.
 
 ## Layout
 
