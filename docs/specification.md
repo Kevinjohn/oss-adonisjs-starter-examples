@@ -105,7 +105,7 @@ resolutions/inertia-react/lucid-soft-delete/app/models/user.ts.inputs.json input
 
 ## 6. How assembly works
 
-The specification for Phase 1. Released mode only; main mode is Phase 7.
+The specification for released mode, `--with-local` (6.8) and main mode (6.9).
 
 ### 6.1 Overview
 
@@ -350,3 +350,27 @@ package CI.
   copy that archive into `<T>/vendor/` before install and set this package's `@kevinjohn/*`
   specifiers to `file:vendor/<that file>`.
 - Pending conflicts go under `<dir>/conflicts/`. Never compares with `apps/`.
+
+### 6.9 Main mode
+
+`pnpm assemble --mode main --out <dir>` combines every package's `main` branch, so breakage shows
+before a release. `.github/workflows/main_mode.yml` runs it nightly and on demand, then
+`pnpm test:app --kit <kit> --dir <dir>`.
+
+1. Each package's `main` is resolved to one commit once per run (`git ls-remote`). Its examples
+   and its archive come from that commit only: `git clone` into the run's scratch folder,
+   `git checkout <commit>`, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm pack` to an
+   absolute path. Each package is built once per run; the archive serves every kit. The log
+   records each commit and archive SHA-256.
+2. Lineage nodes are keyed by package and revision. When another package builds on a package, its
+   released node (6.3) stays and its `main` node sits on it; otherwise its `main` node sits on its
+   predecessor's released node. A dependent's node always sits on that released node, even though
+   the predecessor also has a `main` node. Every `main` node is merged in config order, so a
+   change only in a predecessor's `main` survives the merge of a dependent built on its release.
+3. The D10 peer checks against sandbox versions are skipped. The `builtOn.base` check is not.
+4. Every `@kevinjohn/*` specifier becomes `file:vendor/<asset without -<version>>.tgz`. The
+   archives are copied into `<T>/vendor/` before install and kept in the output for the app tests.
+5. Each packed archive's `package.json` is read. An exact peer that names another packed package
+   at a different version is logged as `runtime peer mismatch: …` and fails the run, separately
+   from merge failures; the merge still runs.
+6. Conflicts go under `<dir>/conflicts/`. `<dir>` must be inside `tmp/`, as in 6.8.

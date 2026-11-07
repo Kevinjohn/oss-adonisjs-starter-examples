@@ -21,8 +21,8 @@ export interface RegenerateOptions {
   /** The folder `<T>`; it must not exist yet. */
   directory: string
   seedLockfile: Buffer | null
-  /** A local package archive to copy into `<T>/vendor/` before installing (6.8). */
-  vendorArchive?: { source: string; fileName: string }
+  /** Package archives to copy into `<T>/vendor/` before installing (6.8, main mode). */
+  vendorArchives?: { source: string; fileName: string }[]
   frozenLockfile: boolean
   includeVendor: boolean
   runner: CommandRunner
@@ -85,9 +85,9 @@ export async function regenerateApp(options: RegenerateOptions): Promise<Regener
 
   requireOwnWorkspace(t, options.kit)
   if (options.seedLockfile) writeFileSync(join(t, 'pnpm-lock.yaml'), options.seedLockfile)
-  if (options.vendorArchive) {
+  for (const archive of options.vendorArchives ?? []) {
     mkdirSync(join(t, 'vendor'), { recursive: true })
-    copyFileSync(options.vendorArchive.source, join(t, 'vendor', options.vendorArchive.fileName))
+    copyFileSync(archive.source, join(t, 'vendor', archive.fileName))
   }
 
   const commandOptions = { cwd: t, env }

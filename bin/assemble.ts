@@ -8,7 +8,7 @@ import { type Kit, readSandboxConfig } from '../src/sandbox_config.ts'
 import { githubUrlFor } from '../src/tree_source.ts'
 
 /**
- * pnpm assemble [--kit <kit>]... [--check] [--with-local <root> --out <dir>]
+ * pnpm assemble [--kit <kit>]... [--check] [--with-local <root> --out <dir>] [--mode main --out <dir>]
  */
 runCli(async () => {
   const { values } = parseArgs({
@@ -17,9 +17,18 @@ runCli(async () => {
       'check': { type: 'boolean', default: false },
       'with-local': { type: 'string' },
       'out': { type: 'string' },
+      'mode': { type: 'string', default: 'released' },
     },
   })
-  if ((values['with-local'] === undefined) !== (values.out === undefined)) {
+  if (values.mode !== 'released' && values.mode !== 'main') {
+    throw new SandboxError(`Unknown mode ${values.mode}; use released or main`)
+  }
+  const main = values.mode === 'main'
+  if (main && (values.check || values['with-local'] !== undefined)) {
+    throw new SandboxError('--mode main cannot be combined with --check or --with-local')
+  }
+  if (main && !values.out) throw new SandboxError('--mode main needs --out <dir>')
+  if (!main && (values['with-local'] === undefined) !== (values.out === undefined)) {
     throw new SandboxError('--with-local and --out go together')
   }
   if (values['with-local'] === '' || values.out === '') {
@@ -41,7 +50,8 @@ runCli(async () => {
     root: SANDBOX_ROOT,
     config,
     kits,
-    mode: values.check ? 'check' : 'assemble',
+    mode: main ? 'main' : values.check ? 'check' : 'assemble',
+    out: main ? resolveOutDirectory(SANDBOX_ROOT, values.out!) : undefined,
     local:
       values['with-local'] !== undefined
         ? {
