@@ -137,14 +137,40 @@ test.group('regenerate', (group) => {
   })
 
   test('the constructed environment drops ACCOUNT_KIT_ variables', ({ assert }) => {
+    const saved = { ...process.env }
+    for (const key of ['CI', 'PNPM_HOME', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME']) {
+      delete process.env[key]
+    }
     process.env.ACCOUNT_KIT_AUTH_STRATEGY = 'session'
+    process.env.XDG_DATA_HOME = '/data'
+    process.env.npm_lifecycle_event = 'assemble'
     try {
       const env = constructedEnvironment({ ACCOUNT_KIT_USERS_TABLE: 'people', EXTRA: 'yes' })
-      assert.deepEqual(Object.keys(env).sort(), ['EXTRA', 'HOME', 'HOST', 'LIMITER_STORE', 'PATH'])
+      assert.deepEqual(Object.keys(env).sort(), [
+        'EXTRA',
+        'HOME',
+        'HOST',
+        'LIMITER_STORE',
+        'PATH',
+        'XDG_DATA_HOME',
+      ])
       assert.equal(env.HOST, '127.0.0.1')
       assert.equal(env.LIMITER_STORE, 'memory')
     } finally {
-      delete process.env.ACCOUNT_KIT_AUTH_STRATEGY
+      process.env = saved
+    }
+  })
+
+  test('the constructed environment keeps pnpm on the CI runner store', ({ assert }) => {
+    const saved = { ...process.env }
+    process.env.CI = 'true'
+    process.env.PNPM_HOME = '/runner/setup-pnpm'
+    try {
+      const env = constructedEnvironment()
+      assert.equal(env.CI, 'true')
+      assert.equal(env.PNPM_HOME, '/runner/setup-pnpm')
+    } finally {
+      process.env = saved
     }
   })
 

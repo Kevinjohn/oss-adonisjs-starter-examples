@@ -285,7 +285,8 @@ last merged package's example at its tag (6.2). For `--with-local`, copy the arc
 `<T>/vendor/` now (6.8).
 
 In `<T>`, with a constructed environment (`PATH`, `HOME`, `HOST=127.0.0.1`,
-`LIMITER_STORE=memory`, and no variable starting with `ACCOUNT_KIT_`):
+`LIMITER_STORE=memory`, `CI`, `PNPM_HOME` and `XDG_*_HOME` when set, and no variable starting
+with `ACCOUNT_KIT_`):
 
 ```
 pnpm install --no-frozen-lockfile        (assemble, --with-local, main)
