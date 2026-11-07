@@ -35,6 +35,10 @@ export type ScannedRoutes = {
     'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'teams.update': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'team_invitations.store': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'account_deletion.show': { paramsTuple?: []; params?: {} }
+    'account_deletion.destroy': { paramsTuple?: []; params?: {} }
+    'deleted_users.index': { paramsTuple?: []; params?: {} }
+    'deleted_users.restore': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
     'masquerade.start': { paramsTuple?: []; params?: {} }
@@ -56,6 +60,8 @@ export type ScannedRoutes = {
     'invitations.edit': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
     'teams.index': { paramsTuple?: []; params?: {} }
     'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'account_deletion.show': { paramsTuple?: []; params?: {} }
+    'deleted_users.index': { paramsTuple?: []; params?: {} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
@@ -75,6 +81,8 @@ export type ScannedRoutes = {
     'invitations.edit': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
     'teams.index': { paramsTuple?: []; params?: {} }
     'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'account_deletion.show': { paramsTuple?: []; params?: {} }
+    'deleted_users.index': { paramsTuple?: []; params?: {} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
@@ -95,6 +103,8 @@ export type ScannedRoutes = {
     'teams.store': { paramsTuple?: []; params?: {} }
     'teams.update': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'team_invitations.store': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'account_deletion.destroy': { paramsTuple?: []; params?: {} }
+    'deleted_users.restore': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'masquerade.start': { paramsTuple?: []; params?: {} }
     'masquerade.stop': { paramsTuple?: []; params?: {} }
   }

@@ -85,3 +85,16 @@ router
       .as('team_invitations.store')
   })
   .use([middleware.auth(), middleware.verified(), middleware.scope()])
+
+router
+  .group(() => {
+    router.get('account/delete', [controllers.AccountDeletion, 'show']).as('account_deletion.show')
+    router
+      .post('account/delete', [controllers.AccountDeletion, 'destroy'])
+      .as('account_deletion.destroy')
+    router.get('admin/deleted-users', [controllers.DeletedUsers, 'index']).as('deleted_users.index')
+    router
+      .post('admin/deleted-users/:id/restore', [controllers.DeletedUsers, 'restore'])
+      .as('deleted_users.restore')
+  })
+  .use(middleware.auth())

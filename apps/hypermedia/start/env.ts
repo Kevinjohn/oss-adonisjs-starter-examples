@@ -30,4 +30,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   // Masquerade
   // Comma-separated emails of the accounts that may act as other accounts. Missing means nobody.
   MASQUERADE_OPERATOR_EMAILS: Env.schema.string.optional(),
+
+  // Soft Delete: comma-separated emails that may list and restore deleted accounts.
+  // Missing means nobody.
+  SOFT_DELETE_ADMIN_EMAILS: Env.schema.string.optional(),
 })

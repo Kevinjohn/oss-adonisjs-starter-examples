@@ -376,12 +376,14 @@ export class TeamSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'credentialsChangedAt', 'email', 'emailVerifiedAt', 'fullName', 'id', 'password', 'unverifiedEmail', 'updatedAt'] as const
+  static $columns = ['createdAt', 'credentialsChangedAt', 'deletedAt', 'email', 'emailVerifiedAt', 'fullName', 'id', 'password', 'unverifiedEmail', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime()
   declare credentialsChangedAt: DateTime | null
+  @column.dateTime()
+  declare deletedAt: DateTime | null
   @column()
   declare email: string
   @column.dateTime()

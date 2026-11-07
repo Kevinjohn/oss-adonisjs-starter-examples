@@ -52,6 +52,22 @@
         "inertia-react": "examples/with_account_kit/inertia_react"
       },
       "exclude": []
+    },
+    {
+      "name": "@kevinjohn/adonisjs-lucid-soft-delete",
+      "repository": "Kevinjohn/oss-adonisjs-lucid-soft-delete",
+      "version": "0.1.5",
+      "buildsOn": null,
+      "builtOn": {
+        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
+        "predecessorVersion": null
+      },
+      "kits": {
+        "api": "examples/starter/api",
+        "hypermedia": "examples/starter/hypermedia",
+        "inertia-react": "examples/starter/inertia_react"
+      },
+      "exclude": ["tests/functional/soft_delete.spec.ts", "tests/browser/soft_delete.spec.ts"]
     }
   ]
 }

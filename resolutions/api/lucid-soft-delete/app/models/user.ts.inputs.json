@@ -1,0 +1,16 @@
+{
+  "path": "app/models/user.ts",
+  "base": {
+    "mode": "100644",
+    "blob": "7bc5a0834cfe83fda08c278b50b9fd37cfe8e399"
+  },
+  "ours": {
+    "mode": "100644",
+    "blob": "cf82de5778c84d50a2f7ff66894cd77af6efe8d3"
+  },
+  "theirs": {
+    "mode": "100644",
+    "blob": "369c635722ab5348ddb861e1f7626f92f289bfc6"
+  },
+  "result": "content"
+}
