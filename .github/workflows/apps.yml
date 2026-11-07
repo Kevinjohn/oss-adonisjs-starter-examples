@@ -1,0 +1,54 @@
+name: apps
+
+on:
+  pull_request:
+    paths: &paths
+      - 'apps/**'
+      - 'config/**'
+      - 'resolutions/**'
+      - 'layers/**'
+      - 'templates/**'
+      - 'src/**'
+      - 'bin/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/apps.yml'
+  push:
+    branches: [main]
+    paths: *paths
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assemble-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm assemble --check
+
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        kit: [api, hypermedia, inertia-react]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:app --kit ${{ matrix.kit }} --install-browsers
