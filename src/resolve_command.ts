@@ -1,8 +1,22 @@
 import { join, relative } from 'node:path'
-import { rmSync } from 'node:fs'
+import { realpathSync, rmSync } from 'node:fs'
 import { createWorkDirectory, mergeKit } from './assembly.ts'
+import { SandboxError } from './errors.ts'
 import type { Kit, SandboxConfig } from './sandbox_config.ts'
 import type { RemoteUrlFor } from './tree_source.ts'
+
+/**
+ * `--prune-unused` merges the released packages. Resolutions saved from a `--with-local` run's
+ * conflicts (`--pending <out>/conflicts`) match local inputs, so it would delete them at once.
+ * `pendingRoot` is the resolved `--pending` folder.
+ */
+export function refusePruneWithLocalPending(root: string, pendingRoot: string): void {
+  if (pendingRoot !== join(realpathSync(join(root, 'tmp')), 'conflicts')) {
+    throw new SandboxError(
+      '--prune-unused merges the released packages, so it would delete the resolutions saved from --pending. Run it without --pending.'
+    )
+  }
+}
 
 /**
  * `pnpm resolve --prune-unused` (specification 6.5 step 5): merges the kit and, only when every

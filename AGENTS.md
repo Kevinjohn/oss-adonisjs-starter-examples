@@ -14,7 +14,8 @@ Node 24 (`.nvmrc`) and pnpm 11.23.0 (`packageManager`) for every command. Run `n
   with a local working copy, packed into the app's `vendor/`. `--out` must be inside `tmp/`.
 - `pnpm resolve --kit <kit> [--pending <dir>] [--delete <path>]... [--prune-unused]` saves edited
   pending conflicts from `tmp/conflicts/` (or `<out>/conflicts/` after a `--with-local` run) into
-  `resolutions/`, and optionally deletes resolutions no conflict used.
+  `resolutions/`, and optionally deletes resolutions no conflict used. `--prune-unused` merges the
+  released packages, so it refuses a `--pending` folder other than `tmp/conflicts`.
 - `pnpm test:app --kit <kit> [--dir apps] [--install-browsers]` installs, checks and tests one app
   in a copy under `tmp/test-app/`.
 - `pnpm test` runs the Japa specs in `tests/tooling/`.
