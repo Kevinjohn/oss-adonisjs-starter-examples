@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { type CommandRunner, constructedEnvironment } from './command_runner.ts'
 import { compareOutput } from './compare.ts'
@@ -67,9 +67,13 @@ interface KitContext {
   store: ResolutionStore
 }
 
-/** The scratch folder of one kit's run, deleted when the run ends. */
-export function kitWorkDirectory(root: string, kit: string): string {
-  return join(root, 'tmp', 'work', kit)
+/**
+ * A new scratch folder under `tmp/work/` for one run, so concurrent runs never share one. The
+ * caller deletes it.
+ */
+export function createWorkDirectory(root: string, name: string): string {
+  mkdirSync(join(root, 'tmp', 'work'), { recursive: true })
+  return mkdtempSync(join(root, 'tmp', 'work', `${name}-`))
 }
 
 function labelFor(pkg: PackageConfig, localName: string | undefined): string {
@@ -78,19 +82,17 @@ function labelFor(pkg: PackageConfig, localName: string | undefined): string {
 
 /**
  * Builds the lineage and merges it for one kit. Shared by assembly and `pnpm resolve
- * --prune-unused`. The caller deletes `context.work`.
+ * --prune-unused`. `work` is an empty scratch folder the caller deletes.
  */
 export function mergeKit(options: {
   root: string
   config: SandboxConfig
   kit: Kit
+  work: string
   remoteUrlFor: RemoteUrlFor
   local?: { root: string; name: string; pendingRoot: string }
 }): { context: KitContext; lineage: Lineage; outcome: ReturnType<typeof mergeLineage> } {
-  const { root, config, kit } = options
-  const work = kitWorkDirectory(root, kit)
-  rmSync(work, { recursive: true, force: true })
-  mkdirSync(work, { recursive: true })
+  const { root, config, kit, work } = options
   const git = initRepository(join(work, 'repo'))
   const pendingRoot = options.local?.pendingRoot ?? join(root, 'tmp', 'conflicts')
   rmSync(join(pendingRoot, kit), { recursive: true, force: true })
@@ -129,9 +131,7 @@ export function mergeKit(options: {
  */
 async function packLocalPackage(options: AssemblyOptions, name: string): Promise<string> {
   const local = options.local!
-  const folder = join(options.root, 'tmp', 'work', 'local-pack')
-  rmSync(folder, { recursive: true, force: true })
-  mkdirSync(folder, { recursive: true })
+  const folder = createWorkDirectory(options.root, 'local-pack')
   const archive = join(folder, unversionedAssetName(name))
   const commandOptions = { cwd: local.root, env: constructedEnvironment() }
   options.log(`packing ${name} from ${local.root}`)
@@ -147,11 +147,13 @@ async function assembleKit(
   local: { name: string; archive: string } | undefined
 ): Promise<boolean> {
   const { root, config, log } = options
+  const work = createWorkDirectory(root, kit)
   try {
     const { context, lineage, outcome } = mergeKit({
       root,
       config,
       kit,
+      work,
       remoteUrlFor: options.remoteUrlFor,
       local:
         local && options.local
@@ -250,7 +252,7 @@ async function assembleKit(
     log(`assembled ${relative(root, target) || target}`)
     return ok
   } finally {
-    rmSync(kitWorkDirectory(root, kit), { recursive: true, force: true })
+    rmSync(work, { recursive: true, force: true })
   }
 }
 
@@ -268,15 +270,19 @@ export async function runAssembly(options: AssemblyOptions): Promise<boolean> {
     local = { name: manifest.name, archive: await packLocalPackage(options, manifest.name) }
   }
 
-  let ok = true
-  for (const kit of options.kits) {
-    try {
-      if (!(await assembleKit(options, kit, local))) ok = false
-    } catch (error) {
-      if (!(error instanceof SandboxError)) throw error
-      options.log(`${kit}: ${error.message}`)
-      ok = false
+  try {
+    let ok = true
+    for (const kit of options.kits) {
+      try {
+        if (!(await assembleKit(options, kit, local))) ok = false
+      } catch (error) {
+        if (!(error instanceof SandboxError)) throw error
+        options.log(`${kit}: ${error.message}`)
+        ok = false
+      }
     }
+    return ok
+  } finally {
+    if (local) rmSync(dirname(local.archive), { recursive: true, force: true })
   }
-  return ok
 }

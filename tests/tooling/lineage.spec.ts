@@ -1,6 +1,5 @@
 import { test } from '@japa/runner'
-import { rmSync } from 'node:fs'
-import { kitWorkDirectory, mergeKit } from '../../src/assembly.ts'
+import { createWorkDirectory, mergeKit } from '../../src/assembly.ts'
 import { exactly } from '../helpers/exact_message.ts'
 import { ACCOUNT_KIT, MASQUERADE, SOFT_DELETE, SandboxFixture } from '../helpers/sandbox_fixture.ts'
 
@@ -9,6 +8,7 @@ function merge(fixture: SandboxFixture) {
     root: fixture.root,
     config: fixture.config,
     kit: 'api',
+    work: createWorkDirectory(fixture.root, 'api'),
     remoteUrlFor: fixture.world.remoteUrlFor,
   })
 }
@@ -55,7 +55,6 @@ test.group('lineage', (group) => {
     assert.equal(mergeBase(m.commit, s.commit), lineage.base)
     assert.equal(mergeBase(ak.commit, m.commit), ak.commit)
     assert.isTrue(outcome.ok)
-    rmSync(kitWorkDirectory(fixture.root, 'api'), { recursive: true, force: true })
   })
 
   test('gives identical commit ids across runs', ({ assert }) => {

@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { mergeKit } from '../../src/assembly.ts'
+import { createWorkDirectory, mergeKit } from '../../src/assembly.ts'
 import { unsupportedReason } from '../../src/merge.ts'
 import { resolvePendingConflicts } from '../../src/resolutions.ts'
 import { pruneUnusedResolutions } from '../../src/resolve_command.ts'
@@ -25,18 +25,22 @@ function twoPackages(
   fixture.publish({ name: SOFT_DELETE, version: softDeleteVersion, changes: () => softDelete })
 }
 
+let lastMerge: ReturnType<typeof mergeKit> | undefined
+
 function merge(fixture: SandboxFixture) {
-  return mergeKit({
+  lastMerge = mergeKit({
     root: fixture.root,
     config: fixture.config,
     kit: 'api',
+    work: createWorkDirectory(fixture.root, 'api'),
     remoteUrlFor: fixture.world.remoteUrlFor,
   })
+  return lastMerge
 }
 
 /** The file content on the app branch of the last merge, or null. */
-function appFile(fixture: SandboxFixture, path: string): string | null {
-  const git = new Git(join(fixture.root, 'tmp/work/api/repo'))
+function appFile(path: string): string | null {
+  const git = lastMerge!.context.git
   const result = git.run(['show', `app:${path}`], { allowFailure: true })
   return result.code === 0 ? result.stdout.toString('utf8') : null
 }
@@ -85,7 +89,7 @@ test.group('merging', (group) => {
     )
     const { outcome, context } = merge(fixture)
     assert.isTrue(outcome.ok)
-    assert.equal(appFile(fixture, 'package.json')!.match(/"extra"/g)!.length, 1)
+    assert.equal(appFile('package.json')!.match(/"extra"/g)!.length, 1)
     assert.equal(context.git.text(['status', '--porcelain']), '')
   })
 
@@ -157,7 +161,7 @@ test.group('merging', (group) => {
     assert.isNull(pending(fixture, 'start/routes.ts').inputs)
     const { outcome, context } = merge(fixture)
     assert.isTrue(outcome.ok)
-    assert.equal(appFile(fixture, 'start/routes.ts'), merged)
+    assert.equal(appFile('start/routes.ts'), merged)
     assert.deepEqual(context.store.unused(), [])
   })
 
@@ -172,7 +176,7 @@ test.group('merging', (group) => {
     )
     assert.isFalse(existsSync(join(folder, 'routes.ts')))
     assert.isTrue(merge(fixture).outcome.ok)
-    assert.isNull(appFile(fixture, 'start/routes.ts'))
+    assert.isNull(appFile('start/routes.ts'))
   })
 
   test('a changed input makes the resolution unused and the conflict pending again', ({
@@ -315,7 +319,7 @@ test.group('merging', (group) => {
       { 'database/schema.ts': 'export class TrashSchema {}\n' }
     )
     assert.isTrue(merge(fixture).outcome.ok)
-    assert.equal(appFile(fixture, 'database/schema.ts'), 'export class AccountSchema {}\n')
+    assert.equal(appFile('database/schema.ts'), 'export class AccountSchema {}\n')
   })
 
   test('a package.json conflict is pending with its key paths', ({ assert }) => {

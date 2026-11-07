@@ -1,7 +1,19 @@
 import { test } from '@japa/runner'
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { join } from 'node:path'
-import { type AssemblyOptions, resolveOutDirectory, runAssembly } from '../../src/assembly.ts'
+import {
+  type AssemblyOptions,
+  createWorkDirectory,
+  resolveOutDirectory,
+  runAssembly,
+} from '../../src/assembly.ts'
 import { listFiles } from '../../src/file_tree.ts'
 import { resolvePendingConflicts } from '../../src/resolutions.ts'
 import { pruneUnusedResolutions } from '../../src/resolve_command.ts'
@@ -79,7 +91,7 @@ test.group('assembly', (group) => {
     )
     assert.include(readFileSync(join(app, 'README.md'), 'utf8'), fixture.baseCommit)
     assert.isTrue(existsSync(join(app, 'pnpm-lock.yaml')))
-    assert.isFalse(existsSync(join(fixture.root, 'tmp/work/api')))
+    assert.deepEqual(readdirSync(join(fixture.root, 'tmp/work')), [])
     for (const call of assemble.fake.calls) {
       assert.deepEqual(
         Object.keys(call.env).filter((key) => key.startsWith('ACCOUNT_KIT_')),
@@ -92,6 +104,14 @@ test.group('assembly', (group) => {
     assert.isTrue(await runAssembly(check.value), check.logged.join('\n'))
     assert.equal(check.fake.calls[0].args.join(' '), 'install --frozen-lockfile')
     assert.equal(snapshotOutsideTmp(fixture.root), before)
+  })
+
+  test('each run gets its own scratch folder and leaves the others alone', ({ assert }) => {
+    const first = createWorkDirectory(fixture.root, 'api')
+    writeFileSync(join(first, 'in-use'), '')
+    const second = createWorkDirectory(fixture.root, 'api')
+    assert.notEqual(first, second)
+    assert.isTrue(existsSync(join(first, 'in-use')))
   })
 
   test('check fails, lists differences and writes nothing outside tmp/', async ({ assert }) => {
@@ -191,6 +211,7 @@ test.group('assembly', (group) => {
       'file:vendor/kevinjohn-adonisjs-account-kit.tgz'
     )
     assert.isFalse(existsSync(join(fixture.root, 'apps')))
+    assert.deepEqual(readdirSync(join(fixture.root, 'tmp/work')), [])
   })
 
   test('--with-local writes pending conflicts under <out>/conflicts/', async ({ assert }) => {

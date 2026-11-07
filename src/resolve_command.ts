@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path'
 import { rmSync } from 'node:fs'
-import { kitWorkDirectory, mergeKit } from './assembly.ts'
+import { createWorkDirectory, mergeKit } from './assembly.ts'
 import type { Kit, SandboxConfig } from './sandbox_config.ts'
 import type { RemoteUrlFor } from './tree_source.ts'
 
@@ -15,8 +15,9 @@ export function pruneUnusedResolutions(options: {
   remoteUrlFor: RemoteUrlFor
   log: (line: string) => void
 }): boolean {
+  const work = createWorkDirectory(options.root, options.kit)
   try {
-    const { context, outcome } = mergeKit(options)
+    const { context, outcome } = mergeKit({ ...options, work })
     if (!outcome.ok) {
       options.log(outcome.report)
       options.log('Nothing pruned.')
@@ -27,6 +28,6 @@ export function pruneUnusedResolutions(options: {
     }
     return true
   } finally {
-    rmSync(kitWorkDirectory(options.root, options.kit), { recursive: true, force: true })
+    rmSync(work, { recursive: true, force: true })
   }
 }
