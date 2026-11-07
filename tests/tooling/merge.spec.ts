@@ -296,7 +296,16 @@ test.group('merging', (group) => {
       }),
       'symlink'
     )
-    assert.equal(unsupportedReason(git, 'AU', {}), 'AU')
+  })
+
+  test('fails on a file/directory conflict', ({ assert }) => {
+    twoPackages(fixture, { 'app/models': 'a file\n' }, { 'app/models/user.ts': 'a folder\n' })
+    assert.throws(
+      () => merge(fixture),
+      exactly(
+        'Unsupported conflict (file/directory) on app/models while merging lucid-soft-delete@0.1.4. Change the package example so it does not conflict, then run again.'
+      )
+    )
   })
 
   test('a generated-file conflict takes ours', ({ assert }) => {

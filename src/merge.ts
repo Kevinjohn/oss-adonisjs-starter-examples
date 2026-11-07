@@ -212,8 +212,12 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
       const reason = unsupportedReason(git, codes.get(path), stages)
       if (reason) {
         git.run(['merge', '--abort'])
+        // Git moves one side of a file/directory conflict to `<path>~<branch>` and reports it as
+        // added by one side only; name the path both packages wrote.
+        const fileOrDirectory = reason === 'AU' || reason === 'UA'
+        const shown = fileOrDirectory ? path.replace(/~[^/]+$/, '') : path
         throw new SandboxError(
-          `Unsupported conflict (${reason}) on ${path} while merging ${entry.label}. Change the package example so it does not conflict, then run again.`
+          `Unsupported conflict (${fileOrDirectory ? 'file/directory' : reason}) on ${shown} while merging ${entry.label}. Change the package example so it does not conflict, then run again.`
         )
       }
       if (isGenerated(path)) {
