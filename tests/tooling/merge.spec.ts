@@ -347,4 +347,22 @@ test.group('merging', (group) => {
       )
     )
   })
+
+  test('a generated conflict ending in .inputs.json still takes ours', ({ assert }) => {
+    twoPackages(
+      fixture,
+      { '.adonisjs/manifest.inputs.json': '"ak"\n' },
+      { '.adonisjs/manifest.inputs.json': '"sd"\n' }
+    )
+    assert.isTrue(merge(fixture).outcome.ok)
+    assert.equal(appFile('.adonisjs/manifest.inputs.json'), '"ak"\n')
+  })
+
+  test('fails on a conflict under a folder ending in .inputs.json', ({ assert }) => {
+    twoPackages(fixture, { 'a.inputs.json/child.ts': '1\n' }, { 'a.inputs.json/child.ts': '2\n' })
+    assert.throws(
+      () => merge(fixture),
+      /^Unsupported conflict \(name ends in \.inputs\.json\) on a\.inputs\.json\/child\.ts /
+    )
+  })
 })

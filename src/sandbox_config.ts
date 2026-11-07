@@ -132,7 +132,17 @@ export function validateSandboxConfig(value: unknown): SandboxConfig {
     seen.set(name, pkg)
   }
 
-  return value as SandboxConfig
+  const config = value as SandboxConfig
+  // A kit path may end in `/`; drop it so `<path>/<file>` lookups name the tracked path.
+  return {
+    ...config,
+    packages: config.packages.map((pkg) => ({
+      ...pkg,
+      kits: Object.fromEntries(
+        Object.entries(pkg.kits).map(([kit, path]) => [kit, path!.replace(/\/$/, '')])
+      ),
+    })),
+  }
 }
 
 export function readSandboxConfig(path: string): SandboxConfig {

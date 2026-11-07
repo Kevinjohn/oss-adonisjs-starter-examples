@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { SandboxError } from './errors.ts'
 import { listFiles } from './file_tree.ts'
 import { serialisePackageJson } from './package_json_merge.ts'
+import { isRuntimePath } from './tree_filter.ts'
 
 const DEPENDENCY_MAPS = [
   'dependencies',
@@ -96,6 +97,13 @@ export function renderAppReadme(
 export function copyOverlay(overlay: string, appDirectory: string, kit: string): void {
   if (!existsSync(overlay)) return
   for (const entry of listFiles(overlay)) {
+    if (
+      entry.kind === 'symlink' ||
+      isRuntimePath(entry.path) ||
+      entry.path.split('/').includes('node_modules')
+    ) {
+      throw new SandboxError(`Unexpected ${entry.path} in the ${kit} overlay`)
+    }
     if (existsSync(join(appDirectory, entry.path))) {
       throw new SandboxError(`Overlay file ${entry.path} already exists in ${kit}`)
     }

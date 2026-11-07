@@ -92,4 +92,14 @@ test.group('normalise', () => {
     )
     rmSync(directory, { recursive: true, force: true })
   })
+
+  test('refuses runtime files in an overlay', ({ assert }) => {
+    const directory = temporaryDirectory()
+    writeFiles(directory, { 'overlay/vendor/extra.tgz': 'x', 'app/start/routes.ts': 'routes\n' })
+    assert.throws(
+      () => copyOverlay(`${directory}/overlay`, `${directory}/app`, 'api'),
+      exactly('Unexpected vendor/extra.tgz in the api overlay')
+    )
+    rmSync(directory, { recursive: true, force: true })
+  })
 })

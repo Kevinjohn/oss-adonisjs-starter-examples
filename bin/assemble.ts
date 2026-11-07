@@ -22,6 +22,9 @@ runCli(async () => {
   if ((values['with-local'] === undefined) !== (values.out === undefined)) {
     throw new SandboxError('--with-local and --out go together')
   }
+  if (values['with-local'] === '' || values.out === '') {
+    throw new SandboxError('--with-local and --out need a path')
+  }
   if (values.check && values['with-local'])
     throw new SandboxError('--check cannot be combined with --with-local')
 
@@ -39,9 +42,13 @@ runCli(async () => {
     config,
     kits,
     mode: values.check ? 'check' : 'assemble',
-    local: values['with-local']
-      ? { root: resolve(values['with-local']), out: resolveOutDirectory(SANDBOX_ROOT, values.out!) }
-      : undefined,
+    local:
+      values['with-local'] !== undefined
+        ? {
+            root: resolve(values['with-local']),
+            out: resolveOutDirectory(SANDBOX_ROOT, values.out!),
+          }
+        : undefined,
     remoteUrlFor: githubUrlFor,
     runner: processRunner({ stream: false }),
     log: (line) => console.log(line),

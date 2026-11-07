@@ -53,6 +53,18 @@ function snapshotFile(path: string): Snapshot | null {
 }
 
 /**
+ * Fails when the app has no `pnpm-workspace.yaml`: pnpm would then search upward and use the
+ * sandbox's own workspace and lockfile.
+ */
+export function requireOwnWorkspace(app: string, kit: string): void {
+  if (!existsSync(join(app, 'pnpm-workspace.yaml'))) {
+    throw new SandboxError(
+      `${kit} has no pnpm-workspace.yaml, so pnpm would use the sandbox's own workspace. Keep the starter kit's pnpm-workspace.yaml.`
+    )
+  }
+}
+
+/**
  * Specification 6.6: extracts the assembled app into `<T>`, installs it, runs the key, codegen and
  * migration commands, checks that only generated and runtime files changed, and returns the
  * output set.
@@ -71,6 +83,7 @@ export async function regenerateApp(options: RegenerateOptions): Promise<Regener
     ? readFileSync(join(t, '.env.example'))
     : null
 
+  requireOwnWorkspace(t, options.kit)
   if (options.seedLockfile) writeFileSync(join(t, 'pnpm-lock.yaml'), options.seedLockfile)
   if (options.vendorArchive) {
     mkdirSync(join(t, 'vendor'), { recursive: true })

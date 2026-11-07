@@ -118,6 +118,12 @@ test.group('sandbox config validation', () => {
     ['exclude path', (v) => (v.packages[0].exclude = ['../x/']), 'Invalid exclude ../x/'],
   ]
 
+  test('drops a trailing / from kit paths', ({ assert }) => {
+    const value = config()
+    value.packages[0].kits.api = 'examples/api/'
+    assert.equal(validateSandboxConfig(value).packages[0].kits.api, 'examples/api')
+  })
+
   for (const [name, mutate, message] of cases) {
     test(`rejects ${name}`, ({ assert }) => {
       const value = config()

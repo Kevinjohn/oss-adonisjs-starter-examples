@@ -21,7 +21,16 @@ export function isRuntimePath(path: string): boolean {
  */
 export function filterTree(directory: string, source: string, exclude: string[] = []): void {
   for (const path of ['pnpm-lock.yaml', 'README.md', ...exclude]) {
-    const target = join(directory, path.replace(/\/$/, ''))
+    const relativePath = path.replace(/\/$/, '')
+    // Never follow a symlink out of the tree: refuse one on the way to an excluded path.
+    const segments = relativePath.split('/')
+    for (let depth = 1; depth < segments.length; depth++) {
+      const prefix = segments.slice(0, depth).join('/')
+      if (lstatSync(join(directory, prefix), { throwIfNoEntry: false })?.isSymbolicLink()) {
+        throw new SandboxError(`Symlinks are not supported: ${prefix} in ${source}`)
+      }
+    }
+    const target = join(directory, relativePath)
     // A trailing `/` excludes a directory only (specification 5.1).
     if (path.endsWith('/') && !lstatSync(target, { throwIfNoEntry: false })?.isDirectory()) continue
     rmSync(target, { recursive: true, force: true })

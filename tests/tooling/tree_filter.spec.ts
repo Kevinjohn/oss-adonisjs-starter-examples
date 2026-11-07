@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { rmSync } from 'node:fs'
+import { existsSync, rmSync, symlinkSync } from 'node:fs'
+import { join } from 'node:path'
 import { listFiles } from '../../src/file_tree.ts'
 import { filterTree } from '../../src/tree_filter.ts'
 import { exactly } from '../helpers/exact_message.ts'
@@ -60,5 +61,22 @@ test.group('tree filter', (group) => {
       listFiles(directory).map((entry) => entry.path),
       'compatibility'
     )
+  })
+
+  test('refuses a symlink on the way to an excluded path and deletes nothing outside', ({
+    assert,
+  }) => {
+    const outside = temporaryDirectory()
+    writeFiles(outside, { 'cache/keep.txt': 'outside\n' })
+    symlinkSync(outside, join(directory, 'compatibility'))
+    try {
+      assert.throws(
+        () => filterTree(directory, 'example', ['compatibility/cache/']),
+        exactly('Symlinks are not supported: compatibility in example')
+      )
+      assert.isTrue(existsSync(join(outside, 'cache/keep.txt')))
+    } finally {
+      rmSync(outside, { recursive: true, force: true })
+    }
   })
 })

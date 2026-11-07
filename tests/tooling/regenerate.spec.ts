@@ -167,6 +167,33 @@ test.group('regenerate', (group) => {
     })
     assert.deepEqual(logged, ['restored .env.example (api)'])
   })
+
+  test('fails before installing when the app has no pnpm-workspace.yaml', async ({ assert }) => {
+    const files = temporaryDirectory()
+    writeFiles(files, { ...kitFiles('api'), 'pnpm-workspace.yaml': null })
+    const commit = commitFolder(context.git, files, { parent: null, message: 'x', branch: 'x' })
+    rmSync(files, { recursive: true, force: true })
+    const { runner, calls } = fakeRunner()
+    await assert.rejects(
+      () =>
+        regenerateApp({
+          git: context.git,
+          commit,
+          kit: 'api',
+          directory: context.t,
+          seedLockfile: null,
+          frozenLockfile: false,
+          includeVendor: false,
+          runner,
+          env: constructedEnvironment(),
+          log: () => {},
+        }),
+      exactly(
+        "api has no pnpm-workspace.yaml, so pnpm would use the sandbox's own workspace. Keep the starter kit's pnpm-workspace.yaml."
+      )
+    )
+    assert.deepEqual(calls, [])
+  })
 })
 
 test.group('compare', (group) => {

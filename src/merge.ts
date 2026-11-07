@@ -213,10 +213,7 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
     const codes = statusCodes(git)
     for (const [path, stages] of conflictedPaths(git)) {
       if (path === 'package.json') continue
-      // A resolution's inputs file is `<path>.inputs.json`, so such a path would collide with one.
-      const reason = path.endsWith('.inputs.json')
-        ? 'name ends in .inputs.json'
-        : unsupportedReason(git, codes.get(path), stages)
+      const reason = unsupportedReason(git, codes.get(path), stages)
       if (reason) {
         git.run(['merge', '--abort'])
         // Git moves one side of a file/directory conflict to `<path>~<branch>` and reports it as
@@ -231,6 +228,14 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
         const chosen = stages[2] ?? stages[3]!
         writeToWorkTree(git, path, readBlob(git, chosen), chosen.mode)
         continue
+      }
+      // A resolution's inputs file is `<path>.inputs.json`, so a path with a segment ending in
+      // `.inputs.json` could collide with one.
+      if (path.split('/').some((segment) => segment.endsWith('.inputs.json'))) {
+        git.run(['merge', '--abort'])
+        throw new SandboxError(
+          `Unsupported conflict (name ends in .inputs.json) on ${path} while merging ${entry.label}. Change the package example so it does not conflict, then run again.`
+        )
       }
       const inputs: ConflictInputs = {
         path,

@@ -60,6 +60,7 @@ export function kitFiles(kit: string): FileSpec {
       2
     )}\n`,
     'adonisrc.ts': 'export default {}\n',
+    'pnpm-workspace.yaml': 'allowBuilds: {}\n',
     'start/routes.ts':
       "import router from '@adonisjs/core/services/router'\n\nrouter.get('/', () => 'ok')\n",
     'database/migrations/1000_create_users_table.ts': 'export default class {}\n',

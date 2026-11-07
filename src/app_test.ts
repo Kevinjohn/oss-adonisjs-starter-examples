@@ -7,6 +7,7 @@ import {
   constructedEnvironment,
 } from './command_runner.ts'
 import { SandboxError } from './errors.ts'
+import { requireOwnWorkspace } from './regenerate.ts'
 import { SUPPORTED_KITS } from './sandbox_config.ts'
 
 export interface AppTestOptions {
@@ -73,6 +74,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
       verbatimSymlinks: true,
       filter: (path) => !path.split('/').includes('node_modules'),
     })
+    requireOwnWorkspace(app, options.kit)
     const frozen = existsSync(join(app, 'vendor')) ? '--no-frozen-lockfile' : '--frozen-lockfile'
     await run('pnpm', ['install', frozen])
     copyFileSync(join(app, '.env.example'), join(app, '.env'))

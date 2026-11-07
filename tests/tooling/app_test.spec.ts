@@ -164,4 +164,24 @@ test.group('test:app', (group) => {
     }
     assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
   })
+
+  test('refuses an app without pnpm-workspace.yaml before installing', async ({ assert }) => {
+    writeApp(world.sandboxRoot, {}, { 'pnpm-workspace.yaml': null })
+    const fake = fakeRunner()
+    await assert.rejects(
+      () =>
+        testApp({
+          root: world.sandboxRoot,
+          kit: 'inertia-react',
+          directory: 'apps',
+          installBrowsers: false,
+          runner: fake.runner,
+          waitForUrl: async () => {},
+          log: () => {},
+        }),
+      /^inertia-react has no pnpm-workspace.yaml/
+    )
+    assert.deepEqual(fake.calls, [])
+    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+  })
 })
