@@ -6,9 +6,10 @@ Do not edit this folder by hand: change a package's example, then run `pnpm asse
 
 Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https://github.com/adonisjs/starter-kits/tree/46d235932e3eb6472a16b740fa0b47b5f69fc6fc/inertia-react)
 
-| Package                           | Version | Example                                                                                             |
-| --------------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `@kevinjohn/adonisjs-account-kit` | 0.3.1   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.1/examples/inertia-react) |
+| Package                           | Version | Example                                                                                                             |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| `@kevinjohn/adonisjs-account-kit` | 0.3.1   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.1/examples/inertia-react)                 |
+| `@kevinjohn/adonisjs-masquerade`  | 0.2.2   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.2/examples/with_account_kit/inertia_react) |
 
 ## Run it
 

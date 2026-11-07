@@ -21,6 +21,21 @@
         "inertia-react": "examples/inertia-react"
       },
       "exclude": ["compatibility/"]
+    },
+    {
+      "name": "@kevinjohn/adonisjs-masquerade",
+      "repository": "Kevinjohn/oss-adonisjs-masquerade",
+      "version": "0.2.2",
+      "buildsOn": "@kevinjohn/adonisjs-account-kit",
+      "builtOn": {
+        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
+        "predecessorVersion": "0.3.1"
+      },
+      "kits": {
+        "hypermedia": "examples/with_account_kit/hypermedia",
+        "inertia-react": "examples/with_account_kit/inertia_react"
+      },
+      "exclude": []
     }
   ]
 }
