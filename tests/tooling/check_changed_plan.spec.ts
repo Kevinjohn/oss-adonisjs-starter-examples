@@ -22,6 +22,8 @@ test.group('check:changed plan', () => {
         'pnpm',
         'exec',
         'eslint',
+        '--config',
+        'eslint.config.js',
         '--max-warnings',
         '0',
         '--no-warn-ignored',
@@ -62,6 +64,13 @@ test.group('check:changed plan', () => {
       assert.equal(steps.tests, 'skip: no spec or tooling file changed', path)
       assert.equal(steps.typecheck, 'skip: no TypeScript or type configuration changed', path)
     }
+  })
+
+  test('an app source file is linted against the root configuration, which ignores it', ({
+    assert,
+  }) => {
+    const lint = summary(planChecks(changed('apps/api/start/routes.ts'))).lint
+    assert.deepEqual((lint as string[]).slice(3, 5), ['--config', 'eslint.config.js'])
   })
 
   test('format and lint configuration check the whole repository', ({ assert }) => {
