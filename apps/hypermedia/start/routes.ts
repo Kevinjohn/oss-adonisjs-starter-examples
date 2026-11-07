@@ -10,6 +10,7 @@
 import { middleware } from '#start/kernel'
 import { controllers } from '#generated/controllers'
 import router from '@adonisjs/core/services/router'
+import { sensitive } from '@kevinjohn/adonisjs-masquerade/http'
 
 router.on('/').render('pages/home').as('home')
 
@@ -39,11 +40,10 @@ router
     router.get('settings/profile', [controllers.Profile, 'edit'])
     router.post('settings/profile', [controllers.Profile, 'update'])
     router.get('settings/password', [controllers.Passwords, 'edit'])
-    router.post('settings/password', [controllers.Passwords, 'update'])
+    router.post('settings/password', [controllers.Passwords, 'update']).use(sensitive())
     router.get('settings/email', [controllers.EmailChanges, 'edit'])
-    router.post('settings/email', [controllers.EmailChanges, 'store'])
+    router.post('settings/email', [controllers.EmailChanges, 'store']).use(sensitive())
     router.post('settings/email/cancel', [controllers.EmailChanges, 'cancel'])
-    router.post('logout', [controllers.Session, 'destroy'])
   })
   .use(middleware.auth())
 
@@ -51,3 +51,9 @@ router
   .get('account', [controllers.Dashboard, 'protected'])
   .as('account')
   .use([middleware.auth(), middleware.verified()])
+
+// Logout stays on the raw `web` guard, so an operator can still sign out while masquerading.
+router
+  .post('logout', [controllers.Session, 'destroy'])
+  .as('session.destroy')
+  .use(middleware.auth({ guards: ['web'] }))
