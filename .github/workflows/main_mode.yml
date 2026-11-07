@@ -1,0 +1,30 @@
+name: main-mode
+
+# Combines every package's main branch nightly, so breakage shows before a release. A failure
+# names the package commits in the assemble log; it is a signal to investigate, not proof of a
+# defect in one package.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        kit: [api, hypermedia, inertia-react]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm assemble --mode main --kit ${{ matrix.kit }} --out tmp/apps-main
+      - run: pnpm test:app --kit ${{ matrix.kit }} --dir tmp/apps-main --install-browsers

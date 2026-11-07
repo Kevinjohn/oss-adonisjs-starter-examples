@@ -12,6 +12,8 @@ Node 24 (`.nvmrc`) and pnpm 11.23.0 (`packageManager`) for every command. Run `n
   difference or unused resolution. Writes nothing outside `tmp/`.
 - `pnpm assemble --kit <kit> --with-local <package root> --out tmp/<dir>` replaces one package
   with a local working copy, packed into the app's `vendor/`. `--out` must be inside `tmp/`.
+- `pnpm assemble --mode main --out tmp/<dir> [--kit <kit>]...` combines every package's `main`
+  branch, each packed into the app's `vendor/` (specification 6.9; nightly in `main_mode.yml`).
 - `pnpm resolve --kit <kit> [--pending <dir>] [--delete <path>]... [--prune-unused]` saves edited
   pending conflicts from `tmp/conflicts/` (or `<out>/conflicts/` after a `--with-local` run) into
   `resolutions/`, and optionally deletes resolutions no conflict used. `--prune-unused` merges the

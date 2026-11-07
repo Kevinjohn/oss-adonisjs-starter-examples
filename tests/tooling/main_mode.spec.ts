@@ -22,13 +22,13 @@ const MASQUERADE_REPO = 'Kevinjohn/oss-adonisjs-masquerade'
 function packingRunner() {
   const fake = fakeRunner()
   const runner: CommandRunner = {
-    async run(command, args, options) {
-      await fake.runner.run(command, args, options)
+    async run(command, args, commandOptions) {
+      await fake.runner.run(command, args, commandOptions)
       if (args[0] !== 'pack') return
       const archive = args[args.indexOf('--out') + 1]
       const folder = mkdtempSync(join(dirname(archive), 'pack-'))
       mkdirSync(join(folder, 'package'))
-      copyFileSync(join(options.cwd, 'package.json'), join(folder, 'package/package.json'))
+      copyFileSync(join(commandOptions.cwd, 'package.json'), join(folder, 'package/package.json'))
       execFileSync('tar', ['-czf', archive, '-C', folder, 'package'])
       rmSync(folder, { recursive: true, force: true })
     },
