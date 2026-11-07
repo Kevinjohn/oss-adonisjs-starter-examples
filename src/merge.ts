@@ -21,6 +21,8 @@ export interface MergeOptions {
   store: ResolutionStore
   /** Where pending conflicts go: `tmp/conflicts` or `<out>/conflicts`. */
   pendingRoot: string
+  /** The `pnpm resolve` command the conflict report prints. */
+  resolveCommand: string
   /** Folder for temporary merge-file inputs. */
   scratchDirectory: string
 }
@@ -250,7 +252,10 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
 
     if (unresolved.length > 0) {
       git.run(['merge', '--abort'])
-      return { ok: false, report: conflictReport(entry.label, kit, unresolved) }
+      return {
+        ok: false,
+        report: conflictReport(entry.label, kit, unresolved, options.resolveCommand),
+      }
     }
     if (
       git.text(['diff', '--name-only', '--diff-filter=U']) !== '' ||
@@ -263,7 +268,12 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
   return { ok: true, head: git.text(['rev-parse', 'HEAD']) }
 }
 
-function conflictReport(label: string, kit: string, unresolved: Unresolved[]): string {
+function conflictReport(
+  label: string,
+  kit: string,
+  unresolved: Unresolved[],
+  resolveCommand: string
+): string {
   const lines = unresolved.map(({ file, keys }) => {
     const shown = relative(process.cwd(), file).startsWith('..')
       ? file
@@ -274,7 +284,7 @@ function conflictReport(label: string, kit: string, unresolved: Unresolved[]): s
     `Merging ${label} into ${kit} left ${unresolved.length} conflict(s):`,
     ...lines,
     'Edit each file to the merged content and remove every conflict marker. Then run',
-    `  pnpm resolve --kit ${kit}`,
+    `  ${resolveCommand}`,
     'and add --delete <path> for a file that should not exist. Then run pnpm assemble again.',
   ].join('\n')
 }

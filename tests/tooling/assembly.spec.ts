@@ -184,6 +184,10 @@ test.group('assembly', (group) => {
       resolveOutDirectory(fixture.root, join(fixture.root, 'tmp/combined')),
       join(fixture.root, 'tmp/combined')
     )
+    assert.throws(
+      () => resolveOutDirectory(fixture.root, join(fixture.root, 'apps'), '--pending'),
+      /^--pending must be a folder inside /
+    )
   })
 
   test('--with-local packs the local package into vendor/ and writes to --out', async ({
@@ -214,7 +218,9 @@ test.group('assembly', (group) => {
     assert.deepEqual(readdirSync(join(fixture.root, 'tmp/work')), [])
   })
 
-  test('--with-local writes pending conflicts under <out>/conflicts/', async ({ assert }) => {
+  test('--with-local writes pending conflicts under <out>/conflicts/ and they can be saved', async ({
+    assert,
+  }) => {
     publishAccountKit(fixture)
     fixture.publish({
       name: SOFT_DELETE,
@@ -225,16 +231,28 @@ test.group('assembly', (group) => {
     writeFileSync(join(localRoot, 'examples/api/start/routes.ts'), `${ROUTES}// local\n`)
     const out = join(fixture.root, 'tmp/combined')
 
-    assert.isFalse(await runAssembly(options(fixture, { local: { root: localRoot, out } }).value))
-    assert.isTrue(existsSync(join(out, 'conflicts/api/lucid-soft-delete/start/routes.ts')))
+    const first = options(fixture, { local: { root: localRoot, out } })
+    assert.isFalse(await runAssembly(first.value))
+    const pending = join(out, 'conflicts/api/lucid-soft-delete/start/routes.ts')
+    assert.isTrue(existsSync(pending))
     assert.isFalse(existsSync(join(fixture.root, 'tmp/conflicts')))
-    assert.throws(() =>
-      resolvePendingConflicts({
-        pendingRoot: join(fixture.root, 'tmp/conflicts'),
-        resolutionsRoot: join(fixture.root, 'resolutions'),
-        kit: 'api',
-        deletes: ['start/routes.ts'],
-      })
+    assert.include(
+      first.logged.join('\n'),
+      '  pnpm resolve --kit api --pending tmp/combined/conflicts\n'
+    )
+
+    writeFileSync(pending, `${ROUTES}// local\n// sd\n`)
+    resolvePendingConflicts({
+      pendingRoot: join(out, 'conflicts'),
+      resolutionsRoot: join(fixture.root, 'resolutions'),
+      kit: 'api',
+      deletes: [],
+    })
+    const second = options(fixture, { local: { root: localRoot, out } })
+    assert.isTrue(await runAssembly(second.value), second.logged.join('\n'))
+    assert.equal(
+      readFileSync(join(out, 'api/start/routes.ts'), 'utf8'),
+      `${ROUTES}// local\n// sd\n`
     )
   })
 

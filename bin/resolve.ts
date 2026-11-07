@@ -1,5 +1,6 @@
 import { join, relative } from 'node:path'
 import { parseArgs } from 'node:util'
+import { resolveOutDirectory } from '../src/assembly.ts'
 import { pruneUnusedResolutions } from '../src/resolve_command.ts'
 import { SANDBOX_ROOT, runCli } from '../src/cli.ts'
 import { SandboxError } from '../src/errors.ts'
@@ -8,12 +9,13 @@ import { type Kit, readSandboxConfig } from '../src/sandbox_config.ts'
 import { githubUrlFor } from '../src/tree_source.ts'
 
 /**
- * pnpm resolve --kit <kit> [--delete <path>]... [--prune-unused]
+ * pnpm resolve --kit <kit> [--pending <dir>] [--delete <path>]... [--prune-unused]
  */
 runCli(async () => {
   const { values } = parseArgs({
     options: {
       'kit': { type: 'string' },
+      'pending': { type: 'string', default: 'tmp/conflicts' },
       'delete': { type: 'string', multiple: true, default: [] },
       'prune-unused': { type: 'boolean', default: false },
     },
@@ -23,7 +25,7 @@ runCli(async () => {
   if (!config.kits.includes(values.kit as Kit)) throw new SandboxError(`Unknown kit ${values.kit}`)
 
   const saved = resolvePendingConflicts({
-    pendingRoot: join(SANDBOX_ROOT, 'tmp', 'conflicts'),
+    pendingRoot: resolveOutDirectory(SANDBOX_ROOT, values.pending, '--pending'),
     resolutionsRoot: join(SANDBOX_ROOT, 'resolutions'),
     kit: values.kit,
     deletes: values.delete,

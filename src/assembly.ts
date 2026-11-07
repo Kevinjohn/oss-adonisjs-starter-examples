@@ -41,10 +41,10 @@ export interface AssemblyOptions {
 }
 
 /**
- * Resolves `--out` and refuses anything that is not a folder inside the sandbox's `tmp/` after
- * following symlinks (specification 6.8).
+ * Resolves a folder option (`--out`, `--pending`) and refuses anything that is not a folder inside
+ * the sandbox's `tmp/` after following symlinks (specification 6.8).
  */
-export function resolveOutDirectory(root: string, out: string): string {
+export function resolveOutDirectory(root: string, out: string, option = '--out'): string {
   const tmp = realpathSync(join(root, 'tmp'))
   let existing = resolve(out)
   const rest: string[] = []
@@ -54,7 +54,7 @@ export function resolveOutDirectory(root: string, out: string): string {
   }
   const real = join(realpathSync(existing), ...rest)
   if (!real.startsWith(tmp + sep)) {
-    throw new SandboxError(`--out must be a folder inside ${join(root, 'tmp')}, not ${out}`)
+    throw new SandboxError(`${option} must be a folder inside ${join(root, 'tmp')}, not ${out}`)
   }
   return real
 }
@@ -95,6 +95,9 @@ export function mergeKit(options: {
   const { root, config, kit, work } = options
   const git = initRepository(join(work, 'repo'))
   const pendingRoot = options.local?.pendingRoot ?? join(root, 'tmp', 'conflicts')
+  const resolveCommand = options.local
+    ? `pnpm resolve --kit ${kit} --pending ${relative(root, pendingRoot)}`
+    : `pnpm resolve --kit ${kit}`
   rmSync(join(pendingRoot, kit), { recursive: true, force: true })
 
   const cache = new RepositoryCache(join(root, 'tmp', 'cache', 'repos'), options.remoteUrlFor)
@@ -121,7 +124,15 @@ export function mergeKit(options: {
     labelFor: (pkg) => labelFor(pkg, options.local?.name),
   })
   const store = new ResolutionStore(join(root, 'resolutions'), kit)
-  const outcome = mergeLineage({ git, kit, lineage, store, pendingRoot, scratchDirectory: work })
+  const outcome = mergeLineage({
+    git,
+    kit,
+    lineage,
+    store,
+    pendingRoot,
+    resolveCommand,
+    scratchDirectory: work,
+  })
   return { context: { kit, work, git, pendingRoot, store }, lineage, outcome }
 }
 
