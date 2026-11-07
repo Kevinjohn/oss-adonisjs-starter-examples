@@ -10,7 +10,7 @@
 import { middleware } from '#start/kernel'
 import { controllers } from '#generated/controllers'
 import router from '@adonisjs/core/services/router'
-import { sensitive } from '@kevinjohn/adonisjs-masquerade/http'
+import { allowMutation, sensitive } from '@kevinjohn/adonisjs-masquerade/http'
 
 router.on('/').render('pages/home').as('home')
 
@@ -57,3 +57,31 @@ router
   .post('logout', [controllers.Session, 'destroy'])
   .as('session.destroy')
   .use(middleware.auth({ guards: ['web'] }))
+
+// Invitation links: create the account and join the team.
+router.get('invitation/:token', [controllers.Invitations, 'edit'])
+router.post('invitation/:token', [controllers.Invitations, 'update'])
+
+router
+  .group(() => {
+    router.get('teams', [controllers.Teams, 'index']).as('teams.index')
+    router.post('teams', [controllers.Teams, 'store']).as('teams.store')
+  })
+  .use([middleware.auth(), middleware.verified()])
+
+// Teams send invitation email, so they need a confirmed address. `scope` runs after
+// authentication: it loads the membership of `:scopeId`, or refuses with
+// E_ACCESS_CONTROL_FORBIDDEN (403).
+router
+  .group(() => {
+    router.get('teams/:scopeId', [controllers.Teams, 'show']).as('teams.show')
+    // An operator masquerading with Can edit may rename a team the target can write.
+    router
+      .post('teams/:scopeId', [controllers.Teams, 'update'])
+      .as('teams.update')
+      .use(allowMutation())
+    router
+      .post('teams/:scopeId/invitations', [controllers.TeamInvitations, 'store'])
+      .as('team_invitations.store')
+  })
+  .use([middleware.auth(), middleware.verified(), middleware.scope()])

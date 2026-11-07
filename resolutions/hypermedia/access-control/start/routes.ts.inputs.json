@@ -1,0 +1,16 @@
+{
+  "path": "start/routes.ts",
+  "base": {
+    "mode": "100644",
+    "blob": "e9cdf8d7a5d3cf0bc61e6418ef1f0c2b6f5ceb0b"
+  },
+  "ours": {
+    "mode": "100644",
+    "blob": "dddd69f67515b0d3d3ffb1ffd6e80ebc2ceb1caa"
+  },
+  "theirs": {
+    "mode": "100644",
+    "blob": "9a6f870fdd2756961a04538a0492e3a9a0313217"
+  },
+  "result": "content"
+}

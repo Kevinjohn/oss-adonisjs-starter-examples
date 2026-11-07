@@ -179,6 +179,25 @@ export class LoginLinkTokenSchema extends BaseModel {
   declare tokenableId: number
 }
 
+export class MembershipSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'role', 'scopeId', 'status', 'updatedAt', 'userId'] as const
+  $columns = MembershipSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare role: string
+  @column()
+  declare scopeId: number
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: number
+}
+
 export class PasswordResetTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'email', 'expiresAt', 'hash', 'id', 'tokenableId'] as const
   $columns = PasswordResetTokenSchema.$columns
@@ -341,6 +360,19 @@ export class SocialTransactionSchema extends BaseModel {
   declare userId: number | null
   @column()
   declare verificationHash: string | null
+}
+
+export class TeamSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'name', 'updatedAt'] as const
+  $columns = TeamSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class UserSchema extends BaseModel {

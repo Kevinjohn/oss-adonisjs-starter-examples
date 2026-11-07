@@ -7,6 +7,29 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
+export class AccountInvitationSchema extends BaseModel {
+  static $columns = ['createdAt', 'email', 'expiresAt', 'id', 'inviterId', 'role', 'scope', 'tokenHash', 'updatedAt'] as const
+  $columns = AccountInvitationSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare email: string
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare inviterId: number | null
+  @column()
+  declare role: string
+  @column()
+  declare scope: string
+  @column()
+  declare tokenHash: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class AccountSessionSchema extends BaseModel {
   static $columns = ['createdAt', 'expiresAt', 'handleHash', 'id', 'label', 'lastSeenAt', 'userId'] as const
   $columns = AccountSessionSchema.$columns
@@ -145,6 +168,25 @@ export class MasqueradeModeSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class MembershipSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'role', 'scopeId', 'status', 'updatedAt', 'userId'] as const
+  $columns = MembershipSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare role: string
+  @column()
+  declare scopeId: number
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: number
+}
+
 export class PasswordResetTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'email', 'expiresAt', 'hash', 'id', 'tokenableId'] as const
   $columns = PasswordResetTokenSchema.$columns
@@ -184,6 +226,19 @@ export class SessionSchema extends BaseModel {
   declare id: string
   @column()
   declare userId: string | null
+}
+
+export class TeamSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'name', 'updatedAt'] as const
+  $columns = TeamSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class UserSchema extends BaseModel {
