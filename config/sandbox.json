@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "base": {
+    "repository": "adonisjs/starter-kits",
+    "commit": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc"
+  },
+  "kits": ["api", "hypermedia", "inertia-react"],
+  "packages": [
+    {
+      "name": "@kevinjohn/adonisjs-account-kit",
+      "repository": "Kevinjohn/oss-adonisjs-account-kit",
+      "version": "0.3.1",
+      "buildsOn": null,
+      "builtOn": {
+        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
+        "predecessorVersion": null
+      },
+      "kits": {
+        "api": "examples/api",
+        "hypermedia": "examples/hypermedia",
+        "inertia-react": "examples/inertia-react"
+      },
+      "exclude": ["compatibility/"]
+    }
+  ]
+}
