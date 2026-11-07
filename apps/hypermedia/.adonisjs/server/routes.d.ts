@@ -28,6 +28,13 @@ export type ScannedRoutes = {
     'email_changes.cancel': { paramsTuple?: []; params?: {} }
     'account': { paramsTuple?: []; params?: {} }
     'session.destroy': { paramsTuple?: []; params?: {} }
+    'invitations.edit': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'invitations.update': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'teams.index': { paramsTuple?: []; params?: {} }
+    'teams.store': { paramsTuple?: []; params?: {} }
+    'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'teams.update': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'team_invitations.store': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
     'masquerade.start': { paramsTuple?: []; params?: {} }
@@ -46,6 +53,9 @@ export type ScannedRoutes = {
     'passwords.edit': { paramsTuple?: []; params?: {} }
     'email_changes.edit': { paramsTuple?: []; params?: {} }
     'account': { paramsTuple?: []; params?: {} }
+    'invitations.edit': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'teams.index': { paramsTuple?: []; params?: {} }
+    'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
@@ -62,6 +72,9 @@ export type ScannedRoutes = {
     'passwords.edit': { paramsTuple?: []; params?: {} }
     'email_changes.edit': { paramsTuple?: []; params?: {} }
     'account': { paramsTuple?: []; params?: {} }
+    'invitations.edit': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'teams.index': { paramsTuple?: []; params?: {} }
+    'teams.show': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'masquerade.accounts': { paramsTuple?: []; params?: {} }
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
@@ -78,6 +91,10 @@ export type ScannedRoutes = {
     'email_changes.store': { paramsTuple?: []; params?: {} }
     'email_changes.cancel': { paramsTuple?: []; params?: {} }
     'session.destroy': { paramsTuple?: []; params?: {} }
+    'invitations.update': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'teams.store': { paramsTuple?: []; params?: {} }
+    'teams.update': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
+    'team_invitations.store': { paramsTuple: [ParamValue]; params: {'scopeId': ParamValue} }
     'masquerade.start': { paramsTuple?: []; params?: {} }
     'masquerade.stop': { paramsTuple?: []; params?: {} }
   }

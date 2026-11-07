@@ -1,0 +1,16 @@
+{
+  "path": "adonisrc.ts",
+  "base": {
+    "mode": "100644",
+    "blob": "e8055d067f9257f9893fa23eb2711ab54e19aadf"
+  },
+  "ours": {
+    "mode": "100644",
+    "blob": "b3790c7d385a1836fc8773a0b53c10fcda917de8"
+  },
+  "theirs": {
+    "mode": "100644",
+    "blob": "07bdc275f46503e06d585310db83423c5f8a0a4a"
+  },
+  "result": "content"
+}

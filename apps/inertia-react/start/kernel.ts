@@ -44,6 +44,7 @@ router.use([
   () => import('#middleware/silent_auth_middleware'),
   () => import('#middleware/share_masquerade_status_middleware'),
   () => import('#middleware/session_revision_middleware'),
+  () => import('#middleware/initialize_bouncer_middleware'),
 ])
 
 /**
@@ -51,6 +52,7 @@ router.use([
  * the routes or the routes group.
  */
 export const middleware = router.named({
+  scope: () => import('@kevinjohn/adonisjs-access-control/middleware'),
   guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
   verifiedAccount: () => import('#middleware/verified_account_middleware'),

@@ -36,6 +36,22 @@
         "inertia-react": "examples/with_account_kit/inertia_react"
       },
       "exclude": []
+    },
+    {
+      "name": "@kevinjohn/adonisjs-access-control",
+      "repository": "Kevinjohn/oss-adonisjs-access-control",
+      "version": "0.1.3",
+      "buildsOn": "@kevinjohn/adonisjs-account-kit",
+      "builtOn": {
+        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
+        "predecessorVersion": "0.3.1"
+      },
+      "kits": {
+        "api": "examples/with_account_kit/api",
+        "hypermedia": "examples/with_account_kit/hypermedia",
+        "inertia-react": "examples/with_account_kit/inertia_react"
+      },
+      "exclude": []
     }
   ]
 }
