@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { initRepository } from '../../src/git.ts'
 import { commitFolder } from '../../src/tree_commit.ts'
@@ -52,5 +52,24 @@ test.group('tree commits', (group) => {
     process.env.GIT_AUTHOR_DATE = '2020-02-02T00:00:00Z'
 
     assert.equal(commitKit(directory, 'hostile').commit, plain)
+  })
+
+  test('a global attributes file cannot merge a conflict away', ({ assert }) => {
+    mkdirSync(join(directory, 'xdg/git'), { recursive: true })
+    writeFileSync(join(directory, 'xdg/git/attributes'), '* merge=union\n')
+    process.env.XDG_CONFIG_HOME = join(directory, 'xdg')
+    const git = initRepository(join(directory, 'repo'))
+    const commit = (content: string) => {
+      writeFileSync(join(directory, 'repo/routes.ts'), content)
+      git.run(['add', 'routes.ts'])
+      git.run(['commit', '-q', '-m', content])
+    }
+    commit('base\n')
+    git.run(['switch', '-q', '-c', 'theirs'])
+    commit('theirs\n')
+    git.run(['switch', '-q', 'main'])
+    commit('ours\n')
+
+    assert.notEqual(git.run(['merge', '-q', 'theirs'], { allowFailure: true }).code, 0)
   })
 })

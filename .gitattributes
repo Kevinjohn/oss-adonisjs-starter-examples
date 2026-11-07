@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Assembled apps and recorded resolutions keep the exact bytes pnpm assemble and pnpm resolve write
+apps/** -text
+resolutions/** -text

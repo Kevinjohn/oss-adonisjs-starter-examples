@@ -271,7 +271,9 @@ and add --delete <path> for a file that should not exist. Then run pnpm assemble
 4. Delete the pending files.
 5. With `--prune-unused`: run assembly for the kit. If any merge stops or fails, delete nothing
    and exit 1. Otherwise delete each resolution under `resolutions/<kit>/` that no conflict in
-   that run matched, and print each deleted path.
+   that run matched, and print each deleted path. Refuse `--prune-unused` with a `--pending`
+   folder other than `tmp/conflicts`: it merges the released packages, so it would delete
+   resolutions just saved from a `--with-local` run.
 
 Unused resolutions for the selected kits are warnings in `assemble` (with the hint
 `pnpm resolve --kit <kit> --prune-unused`) and errors in `assemble --check`.

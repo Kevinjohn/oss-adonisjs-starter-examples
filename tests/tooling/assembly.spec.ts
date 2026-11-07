@@ -18,7 +18,9 @@ import {
 } from '../../src/assembly.ts'
 import { listFiles } from '../../src/file_tree.ts'
 import { resolvePendingConflicts } from '../../src/resolutions.ts'
-import { pruneUnusedResolutions } from '../../src/resolve_command.ts'
+import { Git } from '../../src/git.ts'
+import { SANDBOX_ROOT } from '../../src/cli.ts'
+import { pruneUnusedResolutions, refusePruneWithLocalPending } from '../../src/resolve_command.ts'
 import { exactly } from '../helpers/exact_message.ts'
 import { fakeRunner } from '../helpers/fake_runner.ts'
 import { ACCOUNT_KIT, SOFT_DELETE, SandboxFixture } from '../helpers/sandbox_fixture.ts'
@@ -169,6 +171,32 @@ test.group('assembly', (group) => {
 
     pruneUnusedResolutions({ ...options(fixture).value, kit: 'api' })
     assert.isTrue(await runAssembly(options(fixture, { mode: 'check' }).value))
+  })
+
+  test('--prune-unused refuses the conflicts of a --with-local run', ({ assert }) => {
+    const local = resolveOutDirectory(fixture.root, join(fixture.root, 'tmp/combined/conflicts'))
+    assert.throws(
+      () => refusePruneWithLocalPending(fixture.root, local),
+      exactly(
+        '--prune-unused merges the released packages, so it would delete the resolutions saved from --pending. Run it without --pending.'
+      )
+    )
+    const released = resolveOutDirectory(fixture.root, join(fixture.root, 'tmp/conflicts'))
+    assert.doesNotThrow(() => refusePruneWithLocalPending(fixture.root, released))
+  })
+
+  test('git stores committed apps and resolutions byte for byte', ({ assert }) => {
+    const attributes = new Git(SANDBOX_ROOT).text([
+      'check-attr',
+      'text',
+      '--',
+      'apps/api/start/routes.ts',
+      'resolutions/api/lucid-soft-delete/start/routes.ts',
+    ])
+    assert.equal(
+      attributes,
+      'apps/api/start/routes.ts: text: unset\nresolutions/api/lucid-soft-delete/start/routes.ts: text: unset'
+    )
   })
 
   test('--out must be inside tmp/, after following symlinks', ({ assert }) => {

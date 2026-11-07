@@ -14,6 +14,7 @@ const ISOLATED_CONFIG = [
   'rerere.enabled=false',
   'core.hooksPath=/dev/null',
   'core.excludesFile=/dev/null',
+  'core.attributesFile=/dev/null',
   'merge.conflictStyle=diff3',
   'init.defaultBranch=main',
   'advice.detachedHead=false',

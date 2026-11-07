@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path'
 import { parseArgs } from 'node:util'
 import { resolveOutDirectory } from '../src/assembly.ts'
-import { pruneUnusedResolutions } from '../src/resolve_command.ts'
+import { pruneUnusedResolutions, refusePruneWithLocalPending } from '../src/resolve_command.ts'
 import { SANDBOX_ROOT, runCli } from '../src/cli.ts'
 import { SandboxError } from '../src/errors.ts'
 import { resolvePendingConflicts } from '../src/resolutions.ts'
@@ -24,8 +24,11 @@ runCli(async () => {
   const config = readSandboxConfig(join(SANDBOX_ROOT, 'config/sandbox.json'))
   if (!config.kits.includes(values.kit as Kit)) throw new SandboxError(`Unknown kit ${values.kit}`)
 
+  const pendingRoot = resolveOutDirectory(SANDBOX_ROOT, values.pending, '--pending')
+  if (values['prune-unused']) refusePruneWithLocalPending(SANDBOX_ROOT, pendingRoot)
+
   const saved = resolvePendingConflicts({
-    pendingRoot: resolveOutDirectory(SANDBOX_ROOT, values.pending, '--pending'),
+    pendingRoot,
     resolutionsRoot: join(SANDBOX_ROOT, 'resolutions'),
     kit: values.kit,
     deletes: values.delete,
