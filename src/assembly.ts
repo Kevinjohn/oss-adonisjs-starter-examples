@@ -5,7 +5,9 @@ import { compareOutput } from './compare.ts'
 import { SandboxError } from './errors.ts'
 import { writeFileWithMode } from './file_tree.ts'
 import { type Git, initRepository } from './git.ts'
+import { runtimePeerMismatches } from './archive_manifest.ts'
 import { type Lineage, buildLineage } from './lineage.ts'
+import { type MainPackage, buildMainPackages } from './main_packages.ts'
 import { mergeLineage } from './merge.ts'
 import { normaliseApp, renderAppReadme } from './normalise.ts'
 import { regenerateApp } from './regenerate.ts'
@@ -16,6 +18,7 @@ import {
   type PackageSource,
   type RemoteUrlFor,
   RepositoryCache,
+  committedPackageSource,
   localPackageSource,
   readBaseKit,
   taggedPackageSource,
@@ -33,8 +36,11 @@ export interface AssemblyOptions {
   root: string
   config: SandboxConfig
   kits: Kit[]
-  mode: 'assemble' | 'check'
+  /** `main` combines every package's `main` branch into `out` (specification 6.9). */
+  mode: 'assemble' | 'check' | 'main'
   local?: LocalPackage
+  /** Absolute output folder inside the sandbox's `tmp/`, for main mode. */
+  out?: string
   remoteUrlFor: RemoteUrlFor
   runner: CommandRunner
   log: (line: string) => void
@@ -92,13 +98,16 @@ export function mergeKit(options: {
   work: string
   remoteUrlFor: RemoteUrlFor
   local?: { root: string; name: string; pendingRoot: string }
+  main?: { packages: MainPackage[]; pendingRoot: string }
 }): { context: KitContext; lineage: Lineage; outcome: ReturnType<typeof mergeLineage> } {
   const { root, config, kit, work } = options
   const git = initRepository(join(work, 'repo'))
-  const pendingRoot = options.local?.pendingRoot ?? join(root, 'tmp', 'conflicts')
-  const resolveCommand = options.local
-    ? `pnpm resolve --kit ${kit} --pending ${relative(root, pendingRoot)}`
-    : `pnpm resolve --kit ${kit}`
+  const pendingRoot =
+    options.local?.pendingRoot ?? options.main?.pendingRoot ?? join(root, 'tmp', 'conflicts')
+  const resolveCommand =
+    options.local || options.main
+      ? `pnpm resolve --kit ${kit} --pending ${relative(root, pendingRoot)}`
+      : `pnpm resolve --kit ${kit}`
   rmSync(join(pendingRoot, kit), { recursive: true, force: true })
 
   const cache = new RepositoryCache(join(root, 'tmp', 'cache', 'repos'), options.remoteUrlFor)
@@ -123,6 +132,12 @@ export function mergeKit(options: {
     readBase: (destination) => readBaseKit(cache, config.base, kit, destination),
     sourceFor,
     labelFor: (pkg) => labelFor(pkg, options.local?.name),
+    mainSourceFor: options.main
+      ? (pkg) => {
+          const built = options.main!.packages.find((entry) => entry.pkg.name === pkg.name)!
+          return committedPackageSource(cache, pkg.repository, built.commit)
+        }
+      : undefined,
   })
   const store = new ResolutionStore(join(root, 'resolutions'), kit)
   const outcome = mergeLineage({
@@ -165,7 +180,8 @@ async function packLocalPackage(options: AssemblyOptions, name: string): Promise
 async function assembleKit(
   options: AssemblyOptions,
   kit: Kit,
-  local: { name: string; archive: string } | undefined
+  local: { name: string; archive: string } | undefined,
+  main: MainPackage[] | undefined
 ): Promise<boolean> {
   const { root, config, log } = options
   const work = createWorkDirectory(root, kit)
@@ -184,6 +200,7 @@ async function assembleKit(
               pendingRoot: join(options.local.out, 'conflicts'),
             }
           : undefined,
+      main: main ? { packages: main, pendingRoot: join(options.out!, 'conflicts') } : undefined,
     })
     if (!outcome.ok) {
       log(outcome.report)
@@ -191,15 +208,19 @@ async function assembleKit(
     }
 
     const { git } = context
+    const mainOf = (name: string) => main?.find((entry) => entry.pkg.name === name)
     const specifiers = new Map<string, string>()
     for (const entry of lineage.entries) {
       specifiers.set(
         entry.pkg.name,
-        entry.pkg.name === local?.name
+        entry.pkg.name === local?.name || main
           ? `file:vendor/${unversionedAssetName(entry.pkg.name)}`
           : releaseAssetUrl(entry.pkg.repository, entry.pkg.name, entry.pkg.version)
       )
     }
+    const shown = main
+      ? lineage.entries.filter((entry) => entry.label.endsWith('@main'))
+      : lineage.entries
     const template = readFileSync(join(root, 'templates', 'app_readme.md'), 'utf8')
     normaliseApp({
       appDirectory: git.cwd,
@@ -209,11 +230,18 @@ async function assembleKit(
       readme: renderAppReadme(template, {
         kit,
         baseCommit: config.base.commit,
-        packages: lineage.entries.map((entry) => ({
-          name: entry.pkg.name,
-          version: entry.pkg.name === local?.name ? 'local' : entry.pkg.version,
-          url: `https://github.com/${entry.pkg.repository}/tree/v${entry.pkg.version}/${entry.pkg.kits[kit]}`,
-        })),
+        packages: shown.map((entry) => {
+          const commit = mainOf(entry.pkg.name)?.commit
+          return {
+            name: entry.pkg.name,
+            version: commit
+              ? `main ${commit.slice(0, 12)}`
+              : entry.pkg.name === local?.name
+                ? 'local'
+                : entry.pkg.version,
+            url: `https://github.com/${entry.pkg.repository}/tree/${commit ?? `v${entry.pkg.version}`}/${entry.pkg.kits[kit]}`,
+          }
+        }),
       }),
     })
     git.run(['add', '-A', '-f'])
@@ -242,11 +270,18 @@ async function assembleKit(
       kit,
       directory: join(context.work, 'app'),
       seedLockfile,
-      vendorArchive: local
-        ? { source: local.archive, fileName: unversionedAssetName(local.name) }
-        : undefined,
+      vendorArchives: main
+        ? lineage.entries
+            .filter((entry) => entry.label.endsWith('@main'))
+            .map((entry) => ({
+              source: mainOf(entry.pkg.name)!.archive,
+              fileName: unversionedAssetName(entry.pkg.name),
+            }))
+        : local
+          ? [{ source: local.archive, fileName: unversionedAssetName(local.name) }]
+          : [],
       frozenLockfile: options.mode === 'check',
-      includeVendor: local !== undefined,
+      includeVendor: local !== undefined || main !== undefined,
       runner: options.runner,
       env: constructedEnvironment(),
       log,
@@ -262,7 +297,11 @@ async function assembleKit(
       return ok
     }
 
-    const target = options.local ? join(options.local.out, kit) : join(root, 'apps', kit)
+    const target = options.local
+      ? join(options.local.out, kit)
+      : main
+        ? join(options.out!, kit)
+        : join(root, 'apps', kit)
     rmSync(target, { recursive: true, force: true })
     for (const file of regenerated.files)
       writeFileWithMode(join(target, file.path), file.bytes, file.executable)
@@ -287,11 +326,44 @@ export async function runAssembly(options: AssemblyOptions): Promise<boolean> {
     local = { name: manifest.name, archive: await packLocalPackage(options, manifest.name) }
   }
 
+  let main: MainPackage[] | undefined
+  let packagesWork: string | undefined
+  let ok = true
+  if (options.mode === 'main') {
+    packagesWork = createWorkDirectory(options.root, 'main-packages')
+    try {
+      main = await buildMainPackages({
+        config: options.config,
+        cache: new RepositoryCache(
+          join(options.root, 'tmp', 'cache', 'repos'),
+          options.remoteUrlFor
+        ),
+        remoteUrlFor: options.remoteUrlFor,
+        work: packagesWork,
+        runner: options.runner,
+        log: options.log,
+      })
+    } catch (error) {
+      rmSync(packagesWork, { recursive: true, force: true })
+      throw error
+    }
+    // Reported apart from merge failures; the merge still runs (rule 5).
+    for (const mismatch of runtimePeerMismatches(
+      main.map(({ manifest }) => ({
+        name: manifest.name,
+        version: manifest.version,
+        peerDependencies: manifest.peerDependencies ?? {},
+      }))
+    )) {
+      options.log(mismatch)
+      ok = false
+    }
+  }
+
   try {
-    let ok = true
     for (const kit of options.kits) {
       try {
-        if (!(await assembleKit(options, kit, local))) ok = false
+        if (!(await assembleKit(options, kit, local, main))) ok = false
       } catch (error) {
         if (!(error instanceof SandboxError)) throw error
         options.log(`${kit}: ${error.message}`)
@@ -301,5 +373,6 @@ export async function runAssembly(options: AssemblyOptions): Promise<boolean> {
     return ok
   } finally {
     if (local) rmSync(dirname(local.archive), { recursive: true, force: true })
+    if (packagesWork) rmSync(packagesWork, { recursive: true, force: true })
   }
 }

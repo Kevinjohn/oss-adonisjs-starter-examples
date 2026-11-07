@@ -9,6 +9,7 @@ import {
   type SandboxConfig,
   packagesForKit,
 } from './sandbox_config.ts'
+import { shortName } from './release_assets.ts'
 import { commitFolder } from './tree_commit.ts'
 import { filterTree } from './tree_filter.ts'
 import type { PackageSource } from './tree_source.ts'
@@ -35,6 +36,12 @@ export interface LineageOptions {
   readBase: (destination: string) => void
   sourceFor: (pkg: PackageConfig) => PackageSource
   labelFor: (pkg: PackageConfig) => string
+  /**
+   * Main mode: each package's `main`. Its node sits on the package's released node when another
+   * package builds on it, otherwise on the predecessor's released node (rule 2). The D10 peer
+   * check is skipped (rule 3).
+   */
+  mainSourceFor?: (pkg: PackageConfig) => PackageSource
 }
 
 function readManifest(source: PackageSource): Record<string, any> {
@@ -46,11 +53,16 @@ function readManifest(source: PackageSource): Record<string, any> {
 /**
  * Checks the fetched package against the config (specification 5.1 and 6.3 lineage step 3.1).
  */
-function checkManifest(config: SandboxConfig, pkg: PackageConfig, source: PackageSource): void {
+function checkManifest(
+  config: SandboxConfig,
+  pkg: PackageConfig,
+  source: PackageSource,
+  checkPeer: boolean
+): void {
   const manifest = readManifest(source)
   if (manifest.name !== pkg.name)
     throw new SandboxError(`${source.description} is ${manifest.name}`)
-  if (pkg.buildsOn === null) return
+  if (pkg.buildsOn === null || !checkPeer) return
   const predecessor = config.packages.find((entry) => entry.name === pkg.buildsOn)!
   const range = manifest.peerDependencies?.[pkg.buildsOn]
   if (range !== predecessor.version) {
@@ -78,12 +90,11 @@ export function buildLineage(options: LineageOptions): Lineage {
   filterTree(baseFolder, `${config.base.repository}@${config.base.commit}:${kit}`)
   const base = commitFolder(git, baseFolder, { parent: null, message: 'base', branch: 'base' })
 
+  const packages = packagesForKit(config, kit)
   const entries: LineageEntry[] = []
-  for (const pkg of packagesForKit(config, kit)) {
-    const label = options.labelFor(pkg)
-    const source = options.sourceFor(pkg)
-    checkManifest(config, pkg, source)
-
+  const released = new Map<string, string>()
+  const addNode = (pkg: PackageConfig, source: PackageSource, label: string, parent: string) => {
+    checkManifest(config, pkg, source, options.mainSourceFor === undefined)
     const kitPath = pkg.kits[kit]!
     const folder = freshFolder(label)
     if (!source.hasFolder(kitPath)) {
@@ -95,13 +106,24 @@ export function buildLineage(options: LineageOptions): Lineage {
     }
     filterTree(folder, `${source.description} ${kitPath}`, pkg.exclude)
 
-    const parent =
-      pkg.buildsOn === null
-        ? base
-        : entries.find((entry) => entry.pkg.name === pkg.buildsOn)!.commit
     const commit = commitFolder(git, folder, { parent, message: label, branch: label })
     checkMigrationOrder(git, { packageName: pkg.name, kit, parent, commit })
     entries.push({ pkg, label, commit, source })
+    return commit
+  }
+
+  for (const pkg of packages) {
+    const parent = pkg.buildsOn === null ? base : released.get(pkg.buildsOn)!
+    if (!options.mainSourceFor) {
+      released.set(pkg.name, addNode(pkg, options.sourceFor(pkg), options.labelFor(pkg), parent))
+      continue
+    }
+    let mainParent = parent
+    if (packages.some((other) => other.buildsOn === pkg.name)) {
+      mainParent = addNode(pkg, options.sourceFor(pkg), options.labelFor(pkg), parent)
+      released.set(pkg.name, mainParent)
+    }
+    addNode(pkg, options.mainSourceFor(pkg), `${shortName(pkg.name)}@main`, mainParent)
   }
   return { base, entries }
 }

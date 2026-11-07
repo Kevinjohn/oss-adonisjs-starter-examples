@@ -38,6 +38,14 @@ export class RepositoryCache {
     return git
   }
 
+  /** The commit the repository's `main` branch points to now (main mode, rule 1). */
+  mainCommit(repository: string): string {
+    const line = this.repository(repository).text(['ls-remote', 'origin', 'refs/heads/main'])
+    const commit = line.split('\t')[0]
+    if (!/^[0-9a-f]{40}$/.test(commit)) throw new SandboxError(`${repository} has no main branch`)
+    return commit
+  }
+
   /** The bare clone with the commit present. */
   withCommit(repository: string, commit: string): Git {
     const git = this.repository(repository)
@@ -91,26 +99,43 @@ export function readBaseKit(
   extractArchive(git, `${base.commit}:${kit}`, destination)
 }
 
+/** Reads a package's files at one revision of its bare clone. */
+function packageSourceAt(git: Git, revision: string, description: string): PackageSource {
+  return {
+    description,
+    readFile(path) {
+      if (!git.succeeds(['cat-file', '-e', `${revision}:${path}`])) return null
+      return git.run(['show', `${revision}:${path}`]).stdout
+    },
+    copyFolder(path, destination) {
+      extractArchive(git, `${revision}:${path}`, destination)
+    },
+    hasFolder(path) {
+      return git.text(['cat-file', '-t', `${revision}:${path}`], { allowFailure: true }) === 'tree'
+    },
+  }
+}
+
 export function taggedPackageSource(
   cache: RepositoryCache,
   repository: string,
   version: string
 ): PackageSource {
-  const git = cache.withTag(repository, version)
   const tag = `v${version}`
-  return {
-    description: `${repository}@${tag}`,
-    readFile(path) {
-      if (!git.succeeds(['cat-file', '-e', `${tag}:${path}`])) return null
-      return git.run(['show', `${tag}:${path}`]).stdout
-    },
-    copyFolder(path, destination) {
-      extractArchive(git, `${tag}:${path}`, destination)
-    },
-    hasFolder(path) {
-      return git.text(['cat-file', '-t', `${tag}:${path}`], { allowFailure: true }) === 'tree'
-    },
-  }
+  return packageSourceAt(cache.withTag(repository, version), tag, `${repository}@${tag}`)
+}
+
+/** A package at one commit, such as the commit its `main` pointed to (main mode). */
+export function committedPackageSource(
+  cache: RepositoryCache,
+  repository: string,
+  commit: string
+): PackageSource {
+  return packageSourceAt(
+    cache.withCommit(repository, commit),
+    commit,
+    `${repository}@${commit.slice(0, 12)}`
+  )
 }
 
 /**
