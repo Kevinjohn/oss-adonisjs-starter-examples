@@ -71,7 +71,7 @@
     "@kevinjohn/adonisjs-access-control": "https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.1.5/kevinjohn-adonisjs-access-control-0.1.5.tgz",
     "@kevinjohn/adonisjs-account-kit": "https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.3.2/kevinjohn-adonisjs-account-kit-0.3.2.tgz",
     "@kevinjohn/adonisjs-lucid-soft-delete": "https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/releases/download/v0.1.7/kevinjohn-adonisjs-lucid-soft-delete-0.1.7.tgz",
-    "@kevinjohn/adonisjs-masquerade": "https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.2.5/kevinjohn-adonisjs-masquerade-0.2.5.tgz",
+    "@kevinjohn/adonisjs-masquerade": "https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.2.6/kevinjohn-adonisjs-masquerade-0.2.6.tgz",
     "@vinejs/vine": "^4.4.0",
     "better-sqlite3": "^13.0.3",
     "edge-iconify": "^2.0.2",

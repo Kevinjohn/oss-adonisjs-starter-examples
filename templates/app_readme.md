@@ -30,12 +30,12 @@ node ace db:seed
 Every demo account uses the password `DemoPassword123!` and has a verified email. Running the
 seeder again skips accounts that exist.
 
-| Account                   | Email                                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Masquerade operator       | First address in `MASQUERADE_OPERATOR_EMAILS`: `operator@example.test` for API, `operator@example.com` for browser kits |
-| Soft-delete administrator | First address in `SOFT_DELETE_ADMIN_EMAILS` (default: `admin@example.com`)                                              |
-| Alice, team owner         | `alice@example.com`                                                                                                     |
-| Bob, team viewer          | `bob@example.com`                                                                                                       |
+| Account                   | Email                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Masquerade operator       | First address in `MASQUERADE_OPERATOR_EMAILS` (default: `operator@example.com`) |
+| Soft-delete administrator | First address in `SOFT_DELETE_ADMIN_EMAILS` (default: `admin@example.com`)      |
+| Alice, team owner         | `alice@example.com`                                                             |
+| Bob, team viewer          | `bob@example.com`                                                               |
 
 Alice owns **Demo team**, with Bob as a viewer.
 

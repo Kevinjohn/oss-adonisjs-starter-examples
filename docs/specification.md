@@ -43,7 +43,7 @@ Current releases and API examples:
 | Package        | Version | API example                     |
 | -------------- | ------- | ------------------------------- |
 | Account Kit    | 0.3.2   | `examples/api`                  |
-| Masquerade     | 0.2.5   | `examples/with_account_kit/api` |
+| Masquerade     | 0.2.6   | `examples/with_account_kit/api` |
 | Access Control | 0.1.5   | `examples/with_account_kit/api` |
 | Soft Delete    | 0.1.7   | `examples/starter/api`          |
 

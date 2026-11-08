@@ -9,7 +9,7 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 | Package                                 | Version | Example                                                                                                       |
 | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `@kevinjohn/adonisjs-account-kit`       | 0.3.2   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.2/examples/api)                     |
-| `@kevinjohn/adonisjs-masquerade`        | 0.2.5   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.5/examples/with_account_kit/api)     |
+| `@kevinjohn/adonisjs-masquerade`        | 0.2.6   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.6/examples/with_account_kit/api)     |
 | `@kevinjohn/adonisjs-access-control`    | 0.1.5   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.5/examples/with_account_kit/api) |
 | `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.7   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.7/examples/starter/api)       |
 
@@ -35,12 +35,12 @@ node ace db:seed
 Every demo account uses the password `DemoPassword123!` and has a verified email. Running the
 seeder again skips accounts that exist.
 
-| Account                   | Email                                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Masquerade operator       | First address in `MASQUERADE_OPERATOR_EMAILS`: `operator@example.test` for API, `operator@example.com` for browser kits |
-| Soft-delete administrator | First address in `SOFT_DELETE_ADMIN_EMAILS` (default: `admin@example.com`)                                              |
-| Alice, team owner         | `alice@example.com`                                                                                                     |
-| Bob, team viewer          | `bob@example.com`                                                                                                       |
+| Account                   | Email                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Masquerade operator       | First address in `MASQUERADE_OPERATOR_EMAILS` (default: `operator@example.com`) |
+| Soft-delete administrator | First address in `SOFT_DELETE_ADMIN_EMAILS` (default: `admin@example.com`)      |
+| Alice, team owner         | `alice@example.com`                                                             |
+| Bob, team viewer          | `bob@example.com`                                                               |
 
 Alice owns **Demo team**, with Bob as a viewer.
 
