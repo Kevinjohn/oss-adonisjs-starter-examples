@@ -392,6 +392,13 @@ package CI.
 - Example trees come from the local working copy (6.2); peer and name checks use the local
   `package.json`; D10 version checks for this package use its local peer, and its `builtOn` in the
   config must still match.
+- Peer ahead: when the local peer on `buildsOn` is an exact release (`x.y.z`) newer than the
+  sandbox version of `buildsOn`, nothing can be combined until the sandbox moves (16.5). Before
+  packing, for each kit, replace `<dir>/<kit>/` with a single `.peer-ahead` file holding
+  `<P> peers on <D> <peer>; the sandbox uses <D>@<w>. Skipped: the sandbox pull request that moves
+<D> to <peer> combines this change (16.5).`, print it (also as a `::notice::` line under GitHub
+  Actions) and exit 0. `pnpm test:app` prints the file and exits 0 when the kit folder holds it and
+  no `package.json`. Any other peer still fails the lineage check (6.3).
 - Runtime is the local code, packed once per run: `pnpm --dir <root> build`, then
   `pnpm --dir <root> pack --out <absolute tmp path>/<asset without -<version>>.tgz`. For each kit,
   copy that archive into `<T>/vendor/` before install and set this package's `@kevinjohn/*`

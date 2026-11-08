@@ -7,6 +7,7 @@ import {
   constructedEnvironment,
 } from './command_runner.ts'
 import { SandboxError } from './errors.ts'
+import { PEER_AHEAD_FILE } from './peer_ahead.ts'
 import { requireOwnWorkspace } from './regenerate.ts'
 import { SUPPORTED_KITS } from './sandbox_config.ts'
 
@@ -55,6 +56,11 @@ export async function testApp(options: AppTestOptions): Promise<void> {
     throw new SandboxError(`Unknown kit ${options.kit}`)
   }
   const source = resolve(options.root, options.directory, options.kit)
+  const peerAhead = join(source, PEER_AHEAD_FILE)
+  if (existsSync(peerAhead) && !existsSync(join(source, 'package.json'))) {
+    options.log(readFileSync(peerAhead, 'utf8').trimEnd())
+    return
+  }
   if (!existsSync(join(source, 'package.json'))) throw new SandboxError(`No app at ${source}`)
   const app = join(options.root, 'tmp', 'test-app', options.kit)
   rmSync(app, { recursive: true, force: true })

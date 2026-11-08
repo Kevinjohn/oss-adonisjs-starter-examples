@@ -23,7 +23,7 @@ import { SANDBOX_ROOT } from '../../src/cli.ts'
 import { pruneUnusedResolutions, refusePruneWithLocalPending } from '../../src/resolve_command.ts'
 import { exactly } from '../helpers/exact_message.ts'
 import { fakeRunner } from '../helpers/fake_runner.ts'
-import { ACCOUNT_KIT, SOFT_DELETE, SandboxFixture } from '../helpers/sandbox_fixture.ts'
+import { ACCOUNT_KIT, MASQUERADE, SOFT_DELETE, SandboxFixture } from '../helpers/sandbox_fixture.ts'
 
 const ROUTES =
   "import router from '@adonisjs/core/services/router'\n\nrouter.get('/', () => 'ok')\n"
@@ -354,6 +354,46 @@ test.group('assembly', (group) => {
         ),
       exactly('Add @kevinjohn/adonisjs-other to config/sandbox.json in the sandbox first')
     )
+  })
+
+  test('--with-local skips a package that peers on a newer release than the sandbox', async ({
+    assert,
+  }) => {
+    publishAccountKit(fixture)
+    fixture.publish({
+      name: MASQUERADE,
+      version: '0.2.6',
+      buildsOn: ACCOUNT_KIT,
+      changes: () => ({}),
+    })
+    const localRoot = fixture.world.workPath('Kevinjohn/oss-adonisjs-masquerade')
+    const writePeer = (peer: string) =>
+      writeFileSync(
+        join(localRoot, 'package.json'),
+        `${JSON.stringify({ name: MASQUERADE, version: '0.2.6', peerDependencies: { [ACCOUNT_KIT]: peer } })}\n`
+      )
+    const out = join(fixture.root, 'tmp/combined')
+    mkdirSync(join(out, 'api'), { recursive: true })
+    writeFileSync(join(out, 'api/package.json'), '{}\n')
+
+    writePeer('0.3.2')
+    const ahead = options(fixture, { local: { root: localRoot, out } })
+    assert.isTrue(await runAssembly(ahead.value), ahead.logged.join('\n'))
+    const note = `${MASQUERADE} peers on ${ACCOUNT_KIT} 0.3.2; the sandbox uses ${ACCOUNT_KIT}@0.3.1. Skipped: the sandbox pull request that moves ${ACCOUNT_KIT} to 0.3.2 combines this change (16.5).`
+    assert.include(ahead.logged, `api: ${note}`)
+    assert.deepEqual(ahead.fake.calls, [])
+    assert.deepEqual(readdirSync(join(out, 'api')), ['.peer-ahead'])
+    assert.equal(readFileSync(join(out, 'api/.peer-ahead'), 'utf8'), `${note}\n`)
+
+    for (const peer of ['0.3.0', '^0.3.2', '0.3.2-next.1']) {
+      writePeer(peer)
+      const other = options(fixture, { local: { root: localRoot, out } })
+      assert.isFalse(await runAssembly(other.value), peer)
+      assert.include(
+        other.logged,
+        `api: ${MASQUERADE}@0.2.6 peers on ${ACCOUNT_KIT} ${peer}; the sandbox uses ${ACCOUNT_KIT}@0.3.1`
+      )
+    }
   })
 
   test('--out works before tmp/ exists', ({ assert }) => {
