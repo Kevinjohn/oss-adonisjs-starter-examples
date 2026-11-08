@@ -43,11 +43,11 @@ Current releases and API examples:
 | Package        | Version | API example                     |
 | -------------- | ------- | ------------------------------- |
 | Account Kit    | 0.3.2   | `examples/api`                  |
-| Masquerade     | 0.2.4   | `examples/with_account_kit/api` |
-| Access Control | 0.1.4   | `examples/with_account_kit/api` |
-| Soft Delete    | 0.1.6   | `examples/starter/api`          |
+| Masquerade     | 0.2.5   | `examples/with_account_kit/api` |
+| Access Control | 0.1.5   | `examples/with_account_kit/api` |
+| Soft Delete    | 0.1.7   | `examples/starter/api`          |
 
-The API kit combines all four packages. The Inertia Vue kit remains Account Kit only.
+Every kit combines all four packages.
 
 `builtOn` records what the example at `version` was copied from. Change it only in the same PR
 that moves `version` to a release whose examples were re-copied or rebased onto the new
