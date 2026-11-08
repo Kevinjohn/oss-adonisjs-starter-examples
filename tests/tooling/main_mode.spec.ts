@@ -147,6 +147,63 @@ test.group('main mode', (group) => {
     assert.isFalse(existsSync(join(fixture.root, 'apps')))
   })
 
+  test('main Vue output includes only packages that provide a Vue example', async ({ assert }) => {
+    fixture.cleanup()
+    fixture = new SandboxFixture(['api', 'inertia-vue'])
+    fixture.publish({
+      name: ACCOUNT_KIT,
+      version: '0.3.1',
+      changes: () => ({
+        'package.json': JSON.stringify({ dependencies: { [ACCOUNT_KIT]: 'local' } }),
+        '.env.example': 'APP_KEY=\n',
+      }),
+    })
+    fixture.publish({
+      name: MASQUERADE,
+      version: '0.2.2',
+      buildsOn: ACCOUNT_KIT,
+      kits: ['api'],
+      changes: () => ({ 'app/masquerade.ts': 'export {}\n' }),
+    })
+    for (const repository of [ACCOUNT_KIT_REPO, MASQUERADE_REPO]) {
+      fixture.world.workRepository(repository).run(['checkout', '-q', '-B', 'main'])
+      fixture.world.commit(repository, {}, 'main')
+    }
+    fixture.world.commit(ACCOUNT_KIT_REPO, {
+      'package.json': JSON.stringify({ name: ACCOUNT_KIT, version: '0.3.2' }),
+      'examples/inertia-vue/app/main_only.ts': 'export {}\n',
+    })
+    const { runner, calls } = packingRunner()
+    const run = options(fixture, runner)
+    run.value.kits = ['inertia-vue']
+    assert.isTrue(await runAssembly(run.value), run.logged.join('\n'))
+    assert.lengthOf(
+      calls.filter((call) => call.args[0] === 'build'),
+      1
+    )
+    assert.isFalse(run.logged.some((line) => line.startsWith(`main ${MASQUERADE} `)))
+    const app = join(fixture.root, 'tmp/apps-main/inertia-vue')
+    assert.isTrue(existsSync(join(app, 'app/main_only.ts')))
+    assert.isFalse(existsSync(join(app, 'app/masquerade.ts')))
+    assert.deepEqual(readdirSync(join(app, 'vendor')), ['kevinjohn-adonisjs-account-kit.tgz'])
+    const manifest = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
+    assert.deepEqual(manifest.dependencies, {
+      [ACCOUNT_KIT]: 'file:vendor/kevinjohn-adonisjs-account-kit.tgz',
+    })
+    const readme = readFileSync(join(app, 'README.md'), 'utf8')
+    assert.include(readme, '/examples/inertia-vue)')
+    assert.notInclude(readme, MASQUERADE)
+
+    const combined = options(fixture, packingRunner().runner)
+    combined.value.kits = ['api', 'inertia-vue']
+    assert.isFalse(await runAssembly(combined.value))
+    assert.include(
+      combined.logged,
+      `runtime peer mismatch: ${MASQUERADE}@0.2.2 peers on ${ACCOUNT_KIT} 0.3.1; main packs ${ACCOUNT_KIT}@0.3.2`
+    )
+    assert.isTrue(existsSync(join(fixture.root, 'tmp/apps-main/api/app/masquerade.ts')))
+  })
+
   test('skips the sandbox peer check and reports a runtime peer mismatch apart', async ({
     assert,
   }) => {

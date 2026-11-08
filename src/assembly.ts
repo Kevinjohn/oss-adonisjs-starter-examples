@@ -277,7 +277,7 @@ async function assembleKit(
               source: mainOf(entry.pkg.name)!.archive,
               fileName: unversionedAssetName(entry.pkg.name),
             }))
-        : local
+        : local && lineage.entries.some((entry) => entry.pkg.name === local.name)
           ? [{ source: local.archive, fileName: unversionedAssetName(local.name) }]
           : [],
       frozenLockfile: options.mode === 'check',
@@ -333,7 +333,12 @@ export async function runAssembly(options: AssemblyOptions): Promise<boolean> {
     packagesWork = createWorkDirectory(options.root, 'main-packages')
     try {
       main = await buildMainPackages({
-        config: options.config,
+        config: {
+          ...options.config,
+          packages: options.config.packages.filter((pkg) =>
+            options.kits.some((kit) => pkg.kits[kit] !== undefined)
+          ),
+        },
         cache: new RepositoryCache(
           join(options.root, 'tmp', 'cache', 'repos'),
           options.remoteUrlFor

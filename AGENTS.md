@@ -30,6 +30,9 @@ Node 24 (`.nvmrc`) and pnpm 11.23.0 (`packageManager`) for every command. Run `n
 
 ## Layout
 
+The supported kits are `api`, `hypermedia`, `inertia-react` and `inertia-vue`. The Inertia Vue
+example is currently provided by Account Kit only.
+
 ```
 config/sandbox.json            packages, versions, kit folders, provenance
 templates/app_readme.md        README written into each assembled app

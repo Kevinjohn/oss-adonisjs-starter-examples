@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { SandboxError } from './errors.ts'
 
-export const SUPPORTED_KITS = ['api', 'hypermedia', 'inertia-react'] as const
+export const SUPPORTED_KITS = ['api', 'hypermedia', 'inertia-react', 'inertia-vue'] as const
 export type Kit = (typeof SUPPORTED_KITS)[number]
 
 export interface PackageConfig {

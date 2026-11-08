@@ -7,9 +7,14 @@ import { exactly } from '../helpers/exact_message.ts'
 import { fakeRunner } from '../helpers/fake_runner.ts'
 import { FixtureWorld, kitFiles, writeFiles } from '../helpers/fixture_repos.ts'
 
-function writeApp(root: string, devDependencies: Record<string, string> = {}, extra = {}) {
-  writeFiles(join(root, 'apps/inertia-react'), {
-    ...kitFiles('inertia-react'),
+function writeApp(
+  root: string,
+  devDependencies: Record<string, string> = {},
+  extra = {},
+  kit = 'inertia-react'
+) {
+  writeFiles(join(root, 'apps', kit), {
+    ...kitFiles(kit),
     'package.json': `${JSON.stringify(
       {
         name: 'app',
@@ -38,47 +43,49 @@ test.group('test:app', (group) => {
     return () => world.cleanup()
   })
 
-  test('runs the sequence in a copy and deletes it', async ({ assert }) => {
-    writeApp(world.sandboxRoot, { '@japa/browser-client': '^2.0.0' })
-    const source = join(world.sandboxRoot, 'apps/inertia-react')
-    const before = snapshot(source)
-    const fake = fakeRunner()
-    const waited: string[] = []
+  for (const kit of ['inertia-react', 'inertia-vue']) {
+    test(`runs the ${kit} browser sequence in a copy and deletes it`, async ({ assert }) => {
+      writeApp(world.sandboxRoot, { '@japa/browser-client': '^2.0.0' }, {}, kit)
+      const source = join(world.sandboxRoot, 'apps', kit)
+      const before = snapshot(source)
+      const fake = fakeRunner()
+      const waited: string[] = []
 
-    await testApp({
-      root: world.sandboxRoot,
-      kit: 'inertia-react',
-      directory: 'apps',
-      installBrowsers: true,
-      runner: fake.runner,
-      waitForUrl: async (url) => {
-        waited.push(url)
-      },
-      playwrightCli: (app) => join(app, 'playwright/cli.js'),
-      log: () => {},
+      await testApp({
+        root: world.sandboxRoot,
+        kit,
+        directory: 'apps',
+        installBrowsers: true,
+        runner: fake.runner,
+        waitForUrl: async (url) => {
+          waited.push(url)
+        },
+        playwrightCli: (app) => join(app, 'playwright/cli.js'),
+        log: () => {},
+      })
+
+      const app = join(world.sandboxRoot, 'tmp/test-app', kit)
+      assert.deepEqual(
+        fake.calls.map((call) => [call.command, ...call.args].join(' ')),
+        [
+          'pnpm install --frozen-lockfile',
+          'pnpm exec node ace generate:key --force',
+          'pnpm exec node ace codegen',
+          'pnpm exec node ace migration:run --force',
+          'pnpm lint',
+          'pnpm build',
+          `node ${join(app, 'playwright/cli.js')} install --with-deps chromium`,
+          'pnpm test',
+        ]
+      )
+      assert.isTrue(fake.calls.every((call) => call.cwd === app))
+      assert.deepEqual(fake.started, ['pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort'])
+      assert.deepEqual(fake.stopped, fake.started)
+      assert.deepEqual(waited, ['http://127.0.0.1:5173/@vite/client'])
+      assert.isFalse(existsSync(app))
+      assert.equal(snapshot(source), before)
     })
-
-    const app = join(world.sandboxRoot, 'tmp/test-app/inertia-react')
-    assert.deepEqual(
-      fake.calls.map((call) => [call.command, ...call.args].join(' ')),
-      [
-        'pnpm install --frozen-lockfile',
-        'pnpm exec node ace generate:key --force',
-        'pnpm exec node ace codegen',
-        'pnpm exec node ace migration:run --force',
-        'pnpm lint',
-        'pnpm build',
-        `node ${join(app, 'playwright/cli.js')} install --with-deps chromium`,
-        'pnpm test',
-      ]
-    )
-    assert.isTrue(fake.calls.every((call) => call.cwd === app))
-    assert.deepEqual(fake.started, ['pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort'])
-    assert.deepEqual(fake.stopped, fake.started)
-    assert.deepEqual(waited, ['http://127.0.0.1:5173/@vite/client'])
-    assert.isFalse(existsSync(app))
-    assert.equal(snapshot(source), before)
-  })
+  }
 
   test('installs without a frozen lockfile when the app has vendor/', async ({ assert }) => {
     writeApp(world.sandboxRoot, {}, { 'vendor/kevinjohn-adonisjs-account-kit.tgz': 'archive' })

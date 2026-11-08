@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        kit: [api, hypermedia, inertia-react]
+        kit: [api, hypermedia, inertia-react, inertia-vue]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

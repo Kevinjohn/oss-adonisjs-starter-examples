@@ -29,6 +29,15 @@ test.group('sandbox config validation', () => {
     assert.equal(validateSandboxConfig(config()).packages.length, 2)
   })
 
+  test('accepts inertia-vue when only Account Kit provides it', ({ assert }) => {
+    const value = config()
+    value.kits.push('inertia-vue')
+    value.packages[0].kits['inertia-vue'] = 'examples/inertia-vue'
+    const validated = validateSandboxConfig(value)
+    assert.equal(validated.packages[0].kits['inertia-vue'], 'examples/inertia-vue')
+    assert.isUndefined(validated.packages[1].kits['inertia-vue'])
+  })
+
   const cases: Array<[string, (value: any) => void, string]> = [
     ['schemaVersion', (v) => (v.schemaVersion = 2), 'Unsupported schemaVersion 2'],
     ['base repository', (v) => (v.base.repository = 'someone/kits'), 'Invalid base'],
@@ -36,7 +45,7 @@ test.group('sandbox config validation', () => {
     ['builtOn base format', (v) => (v.packages[0].builtOn.base = 'short'), 'Invalid base'],
     ['empty kits', (v) => (v.kits = []), 'Invalid kits'],
     ['duplicate kits', (v) => (v.kits = ['api', 'api']), 'Invalid kits'],
-    ['unknown kit', (v) => (v.kits = ['api', 'inertia-vue']), 'Invalid kits'],
+    ['unknown kit', (v) => (v.kits = ['api', 'api-monorepo']), 'Invalid kits'],
     ['no packages', (v) => (v.packages = []), 'Invalid package name (no packages)'],
     [
       'name prefix',

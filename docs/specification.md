@@ -1,12 +1,12 @@
 # Assembly specification
 
-Sections 5 and 6 of the starter examples plan (2026-11-07), verbatim.
+Sections 5 and 6 of the starter examples plan (2026-11-07), updated to include Inertia Vue.
 
 ## 5. File formats
 
 ### 5.1 Sandbox config: `config/sandbox.json`
 
-At the end of Phase 2:
+Example with Account Kit only (the current config also lists the other packages):
 
 ```json
 {
@@ -15,7 +15,7 @@ At the end of Phase 2:
     "repository": "adonisjs/starter-kits",
     "commit": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc"
   },
-  "kits": ["api", "hypermedia", "inertia-react"],
+  "kits": ["api", "hypermedia", "inertia-react", "inertia-vue"],
   "packages": [
     {
       "name": "@kevinjohn/adonisjs-account-kit",
@@ -29,7 +29,8 @@ At the end of Phase 2:
       "kits": {
         "api": "examples/api",
         "hypermedia": "examples/hypermedia",
-        "inertia-react": "examples/inertia-react"
+        "inertia-react": "examples/inertia-react",
+        "inertia-vue": "examples/inertia-vue"
       },
       "exclude": ["compatibility/"]
     }
@@ -47,7 +48,7 @@ Validation. Before any fetch or write. Each rule fails with the quoted message.
 | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `schemaVersion` is `1`                                                                                                | `Unsupported schemaVersion <v>`                                                                   |
 | `base.repository` is `adonisjs/starter-kits`; `base.commit` and every `builtOn.base` are 40 lowercase hex characters  | `Invalid base`                                                                                    |
-| `kits` is a non-empty list of unique values from `api`, `hypermedia`, `inertia-react`                                 | `Invalid kits`                                                                                    |
+| `kits` is a non-empty list of unique values from `api`, `hypermedia`, `inertia-react`, `inertia-vue`                  | `Invalid kits`                                                                                    |
 | `packages` is non-empty; `name` unique, starts with `@kevinjohn/adonisjs-`                                            | `Invalid package name <n>`                                                                        |
 | `repository` matches `Kevinjohn/oss-adonisjs-[a-z-]+`                                                                 | `Invalid repository <r>`                                                                          |
 | `version` and a non-null `builtOn.predecessorVersion` match `^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$`                       | `Invalid version <v>`                                                                             |
@@ -349,6 +350,8 @@ package CI.
   `pnpm --dir <root> pack --out <absolute tmp path>/<asset without -<version>>.tgz`. For each kit,
   copy that archive into `<T>/vendor/` before install and set this package's `@kevinjohn/*`
   specifiers to `file:vendor/<that file>`.
+- Kits the local package does not provide still use their released package examples and do not
+  receive its archive.
 - Pending conflicts go under `<dir>/conflicts/`. Never compares with `apps/`.
 
 ### 6.9 Main mode
@@ -357,7 +360,9 @@ package CI.
 before a release. `.github/workflows/main_mode.yml` runs it nightly and on demand, then
 `pnpm test:app --kit <kit> --dir <dir>`.
 
-1. Each package's `main` is resolved to one commit once per run (`git ls-remote`). Its examples
+1. Packages without an example for any selected kit are skipped, including their builds and runtime
+   peer checks. Each participating package's `main` is resolved to one commit once per run
+   (`git ls-remote`). Its examples
    and its archive come from that commit only: `git clone` into the run's scratch folder,
    `git checkout <commit>`, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm pack` to an
    absolute path. Each package is built once per run; the archive serves every kit. The log
