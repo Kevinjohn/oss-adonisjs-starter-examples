@@ -110,6 +110,63 @@ test.group('assembly', (group) => {
     assert.equal(snapshotOutsideTmp(fixture.root), before)
   })
 
+  test('assembles and checks Vue with packages that do not provide it, including --with-local', async ({
+    assert,
+  }) => {
+    fixture.cleanup()
+    fixture = new SandboxFixture(['api', 'inertia-vue'])
+    publishAccountKit(fixture)
+    fixture.publish({
+      name: SOFT_DELETE,
+      version: '0.1.4',
+      kits: ['api'],
+      changes: () => ({ 'app/soft_delete.ts': 'export {}\n' }),
+    })
+    const run = options(fixture, { kits: ['inertia-vue'] })
+    assert.isTrue(await runAssembly(run.value), run.logged.join('\n'))
+    const app = join(fixture.root, 'apps/inertia-vue')
+    const manifest = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
+    assert.equal(manifest.name, 'adonisjs-starter-examples-inertia-vue')
+    assert.deepEqual(Object.keys(manifest.dependencies), [ACCOUNT_KIT])
+    const readme = readFileSync(join(app, 'README.md'), 'utf8')
+    assert.include(readme, '/examples/inertia-vue)')
+    assert.notInclude(readme, SOFT_DELETE)
+    assert.isFalse(existsSync(join(app, 'app/soft_delete.ts')))
+
+    const check = options(fixture, { kits: ['inertia-vue'], mode: 'check' })
+    assert.isTrue(await runAssembly(check.value), check.logged.join('\n'))
+    const before = snapshotOutsideTmp(fixture.root)
+    const localRoot = fixture.world.workPath('Kevinjohn/oss-adonisjs-account-kit')
+    writeFileSync(join(localRoot, 'examples/inertia-vue/app/local.ts'), 'export {}\n')
+    const out = join(fixture.root, 'tmp/vue-local')
+    const local = options(fixture, { kits: ['inertia-vue'], local: { root: localRoot, out } })
+    assert.isTrue(await runAssembly(local.value), local.logged.join('\n'))
+    assert.isTrue(existsSync(join(out, 'inertia-vue/app/local.ts')))
+    assert.deepEqual(readdirSync(join(out, 'inertia-vue/vendor')), [
+      'kevinjohn-adonisjs-account-kit.tgz',
+    ])
+    const localManifest = JSON.parse(readFileSync(join(out, 'inertia-vue/package.json'), 'utf8'))
+    assert.deepEqual(localManifest.dependencies, {
+      [ACCOUNT_KIT]: 'file:vendor/kevinjohn-adonisjs-account-kit.tgz',
+    })
+
+    const skippedOut = join(fixture.root, 'tmp/vue-skipped-local')
+    const skipped = options(fixture, {
+      kits: ['inertia-vue'],
+      local: {
+        root: fixture.world.workPath('Kevinjohn/oss-adonisjs-lucid-soft-delete'),
+        out: skippedOut,
+      },
+    })
+    assert.isTrue(await runAssembly(skipped.value), skipped.logged.join('\n'))
+    assert.isFalse(existsSync(join(skippedOut, 'inertia-vue/vendor')))
+    assert.equal(
+      readFileSync(join(skippedOut, 'inertia-vue/package.json'), 'utf8'),
+      readFileSync(join(app, 'package.json'), 'utf8')
+    )
+    assert.equal(snapshotOutsideTmp(fixture.root), before)
+  })
+
   test('each run gets its own scratch folder and leaves the others alone', ({ assert }) => {
     const first = createWorkDirectory(fixture.root, 'api')
     writeFileSync(join(first, 'in-use'), '')

@@ -4,7 +4,7 @@
     "repository": "adonisjs/starter-kits",
     "commit": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc"
   },
-  "kits": ["api", "hypermedia", "inertia-react"],
+  "kits": ["api", "hypermedia", "inertia-react", "inertia-vue"],
   "packages": [
     {
       "name": "@kevinjohn/adonisjs-account-kit",
@@ -18,7 +18,8 @@
       "kits": {
         "api": "examples/api",
         "hypermedia": "examples/hypermedia",
-        "inertia-react": "examples/inertia-react"
+        "inertia-react": "examples/inertia-react",
+        "inertia-vue": "examples/inertia-vue"
       },
       "exclude": ["compatibility/"]
     },

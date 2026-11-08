@@ -12,6 +12,8 @@ export interface FixturePackage {
   peer?: string
   /** Name in the published root `package.json`; defaults to `name`. */
   publishedName?: string
+  /** Defaults to every kit in this sandbox. */
+  kits?: Kit[]
   /** Changes on top of the predecessor's example, per kit. */
   changes: (kit: Kit) => FileSpec
 }
@@ -57,10 +59,11 @@ export class SandboxFixture {
 
   /** Publishes a release and adds or updates the package in the config. */
   publish(pkg: FixturePackage): void {
+    const kits = pkg.kits ?? this.kits
     const predecessor = pkg.buildsOn ? this.examples.get(pkg.buildsOn)! : undefined
     const predecessorConfig = this.config.packages.find((entry) => entry.name === pkg.buildsOn)
     const examples = new Map<Kit, FileSpec>()
-    for (const kit of this.kits) {
+    for (const kit of kits) {
       const start = predecessor ? predecessor.get(kit)! : kitFiles(kit)
       examples.set(kit, { ...start, ...pkg.changes(kit) })
     }
@@ -74,7 +77,7 @@ export class SandboxFixture {
         ? { [pkg.buildsOn]: pkg.peer ?? predecessorConfig!.version }
         : {},
       examples: Object.fromEntries(
-        this.kits.map((kit) => [kit, { path: `examples/${kit}`, files: examples.get(kit)! }])
+        kits.map((kit) => [kit, { path: `examples/${kit}`, files: examples.get(kit)! }])
       ),
     })
 
@@ -84,7 +87,7 @@ export class SandboxFixture {
       version: pkg.version,
       buildsOn: pkg.buildsOn ?? null,
       builtOn: { base: this.baseCommit, predecessorVersion: predecessorConfig?.version ?? null },
-      kits: Object.fromEntries(this.kits.map((kit) => [kit, `examples/${kit}`])),
+      kits: Object.fromEntries(kits.map((kit) => [kit, `examples/${kit}`])),
       exclude: [],
     }
     const index = this.config.packages.findIndex((existing) => existing.name === pkg.name)
