@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, rmSync, readdirSync, rmdirSync } from 'node:fs'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { SandboxError } from './errors.ts'
 import { listFiles, writeFileWithMode } from './file_tree.ts'
 
@@ -21,6 +22,8 @@ export interface InputsFile extends ConflictInputs {
 }
 
 const INPUTS_SUFFIX = '.inputs.json'
+/** A further resolution for the same file is saved as `<path>.alt-<hash of its inputs>`. */
+const ALTERNATIVE = '.alt-'
 const MARKER = /^(<{7}|\|{7}|={7}|>{7})/m
 
 function sameSide(a: ConflictSide, b: ConflictSide): boolean {
@@ -34,6 +37,28 @@ export function sameInputs(a: ConflictInputs, b: ConflictInputs): boolean {
     sameSide(a.ours, b.ours) &&
     sameSide(a.theirs, b.theirs)
   )
+}
+
+/** The key a further resolution for these inputs is saved under, stable for the same inputs. */
+function alternativeKey(key: string, inputs: ConflictInputs): string {
+  const { path, base, ours, theirs } = inputs
+  const hash = createHash('sha256')
+    .update(JSON.stringify({ path, base, ours, theirs }))
+    .digest('hex')
+  return `${key}${ALTERNATIVE}${hash.slice(0, 12)}`
+}
+
+/** The recorded keys for one file: the first resolution, then any alternatives, in name order. */
+function keysFor(folder: string, key: string): string[] {
+  const parent = dirname(join(folder, key))
+  const prefix = basename(key) + ALTERNATIVE
+  const alternatives = existsSync(parent)
+    ? readdirSync(parent)
+        .filter((name) => name.startsWith(prefix) && name.endsWith(INPUTS_SUFFIX))
+        .sort()
+        .map((name) => join(dirname(key), name.slice(0, -INPUTS_SUFFIX.length)))
+    : []
+  return [key, ...alternatives]
 }
 
 function serialiseInputs(inputs: InputsFile): string {
@@ -68,7 +93,7 @@ function removeEmptyFolders(folder: string, stop: string): void {
 
 /**
  * The recorded resolutions of one kit, `resolutions/<kit>/<short>/<path>` (specification 5.3).
- * Remembers which ones a run used.
+ * One file can have several, each for different inputs. Remembers which ones a run used.
  */
 export class ResolutionStore {
   readonly folder: string
@@ -83,16 +108,18 @@ export class ResolutionStore {
     short: string,
     inputs: ConflictInputs
   ): { result: 'content' | 'delete'; content: Buffer | null } | null {
-    const key = `${short}/${inputs.path}`
-    const inputsPath = join(this.folder, key + INPUTS_SUFFIX)
-    if (!existsSync(inputsPath)) return null
-    const recorded: InputsFile = JSON.parse(readFileSync(inputsPath, 'utf8'))
-    if (!sameInputs(recorded, inputs) || recorded.result === null) return null
-    this.used.add(key)
-    return {
-      result: recorded.result,
-      content: recorded.result === 'content' ? readFileSync(join(this.folder, key)) : null,
+    for (const key of keysFor(this.folder, `${short}/${inputs.path}`)) {
+      const inputsPath = join(this.folder, key + INPUTS_SUFFIX)
+      if (!existsSync(inputsPath)) continue
+      const recorded: InputsFile = JSON.parse(readFileSync(inputsPath, 'utf8'))
+      if (!sameInputs(recorded, inputs) || recorded.result === null) continue
+      this.used.add(key)
+      return {
+        result: recorded.result,
+        content: recorded.result === 'content' ? readFileSync(join(this.folder, key)) : null,
+      }
     }
+    return null
   }
 
   /** Recorded resolutions no conflict in this run matched, as `resolutions/<kit>/...` keys. */
@@ -187,9 +214,14 @@ export function resolvePendingConflicts(options: {
   const store = join(options.resolutionsRoot, options.kit)
   for (const entry of pending) {
     const result = options.deletes.includes(entry.inputs.path) ? 'delete' : 'content'
-    const target = join(store, entry.key)
     const { path, base, ours, theirs } = entry.inputs
     const inputs = { path, base, ours, theirs }
+    // A resolution recorded for other inputs stays: released mode may still need it. The new one
+    // is saved beside it, and `--prune-unused` removes whichever no released assembly uses.
+    const firstInputs = join(store, entry.key + INPUTS_SUFFIX)
+    const keepFirst =
+      existsSync(firstInputs) && !sameInputs(JSON.parse(readFileSync(firstInputs, 'utf8')), inputs)
+    const target = join(store, keepFirst ? alternativeKey(entry.key, inputs) : entry.key)
     if (result === 'content') {
       writeFileWithMode(target, readFileSync(entry.contentPath), false)
     } else {
