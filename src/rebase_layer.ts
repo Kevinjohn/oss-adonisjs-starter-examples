@@ -67,12 +67,12 @@ function removeEmptyFolders(folder: string, stop: string): void {
 }
 
 /**
- * Moves a package's examples onto a new predecessor (runbook 16.1) for every kit in one
- * operation. For each kit, the package's example is merged onto the new predecessor with the old
- * predecessor as the merge base. The package checkout changes only when every kit merges: then
- * each example folder is replaced exactly, deleting files the result does not have. Conflicts
- * stop the run and are written for editing; the next run saves the edited files and uses them.
- * Returns false when conflicts remain.
+ * Moves a package's examples onto a new predecessor for every kit in one operation (runbook 16.1,
+ * specification 6.10). For each kit, the package's example is merged onto the new predecessor
+ * with the old predecessor as the merge base. The package checkout changes only when every kit
+ * merges: then each example folder is replaced exactly, deleting files the result does not have.
+ * Conflicts stop the run and are written for editing; the next run saves the edited files and
+ * uses them. Returns false when conflicts remain.
  */
 export function rebaseLayer(options: RebaseLayerOptions): boolean {
   const { root, config, log } = options

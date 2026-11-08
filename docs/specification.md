@@ -247,9 +247,9 @@ After `git init`, write `* -text` to `.git/info/attributes`.
 
 - No conflicts: write the result, `git add package.json`. Done with this path.
 - Conflicts: use a recorded resolution if one matches (step 4), else write a pending conflict
-  containing the three versions and the conflicting key paths (step 5).
+  containing the three versions and the conflicting key paths (step 6).
 
-`package.json` is then excluded from steps 2 to 5.
+`package.json` is then excluded from steps 2 to 6.
 
 **Structural merge.** Inputs `O` (base), `A` (ours), `B` (theirs); a missing value is different
 from `null`. For each object key, in the order keys of `A`, then new keys of `B`, then keys only
@@ -266,7 +266,7 @@ in `O`:
 Arrays and other values are compared whole. Duplicate keys inside a package's own input
 `package.json` are not detected (out of scope; the output cannot contain duplicates).
 
-**Steps 2 to 5, for every other conflicted path.** List paths and stages with `git ls-files -u -z`
+**Steps 2 to 6, for every other conflicted path.** List paths and stages with `git ls-files -u -z`
 (stage 1 base, 2 ours, 3 theirs; a missing stage means the file does not exist on that side).
 
 2. **Unsupported (D8).** Fail if a present stage contains a NUL byte, present stages' modes
@@ -277,7 +277,14 @@ Arrays and other values are compared whole. Duplicate keys inside a package's ow
    else stage 3, and `git add` it.
 4. **Recorded resolution** matching all three inputs (5.3): write the content and `git add` it, or
    `git rm` the path for `"delete"`.
-5. **Pending.** Run `git merge-file -p --diff3 -L ours -L base -L theirs <ours> <base> <theirs>`
+5. **Registry files** (`adonisrc.ts`, `start/kernel.ts`, `start/env.ts`, `.env.example`), present
+   on both sides. Run the diff3 merge of step 6. When in every conflict hunk both sides kept the
+   base lines unchanged and only added lines before or after them, keep the base lines and both
+   additions, ours first; identical additions are kept once, and additions that share a line with
+   a letter or digit go to step 6. The result must parse: TypeScript without syntax errors, or an
+   env file with one `KEY=` assignment per key. Write it and `git add` it. Routes are not registry
+   files, because their order matters.
+6. **Pending.** Run `git merge-file -p --diff3 -L ours -L base -L theirs <ours> <base> <theirs>`
    on temporary copies (an empty file for a missing stage). Write the output and an inputs file
    with `"result": null` to the pending folder (D14). Mark the path unresolved.
 
@@ -411,3 +418,27 @@ before a release. `.github/workflows/main_mode.yml` runs it nightly and on deman
    at a different version is logged as `runtime peer mismatch: …` and fails the run, separately
    from merge failures; the merge still runs.
 6. Conflicts go under `<dir>/conflicts/`. `<dir>` must be inside `tmp/`, as in 6.8.
+
+### 6.10 Moving a package's examples to a new predecessor
+
+`pnpm rebase-layer --package <name> --root <package checkout> (--to <version> | --base <commit>)`
+does runbook 16.1 for every kit of one package in one operation. `--to` names the release of the
+package it builds on; `--base` names a starter kits commit for a package on the base.
+
+1. Refuse when the checkout has uncommitted changes in any of the package's example folders, so
+   the result can be undone with git.
+2. Save the edited pending conflicts of an earlier run (6.5's checks) from
+   `tmp/rebase-layer/<short>/conflicts/` into `tmp/rebase-layer/<short>/resolutions/`.
+3. For each kit, build three trees: the old predecessor (the predecessor's example at
+   `builtOn.predecessorVersion`, or the base kit at `builtOn.base`), the new predecessor, and the
+   example from the checkout (tracked and untracked files git does not ignore). `README.md` and
+   `pnpm-lock.yaml` belong to the package: both predecessor trees take the example's copies, and a
+   changed predecessor lockfile is reported so the example is reinstalled.
+4. Commit old, then example and new on old, and merge example into new with the steps of 6.4,
+   using the resolutions of step 2. Conflicts are written to the pending folder.
+5. If any kit has conflicts, print them and change nothing in the checkout. Otherwise replace each
+   example folder exactly: delete its tracked and untracked files git does not ignore, write the
+   merged tree, and delete `tmp/rebase-layer/<short>/`. Ignored files such as `node_modules/` and
+   `.env` stay.
+
+It does not change `config/sandbox.json`, the package's peer, or its lockfile; those follow 16.1.

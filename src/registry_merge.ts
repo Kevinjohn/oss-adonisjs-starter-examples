@@ -92,7 +92,7 @@ function validEnvFile(text: string): boolean {
 
 /**
  * Resolves a registry file's text conflict when, in every hunk, both sides only added lines at the
- * same place (specification 6.4, step 3). The result must parse: TypeScript without syntax
+ * same place (specification 6.4, step 5). The result must parse: TypeScript without syntax
  * errors, or an env file with one assignment per key. Returns null when it does not apply, so the
  * conflict goes to a person. A recorded resolution for the exact inputs is used before this.
  */
