@@ -10,6 +10,7 @@
   "scripts": {
     "assemble": "node --import=@poppinss/ts-exec --enable-source-maps bin/assemble.ts",
     "resolve": "node --import=@poppinss/ts-exec --enable-source-maps bin/resolve.ts",
+    "rebase-layer": "node --import=@poppinss/ts-exec --enable-source-maps bin/rebase_layer.ts",
     "test:app": "node --import=@poppinss/ts-exec --enable-source-maps bin/test_app.ts",
     "test": "node --import=@poppinss/ts-exec --enable-source-maps bin/test.ts",
     "lint": "eslint . --max-warnings 0",
