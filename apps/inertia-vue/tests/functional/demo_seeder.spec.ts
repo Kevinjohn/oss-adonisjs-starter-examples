@@ -45,6 +45,11 @@ test.group('demo seeder', (group) => {
 
     const seeder = new DemoSeeder(db.connection())
     await seeder.run()
+    const firstTeam = await Team.findByOrFail('name', 'Demo team')
+    const firstBob = await User.findByOrFail('email', 'bob@example.com')
+    // The first run must create the whole team; a second run must not be needed to finish it.
+    const firstBobMembership = await accessControl.memberships.find(firstTeam.id, firstBob.id)
+    assert.equal(firstBobMembership?.role, 'viewer')
     await seeder.run()
 
     const expectedEmails = [
