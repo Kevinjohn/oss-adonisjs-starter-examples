@@ -34,7 +34,8 @@ test.group('demo seeder', (group) => {
     assert,
   }) => {
     await new DemoSeeder(db.connection()).run()
-    const bobPasswordHash = (await User.findByOrFail('email', 'bob@example.com')).password
+    const seededBob = await User.findByOrFail('email', 'bob@example.com')
+    const bobPasswordHash = seededBob.password
     await new DemoSeeder(db.connection()).run()
 
     const operatorEmail = masqueradeOperatorEmails.values().next().value
@@ -74,10 +75,12 @@ test.group('demo seeder', (group) => {
       assert.isString(responseBody<{ data: { token: string } }>(login).data.token)
     }
 
-    assert.equal((await User.findByOrFail('email', 'bob@example.com')).password, bobPasswordHash)
+    const reseededBob = await User.findByOrFail('email', 'bob@example.com')
+    assert.equal(reseededBob.password, bobPasswordHash)
     await bob.delete()
     await new DemoSeeder(db.connection()).run()
-    assert.isTrue((await User.withTrashed().where('email', bob.email).firstOrFail()).trashed)
+    const deletedBob = await User.withTrashed().where('email', bob.email).firstOrFail()
+    assert.isTrue(deletedBob.trashed)
     assert.lengthOf(await User.withTrashed().where('email', bob.email), 1)
   })
 })

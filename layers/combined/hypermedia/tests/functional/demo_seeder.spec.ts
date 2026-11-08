@@ -64,8 +64,10 @@ test.group('demo seeder', (group) => {
     const teams = await Team.query().where('name', 'Demo team')
     assert.lengthOf(teams, 1)
     const team = teams[0]
-    assert.equal((await accessControl.memberships.find(team.id, alice.id))?.role, 'owner')
-    assert.equal((await accessControl.memberships.find(team.id, bob.id))?.role, 'viewer')
+    const aliceMembership = await accessControl.memberships.find(team.id, alice.id)
+    const bobMembership = await accessControl.memberships.find(team.id, bob.id)
+    assert.equal(aliceMembership?.role, 'owner')
+    assert.equal(bobMembership?.role, 'viewer')
 
     const aliceSession = new FormSession()
     await aliceSession.login(alice.email, password)
