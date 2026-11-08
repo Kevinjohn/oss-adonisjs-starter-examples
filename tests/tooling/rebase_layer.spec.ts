@@ -40,6 +40,7 @@ function packageExample(kit: string, extra: FileSpec = {}): FileSpec {
   }
 }
 
+/** `extra` changes the package's api example only. */
 function setup(extra: FileSpec = {}) {
   const world = new FixtureWorld()
   const baseCommit = world.publishBase(Object.fromEntries(KITS.map((kit) => [kit, kitFiles(kit)])))
@@ -58,7 +59,7 @@ function setup(extra: FileSpec = {}) {
   }
   const files: FileSpec = {}
   for (const kit of KITS) {
-    for (const [path, spec] of Object.entries(packageExample(kit, extra)))
+    for (const [path, spec] of Object.entries(packageExample(kit, kit === 'api' ? extra : {})))
       if (spec !== null) files[`${folderOf(kit)}/${path}`] = spec
   }
   world.commit(PACKAGE_REPO, files, 'package')
@@ -143,22 +144,21 @@ test.group('rebase-layer', () => {
     assert.deepEqual(snapshot(packageRoot), before)
     const pending = (kit: string) =>
       join(rebaseFolder(world.sandboxRoot, MASQUERADE), 'conflicts', kit, 'masquerade/start/kit.ts')
-    for (const kit of KITS) {
-      assert.match(readFileSync(pending(kit), 'utf8'), /^<{7} ours/m)
-      writeFiles(join(pending(kit), '..'), {
-        'kit.ts': "export const kit = 'two and masquerade'\n",
-      })
-    }
+    // The hypermedia kit merged cleanly, and is not written either.
+    assert.isFalse(existsSync(pending('hypermedia')))
+    assert.match(readFileSync(pending('api'), 'utf8'), /^<{7} ours/m)
+    writeFiles(join(pending('api'), '..'), {
+      'kit.ts': "export const kit = 'two and masquerade'\n",
+    })
     assert.isTrue(lines.some((line) => line.includes('Nothing in')))
 
     assert.isTrue(run())
-    for (const kit of KITS) {
-      assert.equal(
-        readFileSync(join(packageRoot, folderOf(kit), 'start/kit.ts'), 'utf8'),
-        "export const kit = 'two and masquerade'\n"
-      )
+    const kitFile = (kit: string) =>
+      readFileSync(join(packageRoot, folderOf(kit), 'start/kit.ts'), 'utf8')
+    assert.equal(kitFile('api'), "export const kit = 'two and masquerade'\n")
+    assert.equal(kitFile('hypermedia'), "export const kit = 'two'\n")
+    for (const kit of KITS)
       assert.isFalse(existsSync(join(packageRoot, folderOf(kit), 'start/kit_removes.ts')))
-    }
     assert.isFalse(existsSync(rebaseFolder(world.sandboxRoot, MASQUERADE)))
   })
 
