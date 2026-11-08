@@ -70,22 +70,11 @@ test.group('teams', (group) => {
     })
     await grantAdmittedOwner(owner)
 
-    const ownerIdentity = await teamIdentity(client, owner.email)
-    const missingContext = await client
-      .post('/api/v1/teams')
-      .bearerToken(ownerIdentity.token)
-      .json({ name: 'Rockets' })
-    // Idle business mutations still require the current Masquerade context token.
-    assert.equal(missingContext.status(), 428)
-    assert.equal(
-      responseBody<{ errors: Array<{ code: string }> }>(missingContext).errors[0].code,
-      'E_MASQUERADE_CONTEXT_REQUIRED'
-    )
-
+    // Native account operations need neither a Masquerade ability nor its context token.
+    const ownerToken = await User.accessTokens.create(owner, ['teams:create'], { expiresIn: '1d' })
     const created = await client
       .post('/api/v1/teams')
-      .bearerToken(ownerIdentity.token)
-      .header('X-Masquerade-Context', ownerIdentity.contextToken)
+      .bearerToken(ownerToken.value!.release())
       .json({ name: 'Rockets' })
     assert.equal(created.status(), 201)
     const scope = String(responseBody<{ id: number }>(created).id)
@@ -115,6 +104,18 @@ test.group('teams', (group) => {
     assert.equal(await teamName(scope), 'Rockets')
 
     const editorIdentity = await teamIdentity(client, editor.email)
+    const missingContext = await client
+      .patch(`/api/v1/teams/${scope}`)
+      .bearerToken(editorIdentity.token)
+      .json({ name: 'Comets' })
+    // Effective business mutations still require the current Masquerade context token.
+    assert.equal(missingContext.status(), 428)
+    assert.equal(
+      responseBody<{ errors: Array<{ code: string }> }>(missingContext).errors[0].code,
+      'E_MASQUERADE_CONTEXT_REQUIRED'
+    )
+    assert.equal(await teamName(scope), 'Rockets')
+
     const renamed = await client
       .patch(`/api/v1/teams/${scope}`)
       .bearerToken(editorIdentity.token)

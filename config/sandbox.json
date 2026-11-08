@@ -26,7 +26,7 @@
     {
       "name": "@kevinjohn/adonisjs-masquerade",
       "repository": "Kevinjohn/oss-adonisjs-masquerade",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",

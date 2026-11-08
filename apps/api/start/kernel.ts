@@ -53,6 +53,10 @@ router.use([
 export const middleware = router.named({
   scope: () => import('@kevinjohn/adonisjs-access-control/middleware'),
   auth: () => import('#middleware/auth_middleware'),
+  accountKitAccountBlocker: () =>
+    import('@kevinjohn/adonisjs-masquerade/account-kit/middleware').then((module) => ({
+      default: module.AccountKitAccountBlocker,
+    })),
   accountAccess: () => import('#middleware/account_access_middleware'),
   verifiedAccount: () => import('#middleware/verified_account_middleware'),
   admittedAccount: () => import('#middleware/admitted_account_middleware'),
