@@ -27,6 +27,11 @@ after starting or stopping masquerade. Team membership follows the effective acc
 management and deleted-account administration routes retain their raw Account Kit guard (Masquerade
 issue #311).
 
+## Cookbook
+
+[The cookbook](docs/cookbook/README.md) explains how the packages are combined, with code taken
+from these apps.
+
 ## How it works
 
 See [the specification](docs/specification.md) and [AGENTS.md](AGENTS.md).
