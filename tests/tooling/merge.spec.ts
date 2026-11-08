@@ -66,6 +66,14 @@ function resolve(fixture: SandboxFixture, deletes: string[] = []) {
   })
 }
 
+/** The recorded resolution keys for Lucid Soft Delete in the api kit. */
+function lucidSoftDeleteKeys(fixture: SandboxFixture): string[] {
+  return listFiles(join(fixture.root, 'resolutions/api'))
+    .map((entry) => entry.path)
+    .filter((path) => path.endsWith('.inputs.json'))
+    .map((path) => path.slice(0, -'.inputs.json'.length))
+}
+
 const conflictingRoutes = {
   ak: { 'start/routes.ts': `${ROUTES}router.get('/account', () => 'ak')\n` },
   softDelete: { 'start/routes.ts': `${ROUTES}router.get('/trash', () => 'sd')\n` },
@@ -197,6 +205,49 @@ test.group('merging', (group) => {
     assert.isFalse(outcome.ok)
     assert.deepEqual(context.store.unused(), ['lucid-soft-delete/start/routes.ts'])
     assert.isNotNull(pending(fixture, 'start/routes.ts').content)
+  })
+
+  test('keeps a resolution for the released inputs beside one for new inputs', ({ assert }) => {
+    twoPackages(fixture, conflictingRoutes.ak, conflictingRoutes.softDelete)
+    merge(fixture)
+    writeFileSync(pending(fixture, 'start/routes.ts').file, `${ROUTES}// released\n`)
+    resolve(fixture)
+    const released = structuredClone(fixture.config.packages)
+
+    fixture.publish({
+      name: SOFT_DELETE,
+      version: '0.1.5',
+      changes: () => ({ 'start/routes.ts': `${ROUTES}router.get('/bin', () => 'sd')\n` }),
+    })
+    merge(fixture)
+    writeFileSync(pending(fixture, 'start/routes.ts').file, `${ROUTES}// next\n`)
+    resolve(fixture)
+    const next = structuredClone(fixture.config.packages)
+
+    assert.isTrue(merge(fixture).outcome.ok)
+    assert.equal(appFile('start/routes.ts'), `${ROUTES}// next\n`)
+    fixture.config.packages = released
+    const { outcome, context } = merge(fixture)
+    assert.isTrue(outcome.ok)
+    assert.equal(appFile('start/routes.ts'), `${ROUTES}// released\n`)
+    const waiting = lucidSoftDeleteKeys(fixture).find((key) => key.includes('.alt-'))!
+    assert.deepEqual(context.store.unused(), [waiting])
+    assert.isTrue(context.store.usedBeside(waiting))
+    assert.isFalse(context.store.usedBeside('lucid-soft-delete/start/other.ts'))
+
+    fixture.config.packages = next
+    assert.isTrue(
+      pruneUnusedResolutions({
+        root: fixture.root,
+        config: fixture.config,
+        kit: 'api',
+        remoteUrlFor: fixture.world.remoteUrlFor,
+        log: () => {},
+      })
+    )
+    assert.lengthOf(lucidSoftDeleteKeys(fixture), 1)
+    assert.isTrue(merge(fixture).outcome.ok)
+    assert.equal(appFile('start/routes.ts'), `${ROUTES}// next\n`)
   })
 
   test('--prune-unused deletes unused resolutions only when every merge succeeds', ({ assert }) => {
