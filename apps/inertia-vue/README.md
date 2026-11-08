@@ -32,9 +32,8 @@ if the development server is running):
 node ace db:seed
 ```
 
-Every new demo account uses the password `DemoPassword123!` and has a verified email. The API
-accounts also have approved admission. Running the seeder again skips existing accounts,
-preserving their passwords and account state.
+Every demo account uses the password `DemoPassword123!` and has a verified email. Running the
+seeder again skips accounts that exist.
 
 | Account                   | Email                                                                                                                   |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -43,9 +42,7 @@ preserving their passwords and account state.
 | Alice, team owner         | `alice@example.com`                                                                                                     |
 | Bob, team viewer          | `bob@example.com`                                                                                                       |
 
-Keep both email settings non-empty to seed the operator and administrator. Use lowercase
-addresses in both settings to match sign-in normalization. Alice owns **Demo team**, with
-Bob as a viewer.
+Alice owns **Demo team**, with Bob as a viewer.
 
 ### Browser kits
 
@@ -65,14 +62,8 @@ Use the default access-token configuration. Send `POST /api/v1/auth/login` with 
 `{"email":"alice@example.com","password":"DemoPassword123!"}`. The response's `data.token`
 is the bearer token for subsequent requests. Log in separately for each account below.
 
-To find the seeded IDs without assuming an empty database, run `node ace repl` and enter:
-
-```js
-const { default: User } = await import('#models/user')
-await User.query().select('id', 'email')
-const { default: Team } = await import('#models/team')
-await Team.query().select('id', 'name')
-```
+On a freshly migrated database the seeder creates the operator, the administrator, Alice and Bob
+as IDs 1 to 4, and **Demo team** as team 1.
 
 1. With Alice's bearer token, read `GET /api/v1/teams/<team-id>` for **Demo team**.
 2. With the operator's bearer token, read `GET /masquerade`. Send its `contextToken` as
