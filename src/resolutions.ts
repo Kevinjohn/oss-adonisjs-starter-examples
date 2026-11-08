@@ -61,6 +61,11 @@ function keysFor(folder: string, key: string): string[] {
   return [key, ...alternatives]
 }
 
+/** The file a key resolves: the key without any `.alt-<hash>` ending. */
+function fileOf(key: string): string {
+  return key.replace(/\.alt-[0-9a-f]{12}$/, '')
+}
+
 function serialiseInputs(inputs: InputsFile): string {
   const { path, base, ours, theirs, result, conflictingKeys } = inputs
   const value = conflictingKeys
@@ -125,6 +130,15 @@ export class ResolutionStore {
   /** Recorded resolutions no conflict in this run matched, as `resolutions/<kit>/...` keys. */
   unused(): string[] {
     return inputsFilesUnder(this.folder).filter((key) => !this.used.has(key))
+  }
+
+  /**
+   * Whether this run used another resolution for the same file as `key`. Such an unused one is
+   * waiting for a release (or left by one), so `assemble --check` warns instead of failing.
+   */
+  usedBeside(key: string): boolean {
+    const file = fileOf(key)
+    return [...this.used].some((used) => used !== key && fileOf(used) === file)
   }
 
   /** Deletes the unused resolutions and returns their paths relative to the store's folder. */

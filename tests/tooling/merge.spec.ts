@@ -230,9 +230,10 @@ test.group('merging', (group) => {
     const { outcome, context } = merge(fixture)
     assert.isTrue(outcome.ok)
     assert.equal(appFile('start/routes.ts'), `${ROUTES}// released\n`)
-    assert.deepEqual(context.store.unused(), [
-      lucidSoftDeleteKeys(fixture).find((key) => key.includes('.alt-'))!,
-    ])
+    const waiting = lucidSoftDeleteKeys(fixture).find((key) => key.includes('.alt-'))!
+    assert.deepEqual(context.store.unused(), [waiting])
+    assert.isTrue(context.store.usedBeside(waiting))
+    assert.isFalse(context.store.usedBeside('lucid-soft-delete/start/other.ts'))
 
     fixture.config.packages = next
     assert.isTrue(

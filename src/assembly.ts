@@ -250,7 +250,7 @@ async function assembleKit(
     let ok = true
     for (const key of context.store.unused()) {
       const path = relative(root, join(context.store.folder, key))
-      if (options.mode === 'check') {
+      if (options.mode === 'check' && !context.store.usedBeside(key)) {
         log(`Unused resolution ${path}`)
         ok = false
       } else {
