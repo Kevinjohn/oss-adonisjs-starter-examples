@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Link } from '@adonisjs/inertia/vue'
 import FlashMessages from '~/components/flash_messages.vue'
+import MasqueradeBanner from '~/components/masquerade_banner.vue'
 </script>
 
 <template>
@@ -16,9 +17,11 @@ import FlashMessages from '~/components/flash_messages.vue'
       </div>
     </div>
   </header>
+  <MasqueradeBanner />
   <nav class="subnav" aria-label="Primary">
     <div class="subnav__inner">
       <Link href="/dashboard" class="subnav__item">Dashboard</Link>
+      <Link href="/teams" class="subnav__item">Teams</Link>
       <Link href="/account" class="subnav__item">Protected app</Link>
       <Link href="/settings/profile" class="subnav__item">Settings</Link>
     </div>

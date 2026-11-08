@@ -26,7 +26,7 @@
     {
       "name": "@kevinjohn/adonisjs-masquerade",
       "repository": "Kevinjohn/oss-adonisjs-masquerade",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -35,14 +35,15 @@
       "kits": {
         "api": "examples/with_account_kit/api",
         "hypermedia": "examples/with_account_kit/hypermedia",
-        "inertia-react": "examples/with_account_kit/inertia_react"
+        "inertia-react": "examples/with_account_kit/inertia_react",
+        "inertia-vue": "examples/with_account_kit/inertia_vue"
       },
       "exclude": ["compatibility/"]
     },
     {
       "name": "@kevinjohn/adonisjs-access-control",
       "repository": "Kevinjohn/oss-adonisjs-access-control",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -51,14 +52,15 @@
       "kits": {
         "api": "examples/with_account_kit/api",
         "hypermedia": "examples/with_account_kit/hypermedia",
-        "inertia-react": "examples/with_account_kit/inertia_react"
+        "inertia-react": "examples/with_account_kit/inertia_react",
+        "inertia-vue": "examples/with_account_kit/inertia_vue"
       },
       "exclude": ["tests/functional/teams.spec.ts"]
     },
     {
       "name": "@kevinjohn/adonisjs-lucid-soft-delete",
       "repository": "Kevinjohn/oss-adonisjs-lucid-soft-delete",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -67,7 +69,8 @@
       "kits": {
         "api": "examples/starter/api",
         "hypermedia": "examples/starter/hypermedia",
-        "inertia-react": "examples/starter/inertia_react"
+        "inertia-react": "examples/starter/inertia_react",
+        "inertia-vue": "examples/starter/inertia_vue"
       },
       "exclude": ["tests/functional/soft_delete.spec.ts", "tests/browser/soft_delete.spec.ts"]
     }

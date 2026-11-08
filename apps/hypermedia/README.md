@@ -9,9 +9,9 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 | Package                                 | Version | Example                                                                                                              |
 | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | `@kevinjohn/adonisjs-account-kit`       | 0.3.2   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.2/examples/hypermedia)                     |
-| `@kevinjohn/adonisjs-masquerade`        | 0.2.4   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.4/examples/with_account_kit/hypermedia)     |
-| `@kevinjohn/adonisjs-access-control`    | 0.1.4   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.4/examples/with_account_kit/hypermedia) |
-| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.6   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.6/examples/starter/hypermedia)       |
+| `@kevinjohn/adonisjs-masquerade`        | 0.2.5   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.5/examples/with_account_kit/hypermedia)     |
+| `@kevinjohn/adonisjs-access-control`    | 0.1.5   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.5/examples/with_account_kit/hypermedia) |
+| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.7   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.7/examples/starter/hypermedia)       |
 
 ## Run it
 

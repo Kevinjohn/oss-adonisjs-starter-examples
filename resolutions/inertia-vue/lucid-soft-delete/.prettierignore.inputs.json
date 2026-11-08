@@ -1,0 +1,16 @@
+{
+  "path": ".prettierignore",
+  "base": {
+    "mode": "100644",
+    "blob": "8e91c7da31d545f2d9eb214d063c0eca5e00874b"
+  },
+  "ours": {
+    "mode": "100644",
+    "blob": "16435b2f2f5235dbf228c9e493d38629a78c88dc"
+  },
+  "theirs": {
+    "mode": "100644",
+    "blob": "c8c53a7e4e71702da1f6685ee7a9533b9eb65f37"
+  },
+  "result": "content"
+}

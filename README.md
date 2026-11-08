@@ -2,8 +2,8 @@
 
 The official [AdonisJS starter kits](https://github.com/adonisjs/starter-kits) with our AdonisJS
 packages added, one app per kit. The API app combines Account Kit, Masquerade, Access Control, and
-Soft Delete. Masquerade's API example uses Account Kit access tokens. Hypermedia and Inertia React
-also combine these packages; Inertia Vue currently comes from Account Kit only. Each package
+Soft Delete. Masquerade's API example uses Account Kit access tokens. Hypermedia, Inertia React and
+Inertia Vue also combine these packages. Each package
 repository keeps its own example apps; this repository reads them at their release tags, lets git
 merge their changes onto the pinned starter kit, and commits the combined apps under `apps/`.
 
