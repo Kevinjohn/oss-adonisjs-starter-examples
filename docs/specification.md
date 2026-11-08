@@ -43,7 +43,7 @@ Current releases and API examples:
 | Package        | Version | API example                     |
 | -------------- | ------- | ------------------------------- |
 | Account Kit    | 0.3.2   | `examples/api`                  |
-| Masquerade     | 0.2.3   | `examples/with_account_kit/api` |
+| Masquerade     | 0.2.4   | `examples/with_account_kit/api` |
 | Access Control | 0.1.4   | `examples/with_account_kit/api` |
 | Soft Delete    | 0.1.6   | `examples/starter/api`          |
 
@@ -143,17 +143,20 @@ Control are based on Account Kit 0.3.2;
 Masquerade's API example authenticates with Account Kit access tokens. This completes the previously
 deferred Q4 API combination of all four packages.
 
-API team routes use the effective bearer guard, require the token's `masquerade` ability even while
-idle, and check the actor's admission before resolving the mode. Clients read `GET /masquerade` with
-the same bearer token and send its `contextToken` in `X-Masquerade-Context` on team writes; they refresh
+API team reads and renames use the effective bearer guard, require the token's `masquerade` ability
+even while idle, and check the actor's admission before resolving the mode. Clients read `GET /masquerade` with
+the same bearer token and send its `contextToken` in `X-Masquerade-Context` on team renames; they refresh
 it after mode transitions. Team renames opt into mutation and still require Access Control's editor
 permission. The combined API overlays cover ordinary team writes, effective team permissions,
 revoked-actor ordering and soft-deleted target rejection. The Access Control team spec is replaced
 by the overlay to include the context handshake. Since package exclusions apply to every kit, the
 browser team specs are preserved unchanged in their overlays; reconcile those copies with Access
 Control when updating its examples. Account management and deleted-account administration routes
-explicitly select the raw Account Kit guard;
-Masquerade issue #311 remains out of scope.
+explicitly select the raw Account Kit guard. Masquerade's native account blocker covers the
+package examples' account routes and combined self-deletion, team creation, team listing and
+invitation routes. These account operations use the raw guard and are refused during any active
+mode, including edit mode; effective team reads and permitted renames remain available.
+Idle API team creation needs neither the Masquerade ability nor a context token.
 
 ### 6.2 Reading trees and files
 
