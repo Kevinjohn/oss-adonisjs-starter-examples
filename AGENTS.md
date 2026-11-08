@@ -18,6 +18,10 @@ Node 24 (`.nvmrc`) and pnpm 11.23.0 (`packageManager`) for every command. Run `n
   pending conflicts from `tmp/conflicts/` (or `<out>/conflicts/` after a `--with-local` run) into
   `resolutions/`, and optionally deletes resolutions no conflict used. `--prune-unused` merges the
   released packages, so it refuses a `--pending` folder other than `tmp/conflicts`.
+- `pnpm rebase-layer --package <name> --root <package checkout> (--to <version> | --base <commit>)`
+  moves every example of one package onto a new predecessor release or base commit (specification
+  6.10). It changes the checkout only when every kit merges; otherwise it writes conflicts to
+  `tmp/rebase-layer/<short>/conflicts/` and the next run uses the edited files.
 - `pnpm test:app --kit <kit> [--dir apps] [--install-browsers]` installs, checks and tests one app
   in a copy under `tmp/test-app/`.
 - `pnpm test` runs the Japa specs in `tests/tooling/`.
