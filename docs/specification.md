@@ -6,7 +6,7 @@ Sections 5 and 6 of the starter examples plan (2026-11-07), updated to include I
 
 ### 5.1 Sandbox config: `config/sandbox.json`
 
-Example with Account Kit only (the current config also lists the other packages):
+Example package entry for Account Kit (the current config also lists the other packages):
 
 ```json
 {
@@ -20,7 +20,7 @@ Example with Account Kit only (the current config also lists the other packages)
     {
       "name": "@kevinjohn/adonisjs-account-kit",
       "repository": "Kevinjohn/oss-adonisjs-account-kit",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -37,6 +37,17 @@ Example with Account Kit only (the current config also lists the other packages)
   ]
 }
 ```
+
+Current releases and API examples:
+
+| Package        | Version | API example                     |
+| -------------- | ------- | ------------------------------- |
+| Account Kit    | 0.3.2   | `examples/api`                  |
+| Masquerade     | 0.2.3   | `examples/with_account_kit/api` |
+| Access Control | 0.1.4   | `examples/with_account_kit/api` |
+| Soft Delete    | 0.1.6   | `examples/starter/api`          |
+
+The API kit combines all four packages. The Inertia Vue kit remains Account Kit only.
 
 `builtOn` records what the example at `version` was copied from. Change it only in the same PR
 that moves `version` to a release whose examples were re-copied or rebased onto the new
@@ -125,6 +136,24 @@ merge C into app        (real merge, merge base AK)
 merge S into app        (real merge, merge base B)
 normalise, overlay, regenerate
 ```
+
+For the API kit, Account Kit supplies `examples/api`, Masquerade and Access Control each supply
+`examples/with_account_kit/api`, and Soft Delete supplies `examples/starter/api`. Masquerade and Access
+Control are based on Account Kit 0.3.2;
+Masquerade's API example authenticates with Account Kit access tokens. This completes the previously
+deferred Q4 API combination of all four packages.
+
+API team routes use the effective bearer guard, require the token's `masquerade` ability even while
+idle, and check the actor's admission before resolving the mode. Clients read `GET /masquerade` with
+the same bearer token and send its `contextToken` in `X-Masquerade-Context` on team writes; they refresh
+it after mode transitions. Team renames opt into mutation and still require Access Control's editor
+permission. The combined API overlays cover ordinary team writes, effective team permissions,
+revoked-actor ordering and soft-deleted target rejection. The Access Control team spec is replaced
+by the overlay to include the context handshake. Since package exclusions apply to every kit, the
+browser team specs are preserved unchanged in their overlays; reconcile those copies with Access
+Control when updating its examples. Account management and deleted-account administration routes
+explicitly select the raw Account Kit guard;
+Masquerade issue #311 remains out of scope.
 
 ### 6.2 Reading trees and files
 

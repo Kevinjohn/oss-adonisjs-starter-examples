@@ -9,7 +9,7 @@
     {
       "name": "@kevinjohn/adonisjs-account-kit",
       "repository": "Kevinjohn/oss-adonisjs-account-kit",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -26,38 +26,39 @@
     {
       "name": "@kevinjohn/adonisjs-masquerade",
       "repository": "Kevinjohn/oss-adonisjs-masquerade",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
-        "predecessorVersion": "0.3.1"
-      },
-      "kits": {
-        "hypermedia": "examples/with_account_kit/hypermedia",
-        "inertia-react": "examples/with_account_kit/inertia_react"
-      },
-      "exclude": []
-    },
-    {
-      "name": "@kevinjohn/adonisjs-access-control",
-      "repository": "Kevinjohn/oss-adonisjs-access-control",
-      "version": "0.1.3",
-      "buildsOn": "@kevinjohn/adonisjs-account-kit",
-      "builtOn": {
-        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
-        "predecessorVersion": "0.3.1"
+        "predecessorVersion": "0.3.2"
       },
       "kits": {
         "api": "examples/with_account_kit/api",
         "hypermedia": "examples/with_account_kit/hypermedia",
         "inertia-react": "examples/with_account_kit/inertia_react"
       },
-      "exclude": []
+      "exclude": ["compatibility/"]
+    },
+    {
+      "name": "@kevinjohn/adonisjs-access-control",
+      "repository": "Kevinjohn/oss-adonisjs-access-control",
+      "version": "0.1.4",
+      "buildsOn": "@kevinjohn/adonisjs-account-kit",
+      "builtOn": {
+        "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
+        "predecessorVersion": "0.3.2"
+      },
+      "kits": {
+        "api": "examples/with_account_kit/api",
+        "hypermedia": "examples/with_account_kit/hypermedia",
+        "inertia-react": "examples/with_account_kit/inertia_react"
+      },
+      "exclude": ["tests/functional/teams.spec.ts"]
     },
     {
       "name": "@kevinjohn/adonisjs-lucid-soft-delete",
       "repository": "Kevinjohn/oss-adonisjs-lucid-soft-delete",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",

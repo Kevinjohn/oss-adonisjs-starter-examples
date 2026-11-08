@@ -8,9 +8,10 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 
 | Package                                 | Version | Example                                                                                                       |
 | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `@kevinjohn/adonisjs-account-kit`       | 0.3.1   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.1/examples/api)                     |
-| `@kevinjohn/adonisjs-access-control`    | 0.1.3   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.3/examples/with_account_kit/api) |
-| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.5   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.5/examples/starter/api)       |
+| `@kevinjohn/adonisjs-account-kit`       | 0.3.2   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.2/examples/api)                     |
+| `@kevinjohn/adonisjs-masquerade`        | 0.2.3   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.3/examples/with_account_kit/api)     |
+| `@kevinjohn/adonisjs-access-control`    | 0.1.4   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.4/examples/with_account_kit/api) |
+| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.6   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.6/examples/starter/api)       |
 
 ## Run it
 
@@ -21,3 +22,8 @@ node ace generate:key
 node ace migration:run
 pnpm dev
 ```
+
+## Combined interactions
+
+See the sandbox's [API team request instructions](https://github.com/Kevinjohn/oss-adonisjs-starter-examples#api-team-requests)
+for the bearer-token ability and context header required by the combined API app.

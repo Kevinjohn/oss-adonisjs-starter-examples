@@ -17,3 +17,8 @@ node ace generate:key
 node ace migration:run
 pnpm dev
 ```
+
+## Combined interactions
+
+See the sandbox's [API team request instructions](https://github.com/Kevinjohn/oss-adonisjs-starter-examples#api-team-requests)
+for the bearer-token ability and context header required by the combined API app.

@@ -12,11 +12,13 @@
 
 import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
+import { allowMutation } from '@kevinjohn/adonisjs-masquerade/http'
 import { controllers } from '#generated/controllers'
-import { authStrategy } from '#services/auth_strategy'
+import { authStrategy, selectedGuardName } from '#services/auth_strategy'
 import { accountPublicLimit } from '#start/limiter'
 
 const strategy = authStrategy()
+const teamGuard = strategy === 'session' ? 'web' : 'api_effective'
 
 router.get('/', () => {
   return { hello: 'world' }
@@ -125,26 +127,32 @@ router
       })
       .prefix('account')
       .as('account')
-      .use(middleware.auth())
+      .use(middleware.auth({ guards: [selectedGuardName()] }))
 
     // Application data: admitted accounts only.
     router
       .get('reports', [controllers.Reports, 'index'])
-      .use(middleware.auth())
+      .use(middleware.auth({ guards: [selectedGuardName()] }))
       .use(middleware.admittedAccount())
 
     // Teams: admitted accounts create them; `scope` loads the caller's membership of `:scopeId`
     // and refuses everyone else with E_ACCESS_CONTROL_FORBIDDEN (403).
     router
       .post('teams', [controllers.Teams, 'store'])
-      .use(middleware.auth())
+      .as(strategy === 'session' ? 'teams.store' : 'business.teams.store')
+      .use(middleware.auth({ guards: [teamGuard] }))
       .use(middleware.admittedAccount())
     router
       .group(() => {
-        router.get('teams/:scopeId', [controllers.Teams, 'show'])
-        router.patch('teams/:scopeId', [controllers.Teams, 'update'])
+        router
+          .get('teams/:scopeId', [controllers.Teams, 'show'])
+          .as(strategy === 'session' ? 'teams.show' : 'business.teams.show')
+        router
+          .patch('teams/:scopeId', [controllers.Teams, 'update'])
+          .as(strategy === 'session' ? 'teams.update' : 'business.teams.update')
+          .use(allowMutation())
       })
-      .use(middleware.auth())
+      .use(middleware.auth({ guards: [teamGuard] }))
       .use(middleware.admittedAccount())
       .use(middleware.scope())
 
@@ -155,6 +163,6 @@ router
       })
       .prefix('admin/deleted-users')
       .as('deleted_users')
-      .use(middleware.auth())
+      .use(middleware.auth({ guards: [selectedGuardName()] }))
   })
   .prefix('/api/v1')
