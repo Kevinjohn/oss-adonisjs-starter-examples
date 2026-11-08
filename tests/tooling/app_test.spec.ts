@@ -131,6 +131,26 @@ test.group('test:app', (group) => {
     assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
   })
 
+  test('skips with the note when assembly left a peer-ahead note instead of an app', async ({
+    assert,
+  }) => {
+    writeFiles(join(world.sandboxRoot, 'tmp/combined/api'), { '.peer-ahead': 'the note\n' })
+    const fake = fakeRunner()
+    const logged: string[] = []
+    await testApp({
+      root: world.sandboxRoot,
+      kit: 'api',
+      directory: 'tmp/combined',
+      installBrowsers: false,
+      runner: fake.runner,
+      waitForUrl: async () => {},
+      log: (line) => logged.push(line),
+    })
+    assert.deepEqual(logged, ['the note'])
+    assert.deepEqual(fake.calls, [])
+    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/api')))
+  })
+
   test('refuses an unknown kit before touching any folder', async ({ assert }) => {
     writeApp(world.sandboxRoot)
     await assert.rejects(

@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { type CommandRunner, constructedEnvironment } from './command_runner.ts'
 import { compareOutput } from './compare.ts'
@@ -10,6 +18,7 @@ import { type Lineage, buildLineage } from './lineage.ts'
 import { type MainPackage, buildMainPackages } from './main_packages.ts'
 import { mergeLineage } from './merge.ts'
 import { normaliseApp, renderAppReadme } from './normalise.ts'
+import { PEER_AHEAD_FILE, peerAheadNote } from './peer_ahead.ts'
 import { regenerateApp } from './regenerate.ts'
 import { releaseAssetUrl, shortName, unversionedAssetName } from './release_assets.ts'
 import { ResolutionStore } from './resolutions.ts'
@@ -326,6 +335,19 @@ export async function runAssembly(options: AssemblyOptions): Promise<boolean> {
     const manifest = JSON.parse(readFileSync(join(options.local.root, 'package.json'), 'utf8'))
     if (!options.config.packages.some((pkg) => pkg.name === manifest.name)) {
       throw new SandboxError(`Add ${manifest.name} to config/sandbox.json in the sandbox first`)
+    }
+    const note = peerAheadNote(options.config, manifest)
+    if (note) {
+      for (const kit of options.kits) {
+        const target = join(options.local.out, kit)
+        rmSync(target, { recursive: true, force: true })
+        mkdirSync(target, { recursive: true })
+        writeFileSync(join(target, PEER_AHEAD_FILE), `${note}\n`)
+        options.log(`${kit}: ${note}`)
+        // A passing check that combined nothing must say so on the pull request.
+        if (process.env.GITHUB_ACTIONS === 'true') options.log(`::notice::${kit}: ${note}`)
+      }
+      return true
     }
     local = { name: manifest.name, archive: await packLocalPackage(options, manifest.name) }
   }
