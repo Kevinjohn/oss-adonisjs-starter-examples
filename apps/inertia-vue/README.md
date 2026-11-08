@@ -8,7 +8,7 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 
 | Package                           | Version | Example                                                                                           |
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| `@kevinjohn/adonisjs-account-kit` | 0.3.1   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.1/examples/inertia-vue) |
+| `@kevinjohn/adonisjs-account-kit` | 0.3.2   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.2/examples/inertia-vue) |
 
 ## Run it
 
@@ -19,3 +19,8 @@ node ace generate:key
 node ace migration:run
 pnpm dev
 ```
+
+## Combined interactions
+
+See the sandbox's [API team request instructions](https://github.com/Kevinjohn/oss-adonisjs-starter-examples#api-team-requests)
+for the bearer-token ability and context header required by the combined API app.
