@@ -5,6 +5,7 @@ import { writeFileWithMode } from './file_tree.ts'
 import { type Git, GitCommandError } from './git.ts'
 import type { Lineage, LineageEntry } from './lineage.ts'
 import { MISSING, mergePackageJson, serialisePackageJson } from './package_json_merge.ts'
+import { resolveRegistryConflict } from './registry_merge.ts'
 import { shortName } from './release_assets.ts'
 import {
   type ConflictInputs,
@@ -249,12 +250,19 @@ export function mergeLineage(options: MergeOptions): MergeOutcome {
       } else if (recorded) {
         writeToWorkTree(git, path, recorded.content!, (stages[2] ?? stages[3])!.mode)
       } else {
+        const merged = diff3(git, options.scratchDirectory, inputs)
+        const automatic =
+          inputs.ours && inputs.theirs ? resolveRegistryConflict(path, merged) : null
+        if (automatic) {
+          writeToWorkTree(git, path, automatic, stages[2]!.mode)
+          continue
+        }
         const file = writePendingConflict(
           options.pendingRoot,
           kit,
           shortName(entry.pkg.name),
           inputs,
-          diff3(git, options.scratchDirectory, inputs)
+          merged
         )
         unresolved.push({ file })
       }

@@ -1,5 +1,6 @@
+import { spawnSync } from 'node:child_process'
 import { test } from '@japa/runner'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createWorkDirectory, mergeKit } from '../../src/assembly.ts'
 import { unsupportedReason } from '../../src/merge.ts'
@@ -364,5 +365,55 @@ test.group('merging', (group) => {
       () => merge(fixture),
       /^Unsupported conflict \(name ends in \.inputs\.json\) on a\.inputs\.json\/child\.ts /
     )
+  })
+})
+
+test.group('merging registry files', (group) => {
+  const registry = (...entries: string[]) =>
+    `export default {\n  providers: [\n${entries.map((entry) => `    ${entry},\n`).join('')}  ],\n}\n`
+  let fixture: SandboxFixture
+  group.each.setup(() => {
+    fixture = new SandboxFixture(['api'], () => ({ 'adonisrc.ts': registry('base') }))
+    twoPackages(
+      fixture,
+      { 'adonisrc.ts': registry('base', 'accountKit') },
+      { 'adonisrc.ts': registry('base', 'softDelete') }
+    )
+    return () => fixture.cleanup()
+  })
+
+  test('merges a registry file where both sides only added lines', ({ assert }) => {
+    const { outcome } = merge(fixture)
+    assert.isTrue(outcome.ok)
+    assert.equal(appFile('adonisrc.ts'), registry('base', 'accountKit', 'softDelete'))
+    assert.isFalse(existsSync(join(fixture.root, 'tmp/conflicts/api')))
+  })
+
+  test('a recorded resolution for the same inputs wins over the automatic merge', ({ assert }) => {
+    const blob = (content: string) => ({
+      blob: spawnSync('git', ['hash-object', '--stdin'], {
+        input: content,
+        encoding: 'utf8',
+      }).stdout.trim(),
+      mode: '100644',
+    })
+    const folder = join(fixture.root, 'resolutions/api/lucid-soft-delete')
+    mkdirSync(folder, { recursive: true })
+    const recorded = registry('base', 'softDelete', 'accountKit')
+    writeFileSync(join(folder, 'adonisrc.ts'), recorded)
+    writeFileSync(
+      join(folder, 'adonisrc.ts.inputs.json'),
+      JSON.stringify({
+        path: 'adonisrc.ts',
+        base: blob(registry('base')),
+        ours: blob(registry('base', 'accountKit')),
+        theirs: blob(registry('base', 'softDelete')),
+        result: 'content',
+      })
+    )
+    const { outcome, context } = merge(fixture)
+    assert.isTrue(outcome.ok)
+    assert.equal(appFile('adonisrc.ts'), recorded)
+    assert.deepEqual(context.store.unused(), [])
   })
 })
