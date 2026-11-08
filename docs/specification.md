@@ -111,6 +111,10 @@ resolutions/inertia-react/lucid-soft-delete/app/models/user.ts.inputs.json input
 - `result` is `"content"` (use the content file) or `"delete"` (no content file exists). Pending
   files have `"result": null`; only `pnpm resolve` sets it.
 - A resolution applies only when path, existence, blob and mode match on all three sides.
+- One file can have several resolutions, each for different inputs. When `pnpm resolve` saves one
+  and the file already has a resolution for other inputs, the new one is saved beside it as
+  `<path>.alt-<hash>` (the first 12 hex characters of the SHA-256 of its inputs). A package PR
+  that changes a resolved file gets its resolution this way while released mode keeps the old one.
 - `resolutions/` is excluded from the sandbox's own lint, format and typecheck.
 
 ---
@@ -316,7 +320,10 @@ and add --delete <path> for a file that should not exist. Then run pnpm assemble
    resolutions just saved from a `--with-local` run.
 
 Unused resolutions for the selected kits are warnings in `assemble` (with the hint
-`pnpm resolve --kit <kit> --prune-unused`) and errors in `assemble --check`.
+`pnpm resolve --kit <kit> --prune-unused`) and errors in `assemble --check`. An unused resolution
+for a file that had another resolution used in the same run is only a note, in both modes: it
+serves other package versions, such as an unreleased package PR. Prune it once no package needs
+it, normally in the sandbox PR that moves to that package's release.
 
 ### 6.6 Regenerating and output
 

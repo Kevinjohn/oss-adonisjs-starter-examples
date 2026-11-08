@@ -250,7 +250,11 @@ async function assembleKit(
     let ok = true
     for (const key of context.store.unused()) {
       const path = relative(root, join(context.store.folder, key))
-      if (options.mode === 'check' && !context.store.usedBeside(key)) {
+      if (context.store.usedBeside(key)) {
+        log(
+          `note: ${path} is for other package versions; prune it only once no package PR or release needs it`
+        )
+      } else if (options.mode === 'check') {
         log(`Unused resolution ${path}`)
         ok = false
       } else {
