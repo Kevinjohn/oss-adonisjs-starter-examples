@@ -35,7 +35,10 @@ runCli(async () => {
     const url = `https://raw.githubusercontent.com/${entry.repository}/v${match[2]}/package.json`
     const response = await fetch(url)
     if (!response.ok) throw new SandboxError(`No release tag v${match[2]} for ${name} (${url})`)
-    const manifest = await response.json()
+    const manifest = (await response.json()) as {
+      version?: string
+      peerDependencies?: Record<string, string>
+    }
     if (manifest.version !== match[2])
       throw new SandboxError(`${name} v${match[2]} has package.json version ${manifest.version}`)
 
@@ -74,4 +77,5 @@ runCli(async () => {
     '\nNext: pnpm assemble, then pnpm resolve --kit <kit> --prune-unused for each kit,' +
       ' pnpm assemble --check and pnpm test:app --kit <kit>.'
   )
+  return true
 })
