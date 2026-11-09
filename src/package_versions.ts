@@ -60,7 +60,7 @@ export function displayName(name: string): string {
 }
 
 function versionPattern(version: string): string {
-  return `(?<![\\d.])${escapeRegExp(version)}(?!\\d)`
+  return `${escapeRegExp(version)}(?!\\d)`
 }
 
 /**

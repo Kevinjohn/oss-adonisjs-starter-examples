@@ -64,6 +64,20 @@ test.group('package versions', () => {
     )
   })
 
+  test('refuses a predecessor for a package that builds on nothing', ({ assert }) => {
+    assert.throws(
+      () =>
+        setConfigVersions(config.replace('"predecessorVersion": null', '"other": null'), [
+          {
+            name: '@kevinjohn/adonisjs-account-kit',
+            version: '0.3.5',
+            predecessorVersion: '0.0.1',
+          },
+        ]),
+      '@kevinjohn/adonisjs-account-kit has no builtOn.predecessorVersion'
+    )
+  })
+
   test('updates the specification table, example entry and prose', ({ assert }) => {
     const specification = [
       '      "name": "@kevinjohn/adonisjs-account-kit",',
@@ -73,7 +87,7 @@ test.group('package versions', () => {
       '| Masquerade     | 0.2.8   | `examples/with_account_kit/api` |',
       '| Soft Delete    | 0.3.4   | `examples/starter/api`          |',
       '',
-      'Control are based on Account Kit 0.3.4; youch 10.3.4 and 0.3.40 stay.',
+      'Control are based on Account Kit 0.3.4; Account Kit 0.3.40 stays.',
     ].join('\n')
 
     assert.equal(
@@ -89,7 +103,7 @@ test.group('package versions', () => {
         '| Masquerade     | 0.2.9   | `examples/with_account_kit/api` |',
         '| Soft Delete    | 0.3.4   | `examples/starter/api`          |',
         '',
-        'Control are based on Account Kit 0.3.10; youch 10.3.4 and 0.3.40 stay.',
+        'Control are based on Account Kit 0.3.10; Account Kit 0.3.40 stays.',
       ].join('\n')
     )
   })
