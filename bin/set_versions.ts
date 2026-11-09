@@ -2,11 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { SANDBOX_ROOT, runCli } from '../src/cli.ts'
 import { SandboxError } from '../src/errors.ts'
-import {
-  type VersionUpdate,
-  setConfigVersions,
-  setSpecificationVersions,
-} from '../src/package_versions.ts'
+import { type VersionUpdate, recordVersions } from '../src/package_versions.ts'
 import { readSandboxConfig } from '../src/sandbox_config.ts'
 
 /**
@@ -51,27 +47,17 @@ runCli(async () => {
     updates.push({ name, version: match[2], predecessorVersion })
   }
 
-  const versions = new Map(config.packages.map((entry) => [entry.name, entry.version]))
-  for (const update of updates) versions.set(update.name, update.version)
-  for (const entry of config.packages) {
-    if (!entry.buildsOn) continue
-    const update = updates.find((candidate) => candidate.name === entry.name)
-    const builtOn = update?.predecessorVersion ?? entry.builtOn.predecessorVersion
-    if (builtOn !== versions.get(entry.buildsOn))
-      console.warn(
-        `Warning: ${entry.name} is built on ${entry.buildsOn} ${builtOn}; the sandbox now has ${versions.get(entry.buildsOn)}.`
-      )
-  }
-
-  writeFileSync(configPath, setConfigVersions(readFileSync(configPath, 'utf8'), updates))
-  writeFileSync(
-    specificationPath,
-    setSpecificationVersions(readFileSync(specificationPath, 'utf8'), config.packages, updates)
+  const recorded = recordVersions(
+    readFileSync(configPath, 'utf8'),
+    readFileSync(specificationPath, 'utf8'),
+    updates
   )
+  writeFileSync(configPath, recorded.config)
+  writeFileSync(specificationPath, recorded.specification)
 
   for (const update of updates) {
     const built = update.predecessorVersion ? ` (built on ${update.predecessorVersion})` : ''
-    console.log(`${update.name} ${versions.get(update.name)}${built}`)
+    console.log(`${update.name} ${update.version}${built}`)
   }
   console.log(
     '\nNext: pnpm assemble, then pnpm resolve --kit <kit> --prune-unused for each kit,' +

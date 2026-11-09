@@ -1,5 +1,5 @@
 import { SandboxError } from './errors.ts'
-import type { PackageConfig } from './sandbox_config.ts'
+import { type PackageConfig, validateSandboxConfig } from './sandbox_config.ts'
 
 /** A package release to record in `config/sandbox.json`. */
 export interface VersionUpdate {
@@ -90,4 +90,41 @@ export function setSpecificationVersions(
     result = replaceField(result, update.name, 'version', update.version) ?? result
   }
   return result
+}
+
+/**
+ * Computes both rewritten files without writing either. Refuses a package named twice, a result
+ * the sandbox would reject (such as a package left built on an older predecessor, D10), and any
+ * update that did not land on its own package.
+ */
+export function recordVersions(
+  configText: string,
+  specificationText: string,
+  updates: VersionUpdate[]
+): { config: string; specification: string } {
+  const names = new Set<string>()
+  for (const update of updates) {
+    if (names.has(update.name)) throw new SandboxError(`${update.name} is named twice`)
+    names.add(update.name)
+  }
+
+  const current = validateSandboxConfig(JSON.parse(configText))
+  const config = setConfigVersions(configText, updates)
+  const recorded = validateSandboxConfig(JSON.parse(config))
+  for (const update of updates) {
+    const entry = recorded.packages.find((candidate) => candidate.name === update.name)
+    const predecessor = update.predecessorVersion ?? entry?.builtOn.predecessorVersion
+    if (entry?.version !== update.version || entry.builtOn.predecessorVersion !== predecessor)
+      throw new SandboxError(`Could not record ${update.name} ${update.version} in its own entry`)
+  }
+  for (const entry of current.packages) {
+    const before = recorded.packages.find((candidate) => candidate.name === entry.name)
+    if (!names.has(entry.name) && JSON.stringify(before) !== JSON.stringify(entry))
+      throw new SandboxError(`Recording the releases changed ${entry.name}, which was not named`)
+  }
+
+  return {
+    config,
+    specification: setSpecificationVersions(specificationText, current.packages, updates),
+  }
 }

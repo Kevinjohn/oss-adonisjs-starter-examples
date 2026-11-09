@@ -462,6 +462,7 @@ It does not change `config/sandbox.json`, the package's peer, or its lockfile; t
 example `pnpm set-versions account-kit@0.3.5 masquerade@0.2.9`. For each one it reads
 `package.json` at the release tag, refuses a missing tag or a mismatched version, and sets
 `version`. For a package with `buildsOn`, it sets `builtOn.predecessorVersion` to the release's
-exact peer on that package. It warns when a package is built on a different version than the
-sandbox now lists, and updates the release table, example entry and version prose in this
+exact peer on that package. It computes both files before writing either, and refuses a package
+named twice or a result that leaves a package built on an older predecessor (record that
+package's release in the same command). It then updates the release table, example entry and version prose in this
 specification. Assembly, resolutions and tests follow as usual.
