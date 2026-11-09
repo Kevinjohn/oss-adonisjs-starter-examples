@@ -20,7 +20,7 @@ Example package entry for Account Kit (the current config also lists the other p
     {
       "name": "@kevinjohn/adonisjs-account-kit",
       "repository": "Kevinjohn/oss-adonisjs-account-kit",
-      "version": "0.3.2",
+      "version": "0.3.3",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -42,9 +42,9 @@ Current releases and API examples:
 
 | Package        | Version | API example                     |
 | -------------- | ------- | ------------------------------- |
-| Account Kit    | 0.3.2   | `examples/api`                  |
-| Masquerade     | 0.2.6   | `examples/with_account_kit/api` |
-| Access Control | 0.1.5   | `examples/with_account_kit/api` |
+| Account Kit    | 0.3.3   | `examples/api`                  |
+| Masquerade     | 0.2.7   | `examples/with_account_kit/api` |
+| Access Control | 0.1.6   | `examples/with_account_kit/api` |
 | Soft Delete    | 0.1.7   | `examples/starter/api`          |
 
 Every kit combines all four packages.
@@ -143,7 +143,7 @@ normalise, overlay, regenerate
 
 For the API kit, Account Kit supplies `examples/api`, Masquerade and Access Control each supply
 `examples/with_account_kit/api`, and Soft Delete supplies `examples/starter/api`. Masquerade and Access
-Control are based on Account Kit 0.3.2;
+Control are based on Account Kit 0.3.3;
 Masquerade's API example authenticates with Account Kit access tokens. This completes the previously
 deferred Q4 API combination of all four packages.
 
