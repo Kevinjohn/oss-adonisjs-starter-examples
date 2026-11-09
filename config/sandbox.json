@@ -9,7 +9,7 @@
     {
       "name": "@kevinjohn/adonisjs-account-kit",
       "repository": "Kevinjohn/oss-adonisjs-account-kit",
-      "version": "0.3.2",
+      "version": "0.3.3",
       "buildsOn": null,
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
@@ -26,11 +26,11 @@
     {
       "name": "@kevinjohn/adonisjs-masquerade",
       "repository": "Kevinjohn/oss-adonisjs-masquerade",
-      "version": "0.2.6",
+      "version": "0.2.7",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
-        "predecessorVersion": "0.3.2"
+        "predecessorVersion": "0.3.3"
       },
       "kits": {
         "api": "examples/with_account_kit/api",
@@ -43,11 +43,11 @@
     {
       "name": "@kevinjohn/adonisjs-access-control",
       "repository": "Kevinjohn/oss-adonisjs-access-control",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "buildsOn": "@kevinjohn/adonisjs-account-kit",
       "builtOn": {
         "base": "46d235932e3eb6472a16b740fa0b47b5f69fc6fc",
-        "predecessorVersion": "0.3.2"
+        "predecessorVersion": "0.3.3"
       },
       "kits": {
         "api": "examples/with_account_kit/api",
