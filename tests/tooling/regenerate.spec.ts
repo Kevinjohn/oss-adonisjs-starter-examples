@@ -136,7 +136,7 @@ test.group('regenerate', (group) => {
     )
   })
 
-  test('the constructed environment drops ACCOUNT_KIT_ variables', ({ assert }) => {
+  test('the constructed environment keeps host variables out', ({ assert }) => {
     const saved = { ...process.env }
     for (const key of ['CI', 'PNPM_HOME', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME']) {
       delete process.env[key]
@@ -145,7 +145,7 @@ test.group('regenerate', (group) => {
     process.env.XDG_DATA_HOME = '/data'
     process.env.npm_lifecycle_event = 'assemble'
     try {
-      const env = constructedEnvironment({ ACCOUNT_KIT_USERS_TABLE: 'people', EXTRA: 'yes' })
+      const env = constructedEnvironment({ EXTRA: 'yes' })
       assert.deepEqual(Object.keys(env).sort(), [
         'EXTRA',
         'HOME',

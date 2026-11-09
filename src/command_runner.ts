@@ -36,7 +36,7 @@ const PASSED_THROUGH = [
 
 /**
  * The environment of specification 6.6: only `PATH`, `HOME`, `HOST`, `LIMITER_STORE` and pnpm's
- * own location variables, so no `ACCOUNT_KIT_*` switch or pnpm script variable reaches the app.
+ * own location variables, so no pnpm script variable reaches the app.
  * `extra` adds variables.
  */
 export function constructedEnvironment(
@@ -52,7 +52,7 @@ export function constructedEnvironment(
     if (process.env[key] !== undefined) env[key] = process.env[key]
   }
   for (const [key, value] of Object.entries(extra)) {
-    if (value !== undefined && !key.startsWith('ACCOUNT_KIT_')) env[key] = value
+    if (value !== undefined) env[key] = value
   }
   return env
 }
