@@ -52,7 +52,8 @@ flowchart TD
     F --> G["Kit TeamsController.show authorizes team:read"]
     G --> H["Load team"]
     H --> I{"Kit?"}
-    I -->|Browser| J["Render team and member roles"]
+    I -->|Browser| L["accessControl.memberships.listForScope loads member roles"]
+    L --> J["Render team and member roles"]
     I -->|API| K["Return team ID, name and caller membership"]
 ```
 
