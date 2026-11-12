@@ -11,11 +11,11 @@ As an admitted API instance owner, I want to filter and page admission records s
 
 ## Acceptance criteria
 
-| Input    | Type   | Required/default/conditions                           |
-| -------- | ------ | ----------------------------------------------------- |
-| `status` | Choice | Optional: pending, approved, rejected, revoked        |
-| `limit`  | Number | Optional; from 1 to 100; package default when omitted |
-| `cursor` | String | Optional opaque page continuation                     |
+| Input    | Type   | Required/default/conditions                      |
+| -------- | ------ | ------------------------------------------------ |
+| `status` | Choice | Optional: pending, approved, rejected, revoked   |
+| `limit`  | Number | Optional; from 1 to 100; default 25 when omitted |
+| `cursor` | String | Optional opaque page continuation                |
 
 - `AdmissionsController.index` derives actor ID from the raw guard and passes validated filters to `service.list`. Results are the package page.
 - Neither team ownership nor knowing another user ID grants this list. An unadmitted actor or a non-instance-owner is refused.

@@ -11,11 +11,11 @@ As the recipient of an email-verification link, I want to prove control of the a
 
 ## Acceptance criteria
 
-| Field            | Control                      | Required/default/conditions                            |
-| ---------------- | ---------------------------- | ------------------------------------------------------ |
-| Password         | Password input / JSON string | Required; 8–256 characters.                            |
-| Confirm password | Password input / JSON string | Required; must match Password.                         |
-| Token            | Link / URL parameter         | Required; valid, unexpired, unused verification token. |
+| Field                                                                      | Control                      | Required/default/conditions                            |
+| -------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------ |
+| Choose a password (Hypermedia) / Password (React, Vue), API key `password` | Password input / JSON string | Required; 8–256 characters.                            |
+| Confirm password (`passwordConfirmation`)                                  | Password input / JSON string | Required; must match Password.                         |
+| Token                                                                      | Link / URL parameter         | Required; valid, unexpired, unused verification token. |
 
 - The browser inspects the link before showing the form. API clients can inspect it with `GET`; valid proof returns `confirmation: true`.
 - Completing a valid token with the password and confirmation activates the address. The browser then asks the owner to sign in with the password entered in this form; API returns the operation result.
@@ -38,6 +38,8 @@ flowchart TD
 ```
 
 ## Code flow
+
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
 
 ```mermaid
 flowchart TD

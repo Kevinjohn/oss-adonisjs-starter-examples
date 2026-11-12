@@ -3,7 +3,7 @@
 As an account owner, I want to authenticate with my email and password so that later requests use my account identity.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Public login route; guest and account-kit account-blocker middleware apply.
+**Access:** Public login route; browser routes apply guest plus account blocker; the API public route applies its account blocker without guest middleware.
 **Entry:** Browser kits: `POST /login`; API: `POST /api/v1/auth/login`.
 **Documentation:** [Hypermedia authentication guide](../../apps/hypermedia/README.md#try-it).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -36,6 +36,8 @@ flowchart TD
 ```
 
 ## Code flow
+
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
 
 ```mermaid
 flowchart TD

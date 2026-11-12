@@ -1,4 +1,4 @@
-# US-API-18 — Reject an admission approval
+# US-API-18 — Reject account admission
 
 As an admitted API instance owner, I want to reject a selected account's admission so that I can record that approval has been refused.
 

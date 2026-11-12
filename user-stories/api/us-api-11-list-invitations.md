@@ -14,7 +14,7 @@ As an API scope manager, I want to read a page of scoped invitations so that I c
 | Input    | Type   | Required/default/conditions                                  |
 | -------- | ------ | ------------------------------------------------------------ |
 | `scope`  | String | Required; trimmed positive decimal integer spelling          |
-| `limit`  | Number | Optional; 1–100; package supplies the omitted default        |
+| `limit`  | Number | Optional; 1–100; defaults to 25 when omitted                 |
 | `cursor` | String | Optional opaque continuation cursor from the previous result |
 
 - `InvitationsController.list` derives `actorId` from the raw guard and returns the package's invitation page. A client's chosen scope does not bypass invitation-list authorization.

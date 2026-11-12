@@ -33,6 +33,8 @@ flowchart TD
 
 ## Code flow
 
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
+
 ```mermaid
 flowchart TD
     A["POST /email-verification or POST /api/v1/account/email-verification/send"] --> B["Browser auth or API accountAccess route guard"]

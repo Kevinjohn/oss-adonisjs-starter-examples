@@ -1,4 +1,4 @@
-# US-API-17 — Approve an admission approval
+# US-API-17 — Approve account admission
 
 As an admitted API instance owner, I want to approve a selected account's admission so that I can allow the approval requirement to become satisfied.
 

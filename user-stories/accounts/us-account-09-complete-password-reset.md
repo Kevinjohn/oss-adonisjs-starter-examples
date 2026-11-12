@@ -11,11 +11,11 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 
 ## Acceptance criteria
 
-| Field            | Control                      | Required/default/conditions               |
-| ---------------- | ---------------------------- | ----------------------------------------- |
-| Password         | Password input / JSON string | Required; 8–256 characters.               |
-| Confirm password | Password input / JSON string | Required; must match Password.            |
-| Token            | Link / URL parameter         | Required; valid, unexpired, unused token. |
+| Field                                      | Control                      | Required/default/conditions               |
+| ------------------------------------------ | ---------------------------- | ----------------------------------------- |
+| New password (browser), API key `password` | Password input / JSON string | Required; 8–256 characters.               |
+| Confirm password (`passwordConfirmation`)  | Password input / JSON string | Required; must match Password.            |
+| Token                                      | Link / URL parameter         | Required; valid, unexpired, unused token. |
 
 - The browser inspects the link before showing the form. API clients can inspect it with `GET`; a valid token returns `valid: true`.
 - A valid token and matching password replace the credential. Browser redirects to sign-in; API returns `202` with a password-reset acknowledgement. Recognized delivery or post-commit failures after the reset are logged and do not report the reset as uncommitted.
@@ -38,6 +38,8 @@ flowchart TD
 ```
 
 ## Code flow
+
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
 
 ```mermaid
 flowchart TD

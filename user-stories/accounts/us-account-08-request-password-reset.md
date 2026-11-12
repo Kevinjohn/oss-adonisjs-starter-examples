@@ -3,7 +3,7 @@
 As a person who may own an account, I want to request a password-reset link so that I can recover access without revealing whether an address is registered.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Public recovery form or API endpoint; guest and account-kit account-blocker middleware apply.
+**Access:** Public recovery form or API endpoint; browser routes apply guest plus account blocker; the API public route applies its account blocker without guest middleware.
 **Entry:** Browser kits: `POST /forgot-password`; API: `POST /api/v1/auth/password-reset`.
 **Documentation:** [Hypermedia recovery form](../../apps/hypermedia/resources/views/pages/auth/forgot_password.edge).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -33,6 +33,8 @@ flowchart TD
 ```
 
 ## Code flow
+
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
 
 ```mermaid
 flowchart TD

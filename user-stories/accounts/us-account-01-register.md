@@ -3,7 +3,7 @@
 As a visitor, I want to create an account so that I can sign in and use account features.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Public signup form or API endpoint; guest and account-kit account-blocker middleware apply.
+**Access:** Public signup form or API endpoint; browser routes apply guest plus account blocker; the API public route applies its account blocker without guest middleware.
 **Entry:** Browser kits: `GET/POST /signup`; API: `POST /api/v1/auth/signup`.
 **Documentation:** [Hypermedia signup guide](../../apps/hypermedia/README.md#try-it).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -11,12 +11,12 @@ As a visitor, I want to create an account so that I can sign in and use account 
 
 ## Acceptance criteria
 
-| Field            | Control                      | Required/default/conditions                                                         |
-| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
-| Full name        | Text input / JSON string     | Optional; trimmed; maximum 255 characters; null or blank is accepted as absent.     |
-| Email            | Email input / JSON string    | Required; trimmed, lowercased, valid email; maximum 254 characters; must be unused. |
-| Password         | Password input / JSON string | Required; 8–256 characters.                                                         |
-| Confirm password | Password input / JSON string | Required; must match Password.                                                      |
+| Field                                     | Control                      | Required/default/conditions                                                         |
+| ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| Full name (optional) (`fullName`)         | Text input / JSON string     | Optional; trimmed; maximum 255 characters; null or blank is accepted as absent.     |
+| Email (`email`)                           | Email input / JSON string    | Required; trimmed, lowercased, valid email; maximum 254 characters; must be unused. |
+| Password (`password`)                     | Password input / JSON string | Required; 8–256 characters.                                                         |
+| Confirm password (`passwordConfirmation`) | Password input / JSON string | Required; must match Password.                                                      |
 
 - Both signup handlers allow at most five requests per client IP in 15 minutes. Invalid fields are returned as validation feedback.
 - A duplicate address is refused. The browser returns to signup with an error; the API returns 422 with an `email` unique error.
@@ -38,9 +38,11 @@ flowchart TD
 
 ## Code flow
 
+Scope: the implemented app routes and controllers delegate account persistence to the named Account Kit service, then reconcile the documented response.
+
 ```mermaid
 flowchart TD
-    A["signupValidator / signupValidator"] --> B["NewAccountController.store in browser / API"]
+    A["Browser or API signup route"] --> B["NewAccountController.store applies client limiter and signupValidator"]
     B --> C["kit.registration.register / accountKit.registration.register"]
     C --> D{"Delivery or post-commit failure?"}
     D -->|No| E["Continue to browser session login or API authStrategy branch"]
