@@ -3,7 +3,7 @@
 As a configured support operator, I want to start a time-limited mode for an eligible account so that I can inspect it without acquiring its credentials.
 
 **Status:** Current when the configured actor and target policies allow it; source-reviewed, not runtime-tested here.
-**Access:** Raw signed-in actor must be listed by `MASQUERADE_OPERATOR_EMAILS`; host policy also requires a distinct admitted target. API token mode requires `masquerade` ability.
+**Access:** Raw signed-in actor must be listed by `MASQUERADE_OPERATOR_EMAILS`; the target must be a different non-operator with an active, unrestricted native account. The API additionally requires an admitted target. API token mode requires `masquerade` ability.
 **Entry:** Browser kits: open `/masquerade/accounts` and choose `Act as <email>`; API: read `GET /masquerade`, then `POST /masquerade/start` with its current context.
 **Documentation:** [Masquerade browser/API walkthrough](../../docs/cookbook/masquerade-with-access-control.md), [API request example](../../apps/api/README.md#api).
 **Source:** [Hypermedia target list](../../apps/hypermedia/app/controllers/masquerade_accounts_controller.ts), [form transition](../../apps/hypermedia/app/controllers/masquerade_form_controller.ts), [API control mount](../../apps/api/start/masquerade_routes.ts), [policy config](../../apps/api/config/masquerade.ts).
@@ -24,7 +24,8 @@ As a configured support operator, I want to start a time-limited mode for an eli
 
 - API control body is limited to 8 KiB and accepts JSON or URL-encoded form fields; multipart and unknown keys are refused. URL form duration must be a canonical safe integer string; explicit JSON `null` is invalid.
 - Browser form exposes no reason or duration field; its duration is service-configured. All kits retain the actor's own credential and return a fresh context after successful start.
-- Failed identity, admission, `canMasquerade`, requested edit policy or stale context refuses the request. An edit request is never silently changed to view.
+- All kits refuse self-targets, operator targets, and inactive or restricted native accounts. Browser `canMasquerade` requires the configured operator pair; API `canMasquerade` also requires `AccountAdmission.isAdmitted(target.id)`.
+- The `view` access is the default. A requested `edit` is accepted only when `canEdit` returns literal `true`; denied edit requests fail instead of silently becoming view. API token control requires the `masquerade` ability and a current context.
 
 ## User flow
 

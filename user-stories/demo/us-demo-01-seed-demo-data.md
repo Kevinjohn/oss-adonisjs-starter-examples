@@ -24,9 +24,9 @@ flowchart TD
     A["Operator runs node ace db:seed in a kit app"] --> B["DemoSeeder.run reads configured operator/admin addresses"]
     B --> C["De-duplicate those addresses with Alice and Bob"]
     C --> D["Create missing users; preserve existing active or trashed users"]
-    D --> E["Find Alice-owned Demo team or create it with Alice owner and Bob viewer"]
-    E --> F{"Team already exists?"}
-    F -->|No| G["Commit team and both memberships transactionally"]
+    D --> E["Load Alice and Bob; search Alice's owned Demo team"]
+    E --> F{"Matching team exists?"}
+    F -->|No| G["Create team, Alice owner, and Bob viewer in one transaction"]
     F -->|Yes| H["Add Bob as viewer only if he has no membership"]
 ```
 
