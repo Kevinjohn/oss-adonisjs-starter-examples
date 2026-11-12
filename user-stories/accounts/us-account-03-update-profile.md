@@ -11,15 +11,15 @@ As a signed-in account owner, I want to change or clear my profile name so that 
 
 ## Acceptance criteria
 
-| Kit                    | Field or key                         | Control             | Required/default/conditions                                                                      |
-| ---------------------- | ------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------ |
+| Kit                    | Field or key                         | Control             | Required/default/conditions                                                                                           |
+| ---------------------- | ------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Hypermedia, React, Vue | Full name (optional) (`fullName`)    | Text input          | Optional; starts with the current name or blank when unset; trimmed; up to 255 characters; blank/null clears the name |
-| Hypermedia             | Current email                        | Read-only text      | Shows the current address.                                                                       |
-| React, Vue             | Signed in as                         | Read-only text      | Shows the current account identity.                                                              |
-| Hypermedia, React, Vue | Current password (`currentPassword`) | Password input      | Required; verifies account ownership                                                             |
-| API                    | `fullName`                           | JSON string or null | Optional; trimmed; up to 255 characters; null clears the name                                    |
-| API                    | `currentPassword`                    | JSON string         | Required; verifies account ownership                                                             |
-| API                    | `email`                              | Optional JSON field | A simultaneous email change is handled by [US-ACCOUNT-05](us-account-05-request-email-change.md) |
+| Hypermedia             | Current email                        | Read-only text      | Shows the current address.                                                                                            |
+| React, Vue             | Signed in as                         | Read-only text      | Shows the current account identity.                                                                                   |
+| Hypermedia, React, Vue | Current password (`currentPassword`) | Password input      | Required; verifies account ownership                                                                                  |
+| API                    | `fullName`                           | JSON string or null | Optional; trimmed; up to 255 characters; null clears the name                                                         |
+| API                    | `currentPassword`                    | JSON string         | Required; verifies account ownership                                                                                  |
+| API                    | `email`                              | Optional JSON field | A simultaneous email change is handled by [US-ACCOUNT-05](us-account-05-request-email-change.md)                      |
 
 - Browser profile submission updates the raw account name and displays the updated profile name. API profile PATCH also writes `fullName`, but its success response is a safe account view that omits the name, or `{ updated: true }` if a committed follow-up failed.
 - Invalid current password or field validation does not update the name; the account identity always comes from the authenticated account, not a Masquerade target.

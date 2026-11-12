@@ -29,8 +29,8 @@ As a team editor, I want to rename a team so that its members see the current na
 
 ## Acceptance criteria
 
-| Field     | Control                         | Required/default/conditions         |
-| --------- | ------------------------------- | ----------------------------------- |
+| Field     | Control                         | Required/default/conditions                                                               |
+| --------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
 | Team name | Text input labelled “Team name” | Required; React editing form starts with the current team name; trimmed; 1–100 characters |
 
 - The controller checks `team:write`, validates the name, saves the team and returns to its page with success feedback.
