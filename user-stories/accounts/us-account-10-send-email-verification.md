@@ -47,9 +47,9 @@ flowchart TD
     D -->|React/Vue returned| G["Show one-minute reuse guidance"]
     D -->|React/Vue error| H["Shared exception handler shows failure page"]
     D -->|API delivery or post-commit error| I["committedFollowUp logs failure and response uses fallback result"]
-    E --> H["Verification remains a separate token-completion action"]
-    F --> H
-    G --> H
+    E --> J["Verification remains a separate token-completion action"]
+    F --> J
+    G --> J
 ```
 
 **Code references:** [Hypermedia route](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/email_verifications_controller.ts), [API route and accountAccess middleware](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/email_verifications_controller.ts), [Committed-failure handling](../../apps/api/app/services/committed_failure_diagnostic.ts), [Email-verification functional tests](../../apps/api/tests/functional/account_email_verification.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/email_verifications_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/email_verifications_controller.ts).
