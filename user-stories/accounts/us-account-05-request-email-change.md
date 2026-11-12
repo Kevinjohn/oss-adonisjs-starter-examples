@@ -18,12 +18,15 @@ As a signed-in account owner, I want to request verification of a new email addr
 | API                    | `email`                              | JSON string    | Optional field on profile PATCH; when supplied, normalized, valid and not already in use |
 | API                    | `currentPassword`                    | JSON string    | Required for profile update; confirms account ownership                                  |
 
-- For a confirmed account, a valid request records a pending new address and attempts to send a confirmation link; the existing address stays active until confirmation. Browser routes reject an unconfirmed current address or requesting the current address. API `updateProfile({ email })` also handles its inactive-address activation state and a pending request may be canceled by supplying the confirmed current address (US-ACCOUNT-06).
+- For a confirmed account, a valid request records a pending new address and attempts to send a confirmation link; the existing address stays active until confirmation. Browser routes reject an unconfirmed current address or requesting the current address. API `updateProfile({ email })` also handles its inactive-address activation state and a pending request may be canceled by supplying the confirmed current address. US-ACCOUNT-06 describes the separate browser cancellation form; API cancellation uses this profile PATCH.
 - The API profile PATCH can also update `fullName`; the browser email form is a separate email-settings action. This story covers requesting a new address.
-- Incorrect password, same or duplicate address, validation refusal or an unconfirmed current address does not complete the address change.
+- Incorrect password, duplicate address or field-validation refusal leaves the existing state unchanged. The browser-only same-address and unconfirmed-address checks do not apply to the API profile PATCH.
 - If browser email delivery fails after the request is saved, Hypermedia, React and Vue log the failure and show an error that says the request was saved but delivery is uncertain. API handles recognized post-commit delivery errors as `{ updated: true }` and logs them. Neither result guarantees a message arrived.
 
 ## User flow
+
+This chart follows a confirmed account requesting a different address. The API cancellation and
+inactive-address activation alternatives are described in the criteria above.
 
 ```mermaid
 flowchart TD
@@ -50,7 +53,7 @@ flowchart TD
     C --> D{"Request returned or error identifies committed update?"}
     D -->|No| E["Refuse input, credential or policy failure"]
     D -->|Yes| F{"Post-commit delivery failure?"}
-    F -->|No| G["Show or return pending-address result"]
+    F -->|No| G["Show browser pending-address result or API account state after its selected branch"]
     F -->|Yes| H["Browser logs and warns; API logs and returns updated true"]
 ```
 
