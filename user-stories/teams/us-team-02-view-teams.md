@@ -7,7 +7,7 @@ As a verified account owner, I want to list the teams attached to my account so 
 **Entry:** Browser kits: `GET /teams`.
 **Documentation:** [Hypermedia team list](../../apps/hypermedia/resources/views/pages/teams/index.edge).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [Hypermedia TeamsController.index](../../apps/hypermedia/app/controllers/teams_controller.ts).
-**Coverage:** [Team functional tests](../../apps/api/tests/functional/teams.spec.ts); this link identifies source behavior coverage, not runtime verification of these docs.
+**Coverage:** [Browser team tests](../../apps/hypermedia/tests/browser/teams.spec.ts); this link identifies source behavior coverage, not runtime verification of these docs.
 
 ## Acceptance criteria
 
@@ -40,4 +40,4 @@ flowchart TD
     F --> G["Render team id, name, and membership role"]
 ```
 
-**Code references:** [Hypermedia route and guards](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [Hypermedia team list](../../apps/hypermedia/resources/views/pages/teams/index.edge), [Inertia React route and controller](../../apps/inertia-react/start/routes.ts), [Inertia Vue route and controller](../../apps/inertia-vue/start/routes.ts), [Team functional tests](../../apps/api/tests/functional/teams.spec.ts).
+**Code references:** [Hypermedia route and guards](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [Hypermedia team list](../../apps/hypermedia/resources/views/pages/teams/index.edge), [Inertia React route and controller](../../apps/inertia-react/start/routes.ts), [Inertia Vue route and controller](../../apps/inertia-vue/start/routes.ts), [Browser team tests](../../apps/hypermedia/tests/browser/teams.spec.ts).

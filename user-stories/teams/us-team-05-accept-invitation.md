@@ -11,12 +11,12 @@ As an invitation recipient, I want to accept a valid invitation so that I can cr
 
 ## Acceptance criteria
 
-| Field            | Control                      | Required/default/conditions                                                                             |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Full name        | Text input / JSON string     | Optional; trimmed; maximum 255 characters.                                                              |
-| Password         | Password input / JSON string | Required; 8–256 characters.                                                                             |
-| Confirm password | Password input / JSON string | Required; must match Password.                                                                          |
-| Token            | Link / URL parameter         | Required; valid, unexpired, unused; invited email is displayed from the invitation and is not editable. |
+| Field                | Control                      | Required/default/conditions                                                                             |
+| -------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Full name (optional) | Text input / JSON string     | Optional; trimmed; maximum 255 characters.                                                              |
+| Password             | Password input / JSON string | Required; 8–256 characters.                                                                             |
+| Confirm password     | Password input / JSON string | Required; must match Password.                                                                          |
+| Token                | Link / URL parameter         | Required; valid, unexpired, unused; invited email is displayed from the invitation and is not editable. |
 
 - Browser inspects the invitation before rendering the form. API `GET` returns invitation details for a valid token; proof responses use no-store/no-referrer headers.
 - Valid acceptance creates the invited account and team membership with the role attached to the invitation. Browser redirects to sign-in; API returns `201` with user ID, email, and verification state.

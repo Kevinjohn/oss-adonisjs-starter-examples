@@ -28,7 +28,7 @@ flowchart TD
     D --> F["scope middleware loads strategy-specific membership"]
     E --> G{"Membership and team:read allowed?"}
     F --> G
-    G -->|No| H["Return access refusal before controller"]
+    G -->|No| H["Refuse request without returning team details"]
     G -->|Yes| I["Browser renders team and member roles; API returns team and caller membership"]
 ```
 

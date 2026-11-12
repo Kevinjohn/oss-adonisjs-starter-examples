@@ -11,15 +11,15 @@ As a team editor, I want to change a team name so that members see the updated n
 
 ## Acceptance criteria
 
-| Field           | Control                                                             | Required/default/conditions                                                                                                                   |
-| --------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Team name       | Text input / JSON string                                            | Required; trimmed; 1–100 characters.                                                                                                          |
-| Support context | Browser session context / `X-Masquerade-Context` for API token mode | API token strategy requires current context on unsafe requests, including while idle; browser session context applies while a mode is active. |
-| CSRF            | Host form token                                                     | Required by the browser Shield middleware for the form submission.                                                                            |
+| Field           | Control                                                             | Required/default/conditions                                                                                                                                                                                             |
+| --------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Team name       | Text input / JSON string                                            | Required; trimmed; 1–100 characters.                                                                                                                                                                                    |
+| Support context | Browser session context / `X-Masquerade-Context` for API token mode | API token strategy requires current context on unsafe requests, including while idle; browser kits check unsafe effective requests too, but their configured report mode logs context mismatch rather than refusing it. |
+| CSRF            | Host form token                                                     | Required by the browser Shield middleware for the form submission.                                                                                                                                                      |
 
 - The route resolves the member scope before the controller. The controller requires `team:write`, validates the name, loads the team, then saves it.
 - A successful browser rename flashes “Team renamed.” and redirects to the team page; API returns `id` and updated `name`.
-- Missing membership, unavailable `team:write`, invalid name, or denied support-mode mutation prevents the save. During support mode, the operator's permission alone is insufficient: the request must be marked mutable, the current context and edit policy must pass, and the effective target must have permission.
+- Missing membership, unavailable `team:write`, invalid name, or denied support-mode mutation prevents the save. During support mode, the operator's permission alone is insufficient: the request must be marked mutable, the context enforcement configuration and edit policy apply, and the effective target must have permission.
 
 ## User flow
 

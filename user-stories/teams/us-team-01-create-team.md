@@ -1,6 +1,6 @@
 # US-TEAM-01 — Create a team
 
-As an admitted account owner, I want to create a team and become its owner so that I can invite people and manage team work.
+As an eligible signed-in account holder, I want to create a team and become its owner so that I can invite people and manage team work.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
 **Access:** Browser: verified account on the raw `web` guard, outside masquerade; API: selected account guard and admitted-account middleware. The account-kit blocker applies.
@@ -24,7 +24,7 @@ As an admitted account owner, I want to create a team and become its owner so th
 
 ```mermaid
 flowchart TD
-    A["Admitted owner submits a team name"] --> B["teamValidator checks trimmed name is 1–100 characters"]
+    A["Eligible account holder submits a team name"] --> B["teamValidator checks trimmed name is 1–100 characters"]
     B --> C{"Name and account access valid?"}
     C -->|No| D["Show validation or access refusal; no team is created"]
     C -->|Yes| E["Create team and owner membership in one transaction"]
