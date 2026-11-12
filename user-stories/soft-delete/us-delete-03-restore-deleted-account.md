@@ -3,7 +3,7 @@
 As a configured soft-delete administrator, I want to restore a selected deleted account so that it can be found by normal account lookup again.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Target must be soft-deleted. Browser checks the default effective session account; API checks the selected raw account guard. The browser restore route is not marked with `allowMutation()`, so it cannot run during active Masquerade even when the effective target is a configured administrator.
+**Access:** The selected account email must exactly match `SOFT_DELETE_ADMIN_EMAILS`; the target must be soft-deleted. Browser checks the default effective session account; API checks the selected raw account guard. The browser restore route is not marked with `allowMutation()`, so it cannot run during active Masquerade even when the effective target is a configured administrator.
 **Entry:** Browser kits: submit the “Restore <email>” action; API: `POST /api/v1/admin/deleted-users/:id/restore`.
 **Documentation:** [Soft-delete administration guide](../../docs/cookbook/soft-delete-with-account-kit.md#expose-deleted-account-administration).
 **Source:** [Hypermedia admin routes](../../apps/hypermedia/start/routes.ts), [API admin routes](../../apps/api/start/routes.ts).
@@ -38,16 +38,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["POST admin/deleted-users/:id/restore"] --> B["Browser or API authentication"]
-    B --> C["DeletedUsersController.restore"]
-    C --> D["isSoftDeleteAdmin(auth.getUserOrFail())"]
-    D --> E{"Configured admin?"}
-    E -->|No| F["Return 403"]
-    E -->|Yes| G{"Browser active mode or API raw guard?"}
-    G -->|Browser active mode| H["No allowMutation marker; refuse"]
-    G -->|Browser idle or API raw account| I["User.onlyTrashed().where id firstOrFail"]
-    I --> J["user.restore"]
-    J --> K["Browser flash and redirect / API id and email response"]
+    A["POST admin/deleted-users/:id/restore"] --> B{"Browser effective guard with active mode?"}
+    B -->|Yes| C["masqueradeContext refuses unmarked mutation before controller"]
+    B -->|No: browser idle or API raw account| D["Authenticate selected account"]
+    D --> E["DeletedUsersController.restore checks isSoftDeleteAdmin"]
+    E --> F{"Exact email in configured admin set?"}
+    F -->|No| G["Return 403"]
+    F -->|Yes| H["User.onlyTrashed().where id firstOrFail"]
+    H --> I["user.restore"]
+    I --> J["Browser flash and redirect or API id and email response"]
 ```
 
 **Code references:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [Deleted-users view and button](../../apps/hypermedia/resources/views/pages/deleted_users.edge), [Hypermedia controller](../../apps/hypermedia/app/controllers/deleted_users_controller.ts), [Hypermedia administrator configuration](../../apps/hypermedia/app/services/soft_delete_admins.ts), [API routes](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/deleted_users_controller.ts), [API administrator configuration](../../apps/api/app/services/soft_delete_admins.ts), [User soft-delete model](../../apps/api/app/models/user.ts), [Account soft-delete functional tests](../../apps/api/tests/functional/account_kit_soft_delete.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/deleted_users_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/deleted_users_controller.ts).

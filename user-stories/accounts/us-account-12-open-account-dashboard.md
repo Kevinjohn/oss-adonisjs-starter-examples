@@ -25,7 +25,7 @@ flowchart TD
     B -->|Hypermedia| C["DashboardController.show resolves effective account and confirmation state"]
     B -->|Inertia React or Vue| D["Render the starter dashboard with verification notice when needed"]
     C --> E{"Address confirmed?"}
-    E -->|No| F["Show limited-access notice and Send a fresh verification link / Resend link action"]
+    E -->|No| F["Show limited-access notice and Send a fresh verification link action"]
     E -->|Yes| G["Show confirmed state and protected account-page link"]
 ```
 
