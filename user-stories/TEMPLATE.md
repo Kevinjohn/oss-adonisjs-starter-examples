@@ -24,14 +24,14 @@ As a team editor, I want to rename a team so that its members see the current na
 **Access:** Verified member with `team:write`; during Masquerade, the effective target must hold that permission and mode policy must permit mutation.
 **Entry:** Hypermedia `POST /teams/:scopeId`; corresponding session/Inertia and API routes use their kit-specific methods.
 **Documentation:** [Masquerade with Access Control](../../docs/cookbook/masquerade-with-access-control.md).
-**Source:** [TeamsController.update](../../apps/hypermedia/app/controllers/teams_controller.ts).
+**Source:** [TeamsController.update](../../apps/hypermedia/app/controllers/teams_controller.ts), [React team form](../../apps/inertia-react/inertia/pages/teams/show.tsx).
 **Coverage:** [Team route tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
 
 ## Acceptance criteria
 
 | Field     | Control                         | Required/default/conditions         |
 | --------- | ------------------------------- | ----------------------------------- |
-| Team name | Text input labelled “Team name” | Required; trimmed; 1–100 characters |
+| Team name | Text input labelled “Team name” | Required; React editing form starts with the current team name; trimmed; 1–100 characters |
 
 - The controller checks `team:write`, validates the name, saves the team and returns to its page with success feedback.
 - Missing membership or permission is refused. Validation or authorization failure leaves the existing name unchanged.
@@ -59,7 +59,7 @@ flowchart TD
     E --> F["Return redirect or API response"]
 ```
 
-**Code references:** [route](../../apps/hypermedia/start/routes.ts), [controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [validator](../../apps/hypermedia/app/validators/team.ts), [tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
+**Code references:** [route](../../apps/hypermedia/start/routes.ts), [controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [React form](../../apps/inertia-react/inertia/pages/teams/show.tsx), [validator](../../apps/hypermedia/app/validators/team.ts), [tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
 ````
 
 ## Actions without input fields

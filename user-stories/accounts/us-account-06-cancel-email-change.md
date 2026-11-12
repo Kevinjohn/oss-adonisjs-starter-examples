@@ -21,10 +21,11 @@ As a signed-in account owner, I want to cancel a pending address change so that 
 
 ```mermaid
 flowchart TD
-    A["Browser kits only: `POST /settings/email/cancel`; the API route tree has no email-change cancellation endpoint."] --> B["Cancel a pending address change"]
-    B --> C{"Accepted?"}
-    C -->|No| D["Incorrect current password returns an error and keeps the pending email request."]
-    C -->|Yes| E["A valid cancellation clears the pending request and leaves the current email address unchanged."]
+    A["Open Email settings with a pending address change"] --> B["Choose Cancel pending change"]
+    B --> C["Enter Current password and submit"]
+    C --> D{"Password accepted?"}
+    D -->|No| E["Cancellation fails; keep the pending address request"]
+    D -->|Yes| F["See confirmation; pending request is cleared and current email stays active"]
 ```
 
 ## Code flow
@@ -34,12 +35,11 @@ Scope: source path for this action; browser/API transport differences are stated
 ```mermaid
 flowchart TD
     A["EmailChangesController.cancel"]
-    B["cancelEmailChangeValidator"]
-    A --> B
-    C["kit.emailPasswordManagement.updateProfile"]
-    B --> C
-    D["redirect settings/email"]
-    C --> D
+    A --> B["cancelEmailChangeValidator"]
+    B --> C["updateProfile with current password and confirmed current email"]
+    C --> D{"Credential and update accepted?"}
+    D -->|No: incorrect password| E["Hypermedia flashes error and redirects back; React and Vue propagate the refusal to error handling"]
+    D -->|Yes| F["Clear pending request, flash success and redirect to Email settings"]
 ```
 
 **Code references:** [apps/hypermedia/start/routes.ts](../../apps/hypermedia/start/routes.ts), [apps/hypermedia/resources/views/pages/settings/email.edge](../../apps/hypermedia/resources/views/pages/settings/email.edge), [apps/hypermedia/app/controllers/email_changes_controller.ts](../../apps/hypermedia/app/controllers/email_changes_controller.ts), [apps/hypermedia/app/validators/email_change.ts](../../apps/hypermedia/app/validators/email_change.ts), [apps/api/tests/functional/account_profile_email.spec.ts](../../apps/api/tests/functional/account_profile_email.spec.ts). [Inertia React route](../../apps/inertia-react/start/routes.ts), [React controller](../../apps/inertia-react/app/controllers/email_changes_controller.ts), [Inertia Vue route](../../apps/inertia-vue/start/routes.ts), [Vue controller](../../apps/inertia-vue/app/controllers/email_changes_controller.ts).
