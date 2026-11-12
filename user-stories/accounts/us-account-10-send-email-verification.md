@@ -46,6 +46,7 @@ flowchart TD
     D -->|Hypermedia delivery error| F["Log failure and flash retryable error"]
     D -->|React/Vue returned| G["Flash already-confirmed or one-minute reuse guidance; redirect back"]
     D -->|React/Vue error| H["HttpExceptionHandler flashes saved-change email/follow-up failure with one-minute wait; redirects back"]
+    D -->|API returned| K["Return { result } from service outcome"]
     D -->|API delivery or post-commit error| I["committedFollowUp logs failure and response uses fallback result"]
     E --> J["Verification remains a separate token-completion action"]
     F --> J
