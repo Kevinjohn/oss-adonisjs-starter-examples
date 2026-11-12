@@ -35,3 +35,7 @@ from these apps.
 ## How it works
 
 See [the specification](docs/specification.md) and [AGENTS.md](AGENTS.md).
+
+## User story catalogue
+
+See the [source-reviewed user story catalogue](user-stories/README.md) for capability coverage and code-backed action flows.
