@@ -18,7 +18,7 @@ As a visitor, I want to create an account so that I can sign in and use account 
 | Password (`password`)                     | Password input / JSON string | Required; 8–256 characters.                                                         |
 | Confirm password (`passwordConfirmation`) | Password input / JSON string | Required; must match Password.                                                      |
 
-- Both signup handlers allow at most five requests per client IP in 15 minutes. Invalid fields are returned as validation feedback.
+- Hypermedia and API signup are limited to five requests per client IP in 15 minutes. React and Vue do not apply this signup limiter. Invalid fields are returned as validation feedback.
 - A duplicate address is refused. The browser returns to signup with an error; the API returns 422 with an `email` unique error.
 - On success, the account is created before verification delivery and credential establishment. Browser signup signs the new account into a session and redirects to the dashboard; if initial session establishment fails, it redirects to login and says the account was created. If delivery follow-up fails, the account remains created, the failure is logged, and the browser directs the owner to request a fresh verification link.
 - API signup returns the user and, when `ACCOUNT_KIT_AUTH_STRATEGY=access_tokens`, a token. With `session`, it establishes a session and returns the user. Delivery/post-commit or credential-establishment failure returns `202` with `accountCreated: true`; the response does not claim the follow-up succeeded.
@@ -27,13 +27,13 @@ As a visitor, I want to create an account so that I can sign in and use account 
 
 ```mermaid
 flowchart TD
-    A["Visitor submits signup details"] --> B["NewAccountController.store validates the fields"]
+    A["Enter signup details and submit the form"] --> B["The app checks the fields"]
     B --> C{"Fields valid and address unused?"}
     C -->|No| D["Show field or duplicate-address feedback"]
-    C -->|Yes| E["registration.register creates account and requests verification delivery"]
+    C -->|Yes| E["Create account and request verification delivery"]
     E --> F{"Browser or API route?"}
-    F -->|Browser| G["Attempt session login; redirect to dashboard or login with created-account feedback"]
-    F -->|API| H["Establish configured session or access token; return user, or 202 after recognized committed failure"]
+    F -->|Browser| G["Sign in to the new account; open dashboard or see that account creation succeeded but sign-in failed"]
+    F -->|API| H["Receive the user or a committed-account acknowledgement"]
 ```
 
 ## Code flow
@@ -42,7 +42,7 @@ Scope: the implemented app routes and controllers delegate account persistence t
 
 ```mermaid
 flowchart TD
-    A["Browser or API signup route"] --> B["NewAccountController.store applies client limiter and signupValidator"]
+    A["Browser or API signup route"] --> B["Hypermedia applies its limiter; API applies accountPublicLimit; React/Vue do not apply this signup limiter"]
     B --> C["kit.registration.register / accountKit.registration.register"]
     C --> D{"Delivery or post-commit failure?"}
     D -->|No| E["Continue to browser session login or API authStrategy branch"]

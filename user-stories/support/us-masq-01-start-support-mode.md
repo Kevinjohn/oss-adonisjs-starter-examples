@@ -3,7 +3,7 @@
 As a configured support operator, I want to start a time-limited mode for an eligible account so that I can inspect it without acquiring its credentials.
 
 **Status:** Current when the configured actor and target policies allow it; source-reviewed, not runtime-tested here.
-**Access:** Raw signed-in actor must be listed by `MASQUERADE_OPERATOR_EMAILS`; the target must be a different non-operator with an active, unrestricted native account. The API additionally requires an admitted target. API token mode requires `masquerade` ability.
+**Access:** Raw signed-in actor must be listed by `MASQUERADE_OPERATOR_EMAILS`; the target must be a different non-operator with an active, unrestricted native account. The API additionally requires an admitted target. API control endpoints use the raw bearer `api` guard independently of `ACCOUNT_KIT_AUTH_STRATEGY`; access tokens also need the `masquerade` ability.
 **Entry:** Browser kits: open `/masquerade/accounts` and choose `Act as <email>`; API: read `GET /masquerade`, then `POST /masquerade/start` with its current context.
 **Documentation:** [Masquerade browser/API walkthrough](../../docs/cookbook/masquerade-with-access-control.md), [API request example](../../apps/api/README.md#api).
 **Source:** [Hypermedia target list](../../apps/hypermedia/app/controllers/masquerade_accounts_controller.ts), [form transition](../../apps/hypermedia/app/controllers/masquerade_form_controller.ts), [API control mount](../../apps/api/start/masquerade_routes.ts), [policy config](../../apps/api/config/masquerade.ts).

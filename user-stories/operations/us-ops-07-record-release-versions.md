@@ -12,7 +12,7 @@ As a sandbox maintainer, I want to record checked release-tag versions so that t
 
 - Supply at least one configured short package name and an exact three-component numeric version; duplicate packages are refused. This command records already published releases; it does not publish or upgrade packages itself.
 - For each package it fetches the `v<version>/package.json`, checks its declared version, and requires an exact predecessor peer when applicable. `recordVersions` rejects incompatible/stale lineage before writing.
-- Both resulting config/specification strings are calculated and validated before writes, then `config/sandbox.json` and `docs/specification.md` are written sequentially. An I/O failure can interrupt those writes; inspect both files before retrying rather than assuming atomic publication.
+- The config string is parsed and validated, including package versions and lineage. The specification string is calculated by replacing matching entries but is not separately validated; unmatched entries may remain unchanged. The files are written sequentially, so inspect both after an I/O failure.
 - Success prints recorded versions and instructions to assemble, resolve unused conflicts, compare and test kits. Recording versions alone establishes none of those follow-up checks.
 
 ## User flow

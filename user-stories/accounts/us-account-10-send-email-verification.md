@@ -12,19 +12,21 @@ As a signed-in account owner, I want to request a verification link so that I ca
 ## Acceptance criteria
 
 - There are no editable fields; an authenticated owner invokes the action from email settings or sends the API request.
-- The account kit sends only when another verification link is due. Browser feedback distinguishes already-confirmed email and otherwise says a link is on its way; API returns `{ result: ... }`, with the implementation defaulting a missing follow-up result to `sent`.
-- Browser delivery failure is logged and shown as a retryable error. API recognized delivery/post-commit failure is logged by `committedFollowUp`; because the operation may already have committed, the response keeps its result shape and should not be read as proof that mail was delivered.
+- The account kit may reuse a recent link instead of sending another message. Hypermedia distinguishes already-confirmed email; React/Vue explain the one-minute reuse window and retry wait. API returns `{ result: ... }`, defaulting a missing follow-up result to `sent`.
+- Hypermedia catches delivery failure, logs it, and shows a retryable error. React/Vue controllers await the send without a local catch; the exception handler shows the request failure. Their success message says the current link may be reused within one minute. API recognized delivery/post-commit failure is logged by `committedFollowUp`. No response proves inbox delivery.
 - Requesting a link does not itself mark the email verified; verification requires completing the token flow.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Signed-in owner requests verification"] --> B["EmailVerificationsController.store / send calls emailVerification.send"]
+    A["Signed-in owner submits the resend action"] --> B["The app processes the request"]
     B --> C{"Outcome?"}
-    C -->|Browser delivery failure| D["Log failure and show retryable error"]
-    C -->|Browser already verified| E["Tell owner the address is already confirmed"]
-    C -->|Browser link due or sent| F["Tell owner a link is on its way"]
+    C -->|Hypermedia send failure| D["Log failure and show retryable error"]
+    C -->|React/Vue send failure| K["See the shared request-failure page"]
+    C -->|Hypermedia already verified| E["See that the address is already confirmed"]
+    C -->|Hypermedia link due| F["See that a link is on its way"]
+    C -->|React/Vue success| L["See that a recent link may be reused within one minute and when to retry"]
     C -->|API result| G["Return result field; a recognized follow-up failure is logged"]
     E --> H["Email state changes only when the confirmation token is completed"]
     F --> H
@@ -40,9 +42,11 @@ flowchart TD
     A["POST /email-verification or POST /api/v1/account/email-verification/send"] --> B["Browser auth or API accountAccess route guard"]
     B --> C["emailVerification.send with signed-in account id"]
     C --> D{"Returned or recognized committed failure?"}
-    D -->|Returned| E["Browser flashes already-verified or link-on-way feedback; API returns result"]
-    D -->|Browser delivery error| F["Log failure and flash retryable error"]
-    D -->|API delivery or post-commit error| G["committedFollowUp logs failure and response uses fallback result"]
+    D -->|Hypermedia returned| E["Flash already-confirmed or link-on-way feedback"]
+    D -->|Hypermedia delivery error| F["Log failure and flash retryable error"]
+    D -->|React/Vue returned| G["Show one-minute reuse guidance"]
+    D -->|React/Vue error| H["Shared exception handler shows failure page"]
+    D -->|API delivery or post-commit error| I["committedFollowUp logs failure and response uses fallback result"]
     E --> H["Verification remains a separate token-completion action"]
     F --> H
     G --> H

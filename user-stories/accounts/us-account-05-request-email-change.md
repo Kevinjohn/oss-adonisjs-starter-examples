@@ -11,12 +11,15 @@ As a signed-in account owner, I want to request verification of a new email addr
 
 ## Acceptance criteria
 
-| Kit                    | Field or key                         | Control        | Required/default/conditions                                                              |
-| ---------------------- | ------------------------------------ | -------------- | ---------------------------------------------------------------------------------------- |
-| Hypermedia, React, Vue | New email (`email`)                  | Email input    | Required for this action; normalized, valid and not already in use                       |
-| Hypermedia, React, Vue | Current password (`currentPassword`) | Password input | Required; confirms account ownership                                                     |
-| API                    | `email`                              | JSON string    | Optional field on profile PATCH; when supplied, normalized, valid and not already in use |
-| API                    | `currentPassword`                    | JSON string    | Required for profile update; confirms account ownership                                  |
+| Kit                    | Field or key                         | Control                                  | Required/default/conditions                                                                                                        |
+| ---------------------- | ------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Hypermedia             | New email (`email`)                  | Email input labelled “New email”         | Required; normalized, valid, not already in use; maximum 254 characters.                                                           |
+| React, Vue             | New email (`email`)                  | Email input labelled “New email address” | Required; normalized, valid, not already in use; maximum 254 characters.                                                           |
+| Hypermedia, React, Vue | Current password (`currentPassword`) | Password input                           | Required; confirms account ownership.                                                                                              |
+| Hypermedia             | Current address                      | Read-only text                           | Shows current address. A pending request shows the pending address and exposes cancellation instead of the request form.           |
+| React, Vue             | Current and pending address          | Read-only text                           | Shows current and pending addresses when present. Confirmed accounts retain the request form alongside cancellation while pending. |
+| API                    | `email`                              | JSON string                              | Optional field on profile PATCH; when supplied, normalized, valid and not already in use                                           |
+| API                    | `currentPassword`                    | JSON string                              | Required for profile update; confirms account ownership                                                                            |
 
 - For a confirmed account, a valid request records a pending new address and attempts to send a confirmation link; the existing address stays active until confirmation. Browser routes reject an unconfirmed current address or requesting the current address. API `updateProfile({ email })` also handles its inactive-address activation state and a pending request may be canceled by supplying the confirmed current address. US-ACCOUNT-06 describes the separate browser cancellation form; API cancellation uses this profile PATCH.
 - The API profile PATCH can also update `fullName`; the browser email form is a separate email-settings action. This story covers requesting a new address.
@@ -30,13 +33,13 @@ inactive-address activation alternatives are described in the criteria above.
 
 ```mermaid
 flowchart TD
-    A["Open email settings or submit API profile PATCH"] --> B["Enter new email and current password"]
+    A["Open email settings or submit API profile PATCH"] --> B["Review current and pending addresses; enter the request fields when available"]
     B --> C{"Input and account proof accepted?"}
     C -->|No| D["See validation or credential refusal; existing address state is unchanged"]
     C -->|Yes| E["New address is pending; current address remains active"]
     E --> F{"Confirmation notice delivered?"}
     F -->|No| G["See that request was saved; delivery is uncertain"]
-    F -->|Yes| H["Check the new address for its confirmation link"]
+    F -->|Yes| H["Use the confirmation link when host delivery provides it"]
     H --> I{"Confirm link completed?"}
     I -->|No| J["Continue using current address"]
     I -->|Yes| K["Sign in with confirmed address"]

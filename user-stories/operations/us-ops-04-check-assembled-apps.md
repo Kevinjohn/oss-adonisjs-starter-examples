@@ -13,7 +13,7 @@ As a sandbox maintainer, I want to compare regenerated kits with committed apps 
 - With no `--kit`, check all configured kits; repeated `--kit` selects a subset. Source configuration and network/cache prerequisites are the same as released assembly.
 - Check mode cannot combine with `--with-local` or main mode. It regenerates into scratch output, uses the existing lockfile frozen, and compares output paths, bytes and modes with `apps/<kit>`.
 - Differences or unused resolutions make the result nonzero; applicable alternative-version resolutions are noted separately. Committed app trees are not replaced by this command.
-- Each selected kit is attempted. A clean comparison establishes source/output parity, not successful runtime journeys.
+- The loop continues after a kit failure only for `SandboxError`; an unexpected exception aborts remaining kits. A clean comparison establishes source/output parity, not successful runtime journeys.
 
 ## User flow
 

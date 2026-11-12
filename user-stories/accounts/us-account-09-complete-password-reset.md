@@ -11,30 +11,32 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 
 ## Acceptance criteria
 
-| Field                                      | Control                      | Required/default/conditions               |
-| ------------------------------------------ | ---------------------------- | ----------------------------------------- |
-| New password (browser), API key `password` | Password input / JSON string | Required; 8–256 characters.               |
-| Confirm password (`passwordConfirmation`)  | Password input / JSON string | Required; must match Password.            |
-| Token                                      | Link / URL parameter         | Required; valid, unexpired, unused token. |
+| Field                                         | Control                                        | Required/default/conditions               |
+| --------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| New password (Hypermedia), API key `password` | Password input / JSON string                   | Required; 8–256 characters.               |
+| New password (React, Vue)                     | Password input labelled “Confirm new password” | Required; 8–256 characters.               |
+| Confirm password (`passwordConfirmation`)     | Password input / JSON string                   | Required; must match Password.            |
+| Token                                         | Link / URL parameter                           | Required; valid, unexpired, unused token. |
 
 - The browser inspects the link before showing the form. API clients can inspect it with `GET`; a valid token returns `valid: true`.
 - A valid token and matching password replace the credential. Browser redirects to sign-in; API returns `202` with a password-reset acknowledgement. Recognized delivery or post-commit failures after the reset are logged and do not report the reset as uncommitted.
-- Invalid or expired tokens do not reset the password. Browser redirects to the forgot-password page; API returns the invalid-token proof response. Password and confirmation validation errors do not change the credential.
+- Invalid or expired tokens do not reset the password. GET renders an unusable-link page; signed-in Inertia reset pages offer **Sign out**, while signed-out pages offer a new-link action and sign-in. Hypermedia invalid POST redirects to forgot-password; Inertia invalid POST follows the proof-recovery fallback: the token-page handler redirects to its safe fallback and flashes invalid-link feedback. API returns the invalid-token proof response. Password and confirmation validation errors do not change the credential.
 - The API limits reset completion requests through `accountPublicLimit('password-reset')`.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Recipient opens reset link"] --> B["PasswordResetsController.edit / inspect checks token"]
-    B --> C{"Token valid?"}
-    C -->|No| D["Show invalid-link state or return invalid-token proof response"]
-    C -->|Yes| E["Recipient enters and confirms a new password"]
-    E --> F["resetPasswordValidator / passwordValidator checks password fields"]
-    F --> G["passwordReset.reset commits the new credential"]
-    G --> H{"Browser or API?"}
-    H -->|Browser| I["Log recognized follow-up failure if present and redirect to sign-in"]
-    H -->|API| J["Return 202; committedFollowUp logs recognized follow-up failure"]
+    A["Open reset link"] --> B["See whether it can be used"]
+    B --> C{"Link valid on opening?"}
+    C -->|No| D["See an unusable-link page and a new-link or sign-out option"]
+    C -->|Yes| E["Enter and submit a new password and confirmation"]
+    E --> F{"Link still valid when submitted?"}
+    F -->|No| G["Browser shows invalid-link recovery; API returns invalid-token refusal"]
+    F -->|Yes| H["See reset confirmation and sign in with the new password"]
+    H --> I{"Browser or API?"}
+    I -->|Browser| J["Sign in with the replacement password"]
+    I -->|API| K["Receive the reset acknowledgement"]
 ```
 
 ## Code flow
@@ -45,12 +47,12 @@ Scope: the implemented app routes and controllers delegate account persistence t
 flowchart TD
     A["GET /reset-password/:token or GET /api/v1/auth/password-reset/:token"] --> B["passwordReset.inspect"]
     B --> C{"Valid token?"}
-    C -->|No| D["Render invalid state or proofFailure with E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
+    C -->|No| D["GET renders unusable state or API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
     C -->|Yes| E["POST handler validates password and confirmation"]
     E --> F["passwordReset.reset"]
     F --> G{"Completion result?"}
-    G -->|InvalidTokenError| D
-    G -->|Password changed| H["Redirect browser to sign-in or return API 202"]
+    G -->|Invalid POST token| J["Browser redirects or shows the kit-specific refusal"]
+    G -->|Password changed| H["Invalidate prior credentials; redirect browser to sign-in or return API 202"]
     G -->|Recognized committed follow-up failure| I["Log failure; password remains changed; return the same success-shaped completion outcome"]
 ```
 

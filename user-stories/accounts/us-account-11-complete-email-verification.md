@@ -19,22 +19,23 @@ As the recipient of an email-verification link, I want to prove control of the a
 
 - The browser inspects the link before showing the form. API clients can inspect it with `GET`; valid proof returns `confirmation: true`.
 - Completing a valid token with the password and confirmation activates the address. The browser then asks the owner to sign in with the password entered in this form; API returns the operation result.
-- Invalid, expired, or used token does not verify the address. Browser redirects to sign-in with a fresh-link message; API returns `E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN` proof failure.
+- Invalid, expired, or used token does not verify the address. GET renders an unusable-link page; Hypermedia invalid POST redirects to sign-in with a fresh-link message, and Inertia POST follows the proof-recovery fallback and flashes invalid-link feedback; API returns `E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN` proof failure.
 - A recognized delivery or post-commit failure after verification is logged. The browser still reports verification and redirects to sign-in; API still returns the result-shaped response, whose fallback value is `verified` when follow-up handling returns no result.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Recipient opens verification link"] --> B["EmailVerificationsController.edit / inspect checks token"]
-    B --> C{"Token valid?"}
-    C -->|No| D["Show invalid-link state or return invalid-token proof response"]
-    C -->|Yes| E["Recipient enters and confirms a password"]
-    E --> F["verifyEmailValidator / passwordValidator validates both values"]
-    F --> G["emailVerification.complete marks address verified"]
-    G --> H{"Browser or API?"}
-    H -->|Browser| I["Log recognized follow-up failure if present; redirect to sign-in"]
-    H -->|API| J["Return operation result; log recognized committed failure"]
+    A["Open the verification link"] --> B["See whether it can be used"]
+    B --> C{"Link valid on opening?"}
+    C -->|No| D["See an unusable-link page"]
+    C -->|Yes| E["Enter and submit the password and confirmation"]
+    E --> F{"Link still valid when submitted?"}
+    F -->|No| G["Hypermedia returns to sign-in; Inertia uses invalid-link recovery; API refuses the token"]
+    F -->|Yes| H["See confirmation and sign-in instructions"]
+    H --> I{"Browser or API?"}
+    I -->|Browser| J["Sign in with the password chosen on the page"]
+    I -->|API| K["Receive the verification result"]
 ```
 
 ## Code flow
@@ -49,7 +50,7 @@ flowchart TD
     C -->|Yes| E["POST handler validates password and confirmation"]
     E --> F["emailVerification.complete"]
     F --> G{"Completion result?"}
-    G -->|InvalidTokenError| D
+    G -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia follows the proof-recovery fallback"]
     G -->|Verified| H["Browser redirects to sign-in; API returns result"]
     G -->|Recognized committed follow-up failure| I["Log failure; verification remains committed and completion response is returned"]
 ```

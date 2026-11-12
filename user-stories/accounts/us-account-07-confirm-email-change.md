@@ -13,21 +13,23 @@ As the recipient of an email-change link, I want to confirm the requested addres
 
 - The link itself supplies the token; no editable form fields are required. The browser first shows whether the link can be used; the API exposes `confirmation: true` for a valid token.
 - Completing a valid link changes the target account email and invalidates that account's sign-ins; its owner must sign in with the new address. The browser handler redirects to sign-in without authenticating as the token's account. API success returns the changed email and its verification state.
-- An invalid, expired, or used token does not change the address. Browser redirects to login with a request-new-link message; API returns the invalid-token proof response.
+- An invalid, expired, or used token does not change the address. GET renders an unusable-link page; Hypermedia invalid POST redirects to sign-in with a request-new-link message, and Inertia POST follows the proof-recovery fallback and flashes invalid-link feedback; API returns the invalid-token proof response.
 - If a recognized delivery or post-commit follow-up fails after the email change is committed, the browser logs the failure and still reports the changed address; the API logs it and returns `{ changed: true }`.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Recipient opens the confirmation link"] --> B["EmailChangesController.confirm / inspectEmailChange checks token"]
-    B --> C{"Token valid?"}
-    C -->|No| D["Show invalid link or return invalid-token proof response"]
-    C -->|Yes| E["Recipient submits confirmation"]
-    E --> F["completeEmailChange updates the email"]
-    F --> G{"Browser or API?"}
-    G -->|Browser| H["Log recognized follow-up failure if present; redirect to sign-in without changing identity to the token owner"]
-    G -->|API| I["Return email and verified state, or changed true after logged committed failure"]
+    A["Open the confirmation link"] --> B["See whether it can be used"]
+    B --> C{"Link valid on opening?"}
+    C -->|No| D["See an unusable-link page"]
+    C -->|Yes| E["Submit confirmation"]
+    E --> F{"Link still valid when submitted?"}
+    F -->|No| G["Hypermedia returns to sign-in; Inertia uses its invalid-link recovery"]
+    F -->|Yes| H["See that the address changed; sign in with the new address"]
+    H --> I{"Browser or API?"}
+    I -->|Browser| J["Sign in without using the link to assume the account"]
+    I -->|API| K["Receive the changed email and verification state"]
 ```
 
 ## Code flow
@@ -41,7 +43,7 @@ flowchart TD
     C -->|No| D["Browser renders invalid state; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
     C -->|Yes| E["POST handler calls completeEmailChange"]
     E --> F{"Completion outcome?"}
-    F -->|Invalid token| D
+    F -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia follows the proof-recovery fallback"]
     F -->|Changed| G["Browser flashes success and redirects to sign-in; API returns email and verified"]
     F -->|Committed follow-up error| H["Browser logs and reports change; API reports failure and returns changed true"]
 ```

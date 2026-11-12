@@ -7,7 +7,7 @@ As a signed-in account owner, I want to soft-delete my account so that it no lon
 **Entry:** Browser kits: `GET/POST /account/delete`; API: `DELETE /api/v1/account`.
 **Documentation:** [Soft-delete account guide](../../docs/cookbook/soft-delete-with-account-kit.md#protect-self-deletion-routes).
 **Source:** [Hypermedia deletion routes](../../apps/hypermedia/start/routes.ts), [API deletion route](../../apps/api/start/routes.ts).
-**Coverage:** [Account soft-delete functional tests](../../apps/api/tests/functional/account_kit_soft_delete.spec.ts); this link identifies source behavior coverage, not runtime verification of these docs.
+**Coverage:** [API HTTP routes](../../apps/api/tests/functional/soft_delete.spec.ts), [Hypermedia routes](../../apps/hypermedia/tests/functional/soft_delete.spec.ts), [React routes](../../apps/inertia-react/tests/functional/soft_delete.spec.ts), [Vue routes](../../apps/inertia-vue/tests/functional/soft_delete.spec.ts), and [Hypermedia browser journey](../../apps/hypermedia/tests/browser/soft_delete.spec.ts), [React browser journey](../../apps/inertia-react/tests/browser/soft_delete.spec.ts), [Vue browser journey](../../apps/inertia-vue/tests/browser/soft_delete.spec.ts); these links identify source behavior coverage, not runtime verification of these docs.
 
 ## Acceptance criteria
 
@@ -46,4 +46,4 @@ flowchart TD
     F -->|API| H["Return response.noContent"]
 ```
 
-**Code references:** [Hypermedia routes and blocker](../../apps/hypermedia/start/routes.ts), [Hypermedia confirmation view](../../apps/hypermedia/resources/views/pages/account/delete.edge), [Hypermedia controller](../../apps/hypermedia/app/controllers/account_deletion_controller.ts), [API routes and guard](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/account_deletion_controller.ts), [User soft-delete model](../../apps/api/app/models/user.ts), [Account soft-delete functional tests](../../apps/api/tests/functional/account_kit_soft_delete.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/account_deletion_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/account_deletion_controller.ts).
+**Code references:** [Hypermedia routes and blocker](../../apps/hypermedia/start/routes.ts), [Hypermedia confirmation view](../../apps/hypermedia/resources/views/pages/account/delete.edge), [Hypermedia controller](../../apps/hypermedia/app/controllers/account_deletion_controller.ts), [API routes and guard](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/account_deletion_controller.ts), [User soft-delete model](../../apps/api/app/models/user.ts), [API HTTP routes](../../apps/api/tests/functional/soft_delete.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/account_deletion_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/account_deletion_controller.ts).

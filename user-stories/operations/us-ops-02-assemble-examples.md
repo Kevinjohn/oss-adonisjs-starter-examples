@@ -20,7 +20,7 @@ As a sandbox maintainer, I want to assemble configured package layers onto the p
 
 - Released mode reads pinned base and release-tag package examples, merges their lineage, applies sandbox layers/resolutions, normalizes and regenerates each kit, then replaces that kit's output under `apps/`.
 - Local mode packs one local package into temporary output; main mode builds selected packages' main revisions into temporary vendor archives and reports incompatible runtime peers.
-- Every selected kit is attempted; one failed/conflicting kit makes the command nonzero even if another kit was written. Failed merges report pending conflicts rather than producing that kit's app. An interruption during output replacement can leave incomplete output; rerun after correcting the cause.
+- The loop continues after a kit failure only for `SandboxError`; an unexpected exception aborts remaining kits. A handled failed/conflicting kit makes the command nonzero even if another kit was written. Failed merges report pending conflicts rather than producing that kit's app. An interruption during output replacement can leave incomplete output; rerun after correcting the cause.
 - A local package whose predecessor is ahead of released sandbox inputs may produce only an explicit peer-ahead note and return success. That is a skipped combination, not an assembled or runtime-tested app.
 
 ## User flow

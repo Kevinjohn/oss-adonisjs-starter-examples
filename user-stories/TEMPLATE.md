@@ -6,7 +6,7 @@ implementation contracts in accepted repository decision records, instructions i
 runnable scenarios in the test suite.
 
 Copy the story example below into a stable path such as
-`user-stories/teams/US-TEAM-03-rename-team.md`; replace its sample content with source-backed
+`user-stories/teams/us-team-03-rename-team.md`; replace its sample content with source-backed
 details. The `../../` links resolve from that copied story path. Keep the writing and maintenance
 guidance in this `TEMPLATE.md`, outside individual stories. Omit the optional Coverage line when
 there is no useful test link. The field table is for form/API input actions; use the controls/results

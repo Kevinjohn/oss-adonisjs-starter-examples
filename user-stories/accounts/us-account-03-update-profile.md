@@ -14,7 +14,8 @@ As a signed-in account owner, I want to change or clear my profile name so that 
 | Kit                    | Field or key                         | Control             | Required/default/conditions                                                                      |
 | ---------------------- | ------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------ |
 | Hypermedia, React, Vue | Full name (optional) (`fullName`)    | Text input          | Optional; trimmed; up to 255 characters; blank/null clears the name                              |
-| Hypermedia, React, Vue | Current email                        | Read-only text      | Shows the current address; email change uses the separate email-settings action                  |
+| Hypermedia             | Current email                        | Read-only text      | Shows the current address.                                                                       |
+| React, Vue             | Signed in as                         | Read-only text      | Shows the current account identity.                                                              |
 | Hypermedia, React, Vue | Current password (`currentPassword`) | Password input      | Required; verifies account ownership                                                             |
 | API                    | `fullName`                           | JSON string or null | Optional; trimmed; up to 255 characters; null clears the name                                    |
 | API                    | `currentPassword`                    | JSON string         | Required; verifies account ownership                                                             |

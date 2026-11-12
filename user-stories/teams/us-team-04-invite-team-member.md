@@ -14,7 +14,7 @@ As a verified team member with invitation permission, I want to invite a person 
 | Kit                    | Field or key    | Control     | Required/default/conditions                                                                                     |
 | ---------------------- | --------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
 | Hypermedia, React, Vue | Email (`email`) | Email input | Required; trimmed, lowercase, valid and at most 254 characters                                                  |
-| Hypermedia, React, Vue | Role (`role`)   | Select      | Required; options are `viewer`, `editor`, `admin`; owner cannot be invited                                      |
+| Hypermedia, React, Vue | Role (`role`)   | Select      | Required; defaults to first ordered role (`viewer`); choices come from configured roles excluding `owner`       |
 | API                    | `email`         | JSON string | Required; normalized email, at most 254 characters                                                              |
 | API                    | `role`          | JSON string | Required, nonempty after trim; Access Control invitation callback decides whether actor may invite to that role |
 | API                    | `scope`         | JSON string | Required; positive integer team ID in normalized decimal form                                                   |

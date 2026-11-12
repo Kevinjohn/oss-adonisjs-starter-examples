@@ -24,10 +24,10 @@ As an eligible signed-in account holder, I want to create a team and become its 
 
 ```mermaid
 flowchart TD
-    A["Eligible account holder submits a team name"] --> B["teamValidator checks trimmed name is 1–100 characters"]
+    A["Enter a team name and submit Create team"] --> B["The app checks the name and account access"]
     B --> C{"Name and account access valid?"}
     C -->|No| D["Show validation or access refusal; no team is created"]
-    C -->|Yes| E["Create team and owner membership in one transaction"]
+    C -->|Yes| E["See the new team; you are its owner"]
     E --> F{"Browser or API?"}
     F -->|Browser| G["Redirect to the new team page"]
     F -->|API| H["Return 201 with team id and name"]

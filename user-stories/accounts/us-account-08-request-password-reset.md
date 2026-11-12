@@ -23,10 +23,10 @@ As a person who may own an account, I want to request a password-reset link so t
 
 ```mermaid
 flowchart TD
-    A["Visitor submits an email address"] --> B["forgotPasswordValidator / recoveryRequestValidator validates it"]
-    B --> C{"Address valid?"}
-    C -->|No| D["Return field validation feedback"]
-    C -->|Yes| E["passwordReset.request looks up account and attempts delivery when applicable"]
+    A["Enter an email address on the recovery form"] --> B["Submit the request"]
+    B --> C{"Is the address valid?"}
+    C -->|No| D["See field validation feedback"]
+    C -->|Yes| E["The app attempts recovery when an account applies"]
     E --> F{"Browser or API?"}
     F -->|Browser| G["Log recognized delivery failure and show the same non-enumerating acknowledgement"]
     F -->|API| H["Log recognized committed failure and return 202 acknowledgement"]

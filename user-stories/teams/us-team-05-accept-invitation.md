@@ -20,22 +20,21 @@ As an invitation recipient, I want to accept a valid invitation so that I can cr
 
 - Browser inspects the invitation before rendering the form. API `GET` returns invitation details for a valid token; proof responses use no-store/no-referrer headers.
 - Valid acceptance creates the invited account and team membership with the role attached to the invitation. Browser redirects to sign-in; API returns `201` with user ID, email, and verification state.
-- Invalid, expired, used, or concurrently consumed token does not create a second account or membership. Browser redirects to sign-in with invalid-link feedback; API returns `E_ACCOUNT_KIT_INVALID_TOKEN` proof failure.
+- Invalid, expired, used, or concurrently consumed token does not create a second account or membership. GET inspection renders an unusable-invitation page; Hypermedia invalid POST redirects to sign-in, while Inertia POST follows the proof-recovery fallback and flashes invalid-link feedback; API returns `E_ACCOUNT_KIT_INVALID_TOKEN` proof failure.
 - If a recognized delivery or post-commit failure follows committed acceptance, the browser logs it and still reports the account ready; API logs it and returns `202` with `accepted: true`.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Recipient opens invitation link"] --> B["invitations.inspect checks token and supplies invited email"]
-    B --> C{"Invitation usable?"}
-    C -->|No| D["Show unavailable invitation or return invalid-token proof response"]
-    C -->|Yes| E["Recipient enters optional name and matching password fields"]
-    E --> F["invitations.accept creates account and invited membership"]
-    F --> G{"Acceptance outcome?"}
-    G -->|Completed| H["Browser redirects to sign-in; API returns created account details"]
-    G -->|Recognized committed follow-up failure| I["Log failure; browser reports ready, API returns accepted true"]
-    G -->|Invalid or already consumed| D
+    A["Open the invitation link"] --> B["See whether it is available and which address it is for"]
+    B --> C{"Invitation valid on opening?"}
+    C -->|No| D["See an unavailable-invitation page"]
+    C -->|Yes| E["Enter optional name and matching password fields"]
+    E --> F["Submit invitation acceptance"]
+    F --> G{"Invitation still valid when submitted?"}
+    G -->|No| H["Hypermedia returns to sign-in; Inertia uses invalid-link recovery; API refuses the token"]
+    G -->|Yes| I["See that the account is ready and sign in"]
 ```
 
 ## Code flow
@@ -50,7 +49,7 @@ flowchart TD
     F --> G{"Result?"}
     G -->|User created| H["Browser redirects to sign-in / API returns 201 account fields"]
     G -->|Delivery or post-commit error after commit| I["Log failure; browser redirects / API returns 202 accepted true"]
-    G -->|InvalidTokenError| D
+    G -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia follows the proof-recovery fallback"]
 ```
 
 **Code references:** [Hypermedia invitation routes](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/invitations_controller.ts), [Hypermedia validator](../../apps/hypermedia/app/validators/team.ts), [API invitation routes](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/invitations_controller.ts), [API validator](../../apps/api/app/validators/account_kit.ts), [Proof response headers](../../apps/api/app/services/http_responses.ts), [Invitation functional tests](../../apps/api/tests/functional/account_invitations.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/invitations_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/invitations_controller.ts).

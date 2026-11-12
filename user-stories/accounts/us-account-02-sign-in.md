@@ -25,14 +25,13 @@ As an account owner, I want to authenticate with my email and password so that l
 
 ```mermaid
 flowchart TD
-    A["Owner submits email and password"] --> B["loginValidator validates and normalizes email"]
-    B --> C["authentication.login checks the account and credential"]
-    C --> D{"Credentials accepted?"}
-    D -->|No| E["Browser shows ordinary credential refusal; API returns an authentication error"]
-    D -->|Yes| F{"Route transport and API strategy?"}
-    F -->|Browser| G["Establish session and redirect to dashboard with confirmation state"]
-    F -->|API access tokens| H["Return serialized user and access token"]
-    F -->|API session| I["Establish session and return serialized user"]
+    A["Enter email and password on the sign-in form"] --> B["Submit the form"]
+    B --> C{"Are the credentials accepted?"}
+    C -->|No| D["See ordinary credential refusal"]
+    C -->|Yes| E{"Browser or API strategy?"}
+    E -->|Browser| F["Open the dashboard"]
+    E -->|API access tokens| G["Receive the user and access token"]
+    E -->|API session| H["Receive the user and use the session"]
 ```
 
 ## Code flow
