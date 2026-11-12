@@ -14,7 +14,7 @@ As a configured support operator, I want to inspect a team using the target acco
 - There is no editable input for a team read; the team ID comes from the route and membership is loaded by route middleware.
 - In Hypermedia, React and Vue, the default `web_effective` guard resolves the admitted target for covered team routes. In API token mode, `teamGuard` selects `api_effective`; if API auth strategy is `session`, `teamGuard` selects raw `web` and this API route does not act as the target.
 - Scope middleware runs after auth and before `TeamsController.show`; it refuses a nonmember and attaches the member role. The controller then checks `team:read` before returning the team and member roles.
-- API token requests need the `masquerade` ability. A current context token is required on unsafe covered mutations, not on this safe GET. Expired or invalidated mode refuses target admission rather than silently reading as the target.
+- API token requests need the `masquerade` ability. A current context token is required on unsafe covered mutations, not on this safe GET. An expired or invalidated mode refuses the triggering request; it does not retry under the operator identity or silently read as the target.
 
 ## User flow
 

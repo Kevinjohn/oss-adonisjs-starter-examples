@@ -21,8 +21,8 @@ As a verified team member with invitation permission, I want to invite a person 
 
 - Browser invitation remains tied to the raw signed-in account and route team; it does not inherit a Masquerade target's membership or permissions.
 - API sends a scoped Account Kit invitation through `/account/invitations`; token clients also need the `invitations:create` ability. The server callback authorizes the requested role.
-- Successful browser send returns to the team page with a confirmation; API returns `201` with invitation ID or `202` when delivery is deferred.
-- Invalid email, scope, role permission or account eligibility is refused. Delivery follow-up failures are handled by the kit/controller contract and must not be presented as proof that the invite was never committed.
+- Successful browser send redirects with `Invitation sent to <email>.`; if its delivery callback fails, the controller logs the failure but still shows that same flash. API returns `201` with invitation ID or `202` when delivery is deferred. Neither response proves an email arrived.
+- Invalid email, scope, role permission or account eligibility is refused. For bearer API requests, the token also needs `invitations:create` ability.
 
 ## User flow
 
@@ -32,9 +32,9 @@ flowchart TD
     B --> C{"Account, scope and role allowed?"}
     C -->|No| D["See permission or validation refusal; no success is reported"]
     C -->|Yes| E["Invitation is recorded and delivery is attempted"]
-    E --> F{"Delivery completed now?"}
-    F -->|No| G["See accepted/deferred or delivery-failure result"]
-    F -->|Yes| H["See invitation sent confirmation"]
+    E --> F{"Browser or API transport?"}
+    F -->|Browser| G["Return to team page with Invitation sent confirmation"]
+    F -->|API| H["Return created ID or accepted/deferred result"]
 ```
 
 ## Code flow
@@ -44,10 +44,13 @@ Scope: browser team-scoped form and API account invitation operation. The browse
 ```mermaid
 flowchart TD
     A["TeamInvitationsController.store or InvitationsController.send"] --> B["teamInvitationValidator or invitationValidator"]
-    B --> C["kit.invitations.send(actorId, email, role, scope)"]
-    C --> D{"Invitation policy and persistence succeed?"}
+    B --> C["kit.invitations.send({ actorId, email, role, scope })"]
+    C --> D{"Invitation accepted by policy and recorded?"}
     D -->|No| E["Return route/API refusal"]
-    D -->|Yes| F["Browser redirect or API 201/202 response"]
+    D -->|Yes| F{"Browser delivery callback fails?"}
+    F -->|Yes| G["Log delivery failure; still flash Invitation sent"]
+    F -->|No| H["Browser redirect or API 201/202 response"]
+    G --> H
 ```
 
 **Code references:** [Hypermedia route](../../apps/hypermedia/start/routes.ts), [team invitation form](../../apps/hypermedia/resources/views/pages/teams/show.edge), [browser controller](../../apps/hypermedia/app/controllers/team_invitations_controller.ts), [browser validator](../../apps/hypermedia/app/validators/team.ts), [API route](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/invitations_controller.ts), [API validator](../../apps/api/app/validators/account_kit.ts), [React route/controller](../../apps/inertia-react/start/routes.ts), [React form/controller](../../apps/inertia-react/app/controllers/team_invitations_controller.ts), [Vue route/controller](../../apps/inertia-vue/start/routes.ts), [Vue form/controller](../../apps/inertia-vue/app/controllers/team_invitations_controller.ts), [API invitation tests](../../apps/api/tests/functional/account_invitations.spec.ts).
