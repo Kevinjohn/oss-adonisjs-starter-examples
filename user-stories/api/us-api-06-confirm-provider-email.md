@@ -21,6 +21,8 @@ As an API social user, I want to continue provider confirmation using an emailed
 - `beginConfirmation` returns an authorization URL and records the new state. Complete provider callback with that state; the package decides the confirmation result.
 - A returned handoff uses the same verifier/redemption boundary as US-API-04. Invalid, expired or mismatched proof/provider results are refused without treating the token-entry GET as successful confirmation.
 
+- Supplied notification delivery uses [development server output and API process-memory records](../REFERENCE.md#proof-delivery-boundary), rather than real inbox mail.
+
 ## User flow
 
 ```mermaid

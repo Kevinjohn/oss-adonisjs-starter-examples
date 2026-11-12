@@ -3,8 +3,8 @@
 As a signed-in account owner, I want to open my dashboard so that I can see my account home and whether email confirmation is complete.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Browser dashboard uses the default effective session guard. `/account` in Hypermedia, React and Vue additionally requires the effective account to be verified.
-**Entry:** Browser kits: `GET /dashboard` and verified-only `GET /account`.
+**Access:** Browser kits use their default effective session guard; account identity shown during support mode follows effective-account behavior.
+**Entry:** Browser kits: `GET /dashboard`; the separate protected-page action is [US-ACCOUNT-14](us-account-14-open-protected-account.md).
 **Documentation:** [Hypermedia dashboard view](../../apps/hypermedia/resources/views/pages/dashboard.edge).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [Hypermedia dashboard controller](../../apps/hypermedia/app/controllers/dashboard_controller.ts), [Inertia React routes](../../apps/inertia-react/start/routes.ts), [Inertia Vue routes](../../apps/inertia-vue/start/routes.ts).
 **Coverage:** [Hypermedia Masquerade browser test](../../apps/hypermedia/tests/browser/masquerade.spec.ts), [Inertia React Masquerade browser test](../../apps/inertia-react/tests/browser/masquerade.spec.ts), [Inertia Vue Masquerade browser test](../../apps/inertia-vue/tests/browser/masquerade.spec.ts); these links identify source behavior coverage, not runtime verification of these docs.
@@ -12,25 +12,24 @@ As a signed-in account owner, I want to open my dashboard so that I can see my a
 ## Acceptance criteria
 
 - There are no editable fields; an authenticated account opens `/dashboard`.
-- All three kits show the account dashboard and effective identity during support mode. Unconfirmed owners see a verification notice. The protected `/account` page is separate: all kits require an authenticated, verified effective session account.
-- All three kits provide a separate `/account` page for verified effective session accounts. React and Vue render their account page; Hypermedia renders its account page. Dashboard access alone does not establish this protected-page journey.
-- Unauthenticated requests are sent through the configured authentication response. Hypermedia `/account` additionally requires a verified effective account.
+- Hypermedia shows the effective account email and whether its address is confirmed. An unconfirmed owner can select **Send a fresh verification link**; a confirmed owner can open the protected `/account` page.
+- Inertia React and Vue render the starter dashboard. Their verification notice appears for an unconfirmed account with **Resend link**, disabled while the form is processing; the Vue page receives email-verification state through shared props.
+- Unauthenticated requests are sent through the configured authentication response. The protected `/account` route in all three kits additionally requires a verified effective account; see [US-ACCOUNT-14](us-account-14-open-protected-account.md).
 - The API has no dashboard route; its account profile read is documented separately.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Open the dashboard"] --> B{"Which browser kit?"}
-    B -->|Hypermedia| C["See effective email and confirmation state"]
-    B -->|React or Vue| D["See the starter dashboard and any verification notice"]
-    C --> E["Choose Send a fresh verification link when shown"]
-    D --> F["Choose Resend link when shown"]
-    C --> G["Open /account as a verified account"]
-    D --> G
-    G --> H{"Verified effective session?"}
-    H -->|No| I["See sign-in or verification refusal"]
-    H -->|Yes| J["See the kit-specific account page"]
+    A["Signed-in owner opens the dashboard"] --> B{"Kit?"}
+    B -->|Hypermedia| C["See the effective account email and confirmation state"]
+    B -->|Inertia React or Vue| D["Render the starter dashboard with verification notice when needed"]
+    D --> H{"Address confirmed?"}
+    H -->|No| I["See Resend link; disabled while processing"]
+    H -->|Yes| J["See the starter dashboard without verification notice"]
+    C --> E{"Address confirmed?"}
+    E -->|No| F["Show limited-access notice and Send a fresh verification link action"]
+    E -->|Yes| G["Show confirmed state and protected account-page link"]
 ```
 
 ## Code flow

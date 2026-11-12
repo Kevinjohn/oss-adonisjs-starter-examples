@@ -34,7 +34,7 @@ Scope: Sandbox CLI through its implementation; generated application behavior is
 flowchart TD
     A["bin/set_versions.ts runCli callback"] --> B["Parse package/version arguments and readSandboxConfig"]
     B --> C["fetch tagged package manifests"]
-    C --> D["recordVersions validates both resulting documents"]
+    C --> D["recordVersions validates rewritten config and lineage; calculates specification replacements"]
     D --> E["writeFileSync config then specification"]
     E --> F["Print versions and next commands; runCli sets status"]
 ```

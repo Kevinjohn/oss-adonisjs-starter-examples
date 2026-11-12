@@ -19,6 +19,8 @@ As a person who may own an account, I want to request a password-reset link so t
 - Browser delivery failure is logged but keeps the same acknowledgement. The API logs recognized delivery/post-commit failure while keeping the accepted response, so clients cannot use the result to enumerate accounts.
 - Invalid email input is returned as validation feedback; it does not start a recovery request.
 
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
+
 ## User flow
 
 ```mermaid
@@ -28,8 +30,8 @@ flowchart TD
     C -->|No| D["See field validation feedback"]
     C -->|Yes| E["The app attempts recovery when an account applies"]
     E --> F{"Browser or API?"}
-    F -->|Browser| G["Log recognized delivery failure and show the same non-enumerating acknowledgement"]
-    F -->|API| H["Log recognized committed failure and return 202 acknowledgement"]
+    F -->|Browser| G["See the same non-enumerating acknowledgement even after recognized delivery failure"]
+    F -->|API| H["Receive the same 202 acknowledgement even after recognized committed failure"]
 ```
 
 ## Code flow

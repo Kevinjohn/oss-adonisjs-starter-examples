@@ -21,7 +21,7 @@ As a verified account owner, I want to list the teams attached to my account so 
 ```mermaid
 flowchart TD
     A["Open the Teams page as a verified account"] --> B["See teams attached to the signed-in account, with each role"]
-    D --> E{"Any memberships?"}
+    B --> E{"Any memberships?"}
     E -->|Yes| F["Show only the account's teams"]
     E -->|No| G["Show an empty list"]
 ```

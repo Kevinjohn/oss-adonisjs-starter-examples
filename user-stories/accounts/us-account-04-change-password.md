@@ -24,6 +24,8 @@ As a signed-in account owner, I want to replace my current password so that I ca
 - Once the password update commits, a later notification/follow-up failure does not roll it back. Hypermedia shows committed success with a notification warning; React and Vue log the failure and distinguish delivery failure from another follow-up problem in success feedback; API logs the committed follow-up failure and returns `{ changed: true }`.
 - Browser success regenerates its session ID and stores the new account revision, invalidating other sessions. API token mode keeps only the caller's token (`keepCurrent`); API session mode regenerates that session and records the revision. A response failure must not be treated as proof that the credential stayed unchanged.
 
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
+
 ## User flow
 
 ```mermaid
@@ -33,7 +35,7 @@ flowchart TD
     C -->|No| D["See field or credential refusal; existing password remains"]
     C -->|Yes| E["Password change commits and other sign-ins are invalidated"]
     E --> F{"Did notification follow-up succeed?"}
-    F -->|No| G["See or log follow-up failure; committed password change remains"]
+    F -->|No| G["See available follow-up feedback; the committed password change remains"]
     F -->|Yes| H["See success or API changed response; continue with the new credential"]
 ```
 

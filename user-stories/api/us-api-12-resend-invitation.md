@@ -15,6 +15,8 @@ As an API scope manager, I want to resend an existing invitation so that the rec
 - On normal completion, return 200 `{ id }`. A recognized delivery/post-commit failure is logged by `committedFollowUp` and returns 202 `{ requested: true }`; this acknowledges committed work without claiming delivery.
 - Invalid identity, authorization or other unexpected failure propagates. Resend does not allow the caller to manage a foreign scope merely by knowing an ID.
 
+- Supplied notification delivery uses [development server output and API process-memory records](../REFERENCE.md#proof-delivery-boundary), rather than real inbox mail.
+
 ## User flow
 
 ```mermaid

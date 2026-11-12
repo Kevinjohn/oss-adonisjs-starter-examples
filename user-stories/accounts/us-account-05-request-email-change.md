@@ -11,20 +11,22 @@ As a signed-in account owner, I want to request verification of a new email addr
 
 ## Acceptance criteria
 
-| Kit                    | Field or key                         | Control                                  | Required/default/conditions                                                                                                        |
-| ---------------------- | ------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Hypermedia             | New email (`email`)                  | Email input labelled “New email”         | Required; normalized, valid, not already in use; maximum 254 characters.                                                           |
-| React, Vue             | New email (`email`)                  | Email input labelled “New email address” | Required; normalized, valid, not already in use; maximum 254 characters.                                                           |
-| Hypermedia, React, Vue | Current password (`currentPassword`) | Password input                           | Required; confirms account ownership.                                                                                              |
-| Hypermedia             | Current address                      | Read-only text                           | Shows current address. A pending request shows the pending address and exposes cancellation instead of the request form.           |
-| React, Vue             | Current and pending address          | Read-only text                           | Shows current and pending addresses when present. Confirmed accounts retain the request form alongside cancellation while pending. |
-| API                    | `email`                              | JSON string                              | Optional field on profile PATCH; when supplied, normalized, valid and not already in use                                           |
-| API                    | `currentPassword`                    | JSON string                              | Required for profile update; confirms account ownership                                                                            |
+| Kit                    | Field or key                           | Control                                  | Required/default/conditions                                                                                                                   |
+| ---------------------- | -------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hypermedia             | New email (`email`)                    | Email input labelled “New email”         | Required; normalized, valid, not already in use; maximum 254 characters.                                                                      |
+| React, Vue             | New email (`email`)                    | Email input labelled “New email address” | Required; normalized, valid, not already in use; maximum 254 characters.                                                                      |
+| Hypermedia, React, Vue | Current password (`currentPassword`)   | Password input                           | Required; confirms account ownership.                                                                                                         |
+| Hypermedia             | Current email                          | Read-only text                           | Shows current address. A pending request shows its address and exposes cancellation instead of the request form.                              |
+| React, Vue             | Current address / Pending confirmation | Read-only text                           | Shows current address and pending confirmation when present. Confirmed accounts retain the request form alongside cancellation while pending. |
+| API                    | `email`                                | JSON string                              | Optional field on profile PATCH; when supplied, normalized, valid, at most 254 characters and not already in use                              |
+| API                    | `currentPassword`                      | JSON string                              | Required for profile update; confirms account ownership                                                                                       |
 
 - For a confirmed account, a valid request records a pending new address and attempts to send a confirmation link; the existing address stays active until confirmation. Browser routes reject an unconfirmed current address or requesting the current address. API `updateProfile({ email })` also handles its inactive-address activation state and a pending request may be canceled by supplying the confirmed current address. US-ACCOUNT-06 describes the separate browser cancellation form; API cancellation uses this profile PATCH.
 - The API profile PATCH can also update `fullName`; the browser email form is a separate email-settings action. This story covers requesting a new address.
 - Incorrect password, duplicate address or field-validation refusal leaves the existing state unchanged. The browser-only same-address and unconfirmed-address checks do not apply to the API profile PATCH.
 - If browser email delivery fails after the request is saved, Hypermedia, React and Vue log the failure and show an error that says the request was saved but delivery is uncertain. API handles recognized post-commit delivery errors as `{ updated: true }` and logs them. Neither result guarantees a message arrived.
+
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
 
 ## User flow
 
@@ -39,7 +41,7 @@ flowchart TD
     C -->|Yes| E["New address is pending; current address remains active"]
     E --> F{"Confirmation notice delivered?"}
     F -->|No| G["See that request was saved; delivery is uncertain"]
-    F -->|Yes| H["Use the confirmation link when host delivery provides it"]
+    F -->|Yes| H["Obtain the supplied development proof link from server output; API also records it in process memory"]
     H --> I{"Confirm link completed?"}
     I -->|No| J["Continue using current address"]
     I -->|Yes| K["Sign in with confirmed address"]

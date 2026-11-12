@@ -11,18 +11,20 @@ As a verified team member with invitation permission, I want to invite a person 
 
 ## Acceptance criteria
 
-| Kit                    | Field or key    | Control     | Required/default/conditions                                                                                     |
-| ---------------------- | --------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| Hypermedia, React, Vue | Email (`email`) | Email input | Required; trimmed, lowercase, valid and at most 254 characters                                                  |
-| Hypermedia, React, Vue | Role (`role`)   | Select      | Required; defaults to first ordered role (`viewer`); choices come from configured roles excluding `owner`       |
-| API                    | `email`         | JSON string | Required; normalized email, at most 254 characters                                                              |
-| API                    | `role`          | JSON string | Required, nonempty after trim; Access Control invitation callback decides whether actor may invite to that role |
-| API                    | `scope`         | JSON string | Required; positive integer team ID in normalized decimal form                                                   |
+| Kit                    | Field or key    | Control     | Required/default/conditions                                                                                                 |
+| ---------------------- | --------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Hypermedia, React, Vue | Email (`email`) | Email input | Required; trimmed, lowercase, valid and at most 254 characters                                                              |
+| Hypermedia, React, Vue | Role (`role`)   | Select      | Required; default `viewer`; available choices are `viewer`, `editor` and `admin` from the browser `invitableRoles` constant |
+| API                    | `email`         | JSON string | Required; normalized email, at most 254 characters                                                                          |
+| API                    | `role`          | JSON string | Required, nonempty after trim; Access Control invitation callback decides whether actor may invite to that role             |
+| API                    | `scope`         | JSON string | Required; positive integer team ID in normalized decimal form                                                               |
 
 - Browser invitation remains tied to the raw signed-in account and route team; it does not inherit a Masquerade target's membership or permissions.
 - API sends a scoped Account Kit invitation through `/account/invitations`; token clients also need the `invitations:create` ability. The server callback authorizes the requested role.
 - Successful browser send redirects with `Invitation sent to <email>.`; if its delivery callback fails, the controller logs the failure but still shows that same flash. API returns `201` with invitation ID or `202` when delivery is deferred. Neither response proves an email arrived.
 - Invalid email, scope, role permission or account eligibility is refused. For bearer API requests, the token also needs `invitations:create` ability.
+
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
 
 ## User flow
 

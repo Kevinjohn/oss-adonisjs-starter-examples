@@ -23,6 +23,8 @@ As a visitor, I want to create an account so that I can sign in and use account 
 - On success, the account is created before verification delivery and credential establishment. Browser signup signs the new account into a session and redirects to the dashboard; if initial session establishment fails, it redirects to login and says the account was created. If delivery follow-up fails, the account remains created, the failure is logged, and the browser directs the owner to request a fresh verification link.
 - API signup returns the user and, when `ACCOUNT_KIT_AUTH_STRATEGY=access_tokens`, a token. With `session`, it establishes a session and returns the user. Delivery/post-commit or credential-establishment failure returns `202` with `accountCreated: true`; the response does not claim the follow-up succeeded.
 
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
+
 ## User flow
 
 ```mermaid

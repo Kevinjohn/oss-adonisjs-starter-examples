@@ -11,17 +11,18 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 
 ## Acceptance criteria
 
-| Field                                         | Control                                        | Required/default/conditions               |
-| --------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
-| New password (Hypermedia), API key `password` | Password input / JSON string                   | Required; 8–256 characters.               |
-| New password (React, Vue)                     | Password input labelled “Confirm new password” | Required; 8–256 characters.               |
-| Confirm password (`passwordConfirmation`)     | Password input / JSON string                   | Required; must match Password.            |
-| Token                                         | Link / URL parameter                           | Required; valid, unexpired, unused token. |
+| Field                                                                                     | Control                                              | Required/default/conditions               |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| New password (`password`)                                                                 | Password input in all browser kits / API JSON string | Required; 8–256 characters.               |
+| Confirm password (Hypermedia) / Confirm new password (React, Vue), `passwordConfirmation` | Password input / API JSON string                     | Required; must match `password`.          |
+| Token                                                                                     | Link / URL parameter                                 | Required; valid, unexpired, unused token. |
 
 - The browser inspects the link before showing the form. API clients can inspect it with `GET`; a valid token returns `valid: true`.
 - A valid token and matching password replace the credential. Browser redirects to sign-in; API returns `202` with a password-reset acknowledgement. Recognized delivery or post-commit failures after the reset are logged and do not report the reset as uncommitted.
-- Invalid or expired tokens do not reset the password. GET renders an unusable-link page; signed-in Inertia reset pages offer **Sign out**, while signed-out pages offer a new-link action and sign-in. Hypermedia invalid POST redirects to forgot-password; Inertia invalid POST follows the proof-recovery fallback: the token-page handler redirects to its safe fallback and flashes invalid-link feedback. API returns the invalid-token proof response. Password and confirmation validation errors do not change the credential.
+- Invalid or expired tokens do not reset the password. Browser GET renders an unusable-link page; API GET returns the invalid-token proof response. Hypermedia offers **Request a new link**. React offers **Sign out** when signed in; otherwise **Request a new link** and **Sign in**. Vue always offers **Request a new link** and **Sign in**. Hypermedia invalid POST redirects to forgot-password; Inertia invalid POST follows the proof-recovery fallback: the token-page handler redirects to its safe fallback and flashes invalid-link feedback. API returns the invalid-token proof response. Password and confirmation validation errors do not change the credential.
 - The API limits reset completion requests through `accountPublicLimit('password-reset')`.
+
+- Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
 
 ## User flow
 
@@ -29,7 +30,8 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 flowchart TD
     A["Open reset link"] --> B["See whether it can be used"]
     B --> C{"Link valid on opening?"}
-    C -->|No| D["See an unusable-link page and a new-link or sign-out option"]
+    C -->|Browser: no| D["See unusable-link page: Hypermedia new link; React signed-in Sign out or guest new link/Sign in; Vue new link/Sign in"]
+    C -->|API: no| L["Receive invalid-token refusal"]
     C -->|Yes| E["Enter and submit a new password and confirmation"]
     E --> F{"Link still valid when submitted?"}
     F -->|No| G["Browser shows invalid-link recovery; API returns invalid-token refusal"]
@@ -51,9 +53,9 @@ flowchart TD
     C -->|Yes| E["POST handler validates password and confirmation"]
     E --> F["passwordReset.reset"]
     F --> G{"Completion result?"}
-    G -->|Invalid POST token| J["Browser redirects or shows the kit-specific refusal"]
+    G -->|Invalid POST token| J["Hypermedia redirects to forgot-password; Inertia flashes and redirects to proof.fallback; API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
     G -->|Password changed| H["Invalidate prior credentials; redirect browser to sign-in or return API 202"]
     G -->|Recognized committed follow-up failure| I["Log failure; password remains changed; return the same success-shaped completion outcome"]
 ```
 
-**Code references:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/password_resets_controller.ts), [Hypermedia validator](../../apps/hypermedia/app/validators/account.ts), [API routes](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/password_resets_controller.ts), [API validator](../../apps/api/app/validators/account_kit.ts), [Proof response headers](../../apps/api/app/services/http_responses.ts), [Password-reset functional tests](../../apps/api/tests/functional/account_password_reset.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/password_resets_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/password_resets_controller.ts).
+**Code references:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/password_resets_controller.ts), [Hypermedia validator](../../apps/hypermedia/app/validators/account.ts), [API routes](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/password_resets_controller.ts), [API validator](../../apps/api/app/validators/account_kit.ts), [Proof response headers](../../apps/api/app/services/http_responses.ts), [Password-reset functional tests](../../apps/api/tests/functional/account_password_reset.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/password_resets_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/password_resets_controller.ts), [Hypermedia token page](../../apps/hypermedia/resources/views/pages/auth/reset_password.edge), [React token page](../../apps/inertia-react/inertia/pages/auth/reset_password.tsx), [Vue token page](../../apps/inertia-vue/inertia/pages/auth/reset_password.vue), [Inertia invalid-proof fallback](../../apps/inertia-react/app/services/token_page_headers.ts), [React exception handler](../../apps/inertia-react/app/exceptions/handler.ts), [Vue exception handler](../../apps/inertia-vue/app/exceptions/handler.ts).

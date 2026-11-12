@@ -13,7 +13,7 @@ As an example-app operator, I want to seed the configured demo accounts and team
 
 - There are no form fields; the operator runs the seeder after database migrations.
 - The seeder considers the first configured Masquerade operator address, first configured soft-delete administrator address, Alice, and Bob; duplicate addresses are de-duplicated. Existing users, including soft-deleted users, are preserved and not reset.
-- Browser kits create missing accounts with a name from the email prefix, `DemoPassword123!`, and confirmed email. API also creates one `account_admissions` row per newly created account, recording invitation evidence as source `operator` and approval `approved`. Existing active or trashed API accounts are skipped entirely; no admission evidence is added for them. The number of created accounts depends on configured addresses and existing rows.
+- Browser kits create missing accounts with a name from the email prefix, `DemoPassword123!`, and confirmed email. API creates each missing user and its `account_admissions` row in the same transaction, recording invitation evidence as source `operator` and approval `approved`. Existing active or trashed API accounts are skipped entirely; no admission evidence is added for them. The number of created accounts depends on configured addresses and existing rows.
 - Alice's owned `Demo team` is created with Bob as a viewer in one transaction when no matching team exists. If the matching owned team already exists, the seeder adds Bob as viewer only when he has no membership; an existing Bob membership is left as-is.
 - Database or transaction failures surface from the seeder. The configured database is used; no in-memory storage is substituted.
 
@@ -25,7 +25,7 @@ flowchart TD
     B --> C["De-duplicate those addresses with Alice and Bob"]
     C --> D{"Kit and existing user?"}
     D -->|Browser missing| E["Create demo user; preserve existing users"]
-    D -->|API missing| F["Create user and admission evidence"]
+    D -->|API missing| F["Create user and admission evidence in one transaction"]
     D -->|Existing API user| G["Skip user without adding admission evidence"]
     E --> H["Load Alice and Bob; search Alice's owned Demo team"]
     F --> H
