@@ -11,9 +11,9 @@ As an eligible signed-in account holder, I want to create a team and become its 
 
 ## Acceptance criteria
 
-| Field     | Control                  | Required/default/conditions          |
-| --------- | ------------------------ | ------------------------------------ |
-| Team name | Text input / JSON string | Required; trimmed; 1–100 characters. |
+| Field                                        | Control                  | Required/default/conditions          |
+| -------------------------------------------- | ------------------------ | ------------------------------------ |
+| Team name (visible label) / `name` (API key) | Text input / JSON string | Required; trimmed; 1–100 characters. |
 
 - Invalid names return validation feedback and do not create a team.
 - A valid name creates a team and the caller's owner membership in the same database transaction. A failure in either write leaves no team without its owner membership.

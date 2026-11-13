@@ -3,7 +3,7 @@
 As a configured soft-delete administrator, I want to restore a selected deleted account so that it can be found by normal account lookup again.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** The selected account email must exactly match `SOFT_DELETE_ADMIN_EMAILS`; the target must be soft-deleted. Browser checks the default effective session account; API checks the selected raw account guard. The browser restore route is not marked with `allowMutation()`, so it cannot run during active Masquerade even when the effective target is a configured administrator.
+**Access:** The authenticated caller's email must exactly match `SOFT_DELETE_ADMIN_EMAILS`; the selected target must be soft-deleted. Browser checks the default effective session account; API checks the selected raw account guard. The browser restore route is not marked with `allowMutation()`, so it cannot run during active Masquerade even when the effective target is a configured administrator.
 **Entry:** Browser kits: submit the “Restore <email>” action; API: `POST /api/v1/admin/deleted-users/:id/restore`.
 **Documentation:** [Soft-delete administration guide](../../docs/cookbook/soft-delete-with-account-kit.md#expose-deleted-account-administration).
 **Source:** [Hypermedia admin routes](../../apps/hypermedia/start/routes.ts), [API admin routes](../../apps/api/start/routes.ts).

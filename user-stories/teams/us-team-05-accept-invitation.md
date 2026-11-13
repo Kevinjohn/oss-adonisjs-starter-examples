@@ -3,7 +3,7 @@
 As an invitation recipient, I want to accept a valid invitation so that I can create my account and join the intended team with the role chosen by the inviter.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Public invitation link with valid, unexpired, unused token; the invited email is supplied by the invitation record.
+**Access:** Public invitation link with valid, unexpired, unused token; the invited email is supplied by the invitation record. The Account Kit blocker refuses the route during support mode; end support mode and reopen the link.
 **Entry:** Browser kits: `GET/POST /invitation/:token`; API: `GET/POST /api/v1/auth/invitations/:token`.
 **Documentation:** [Hypermedia invitation page](../../apps/hypermedia/start/routes.ts).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -11,12 +11,12 @@ As an invitation recipient, I want to accept a valid invitation so that I can cr
 
 ## Acceptance criteria
 
-| Field                | Control                      | Required/default/conditions                                                                             |
-| -------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Full name (optional) | Text input / JSON string     | Optional; trimmed; maximum 255 characters.                                                              |
-| Password             | Password input / JSON string | Required; 8–256 characters.                                                                             |
-| Confirm password     | Password input / JSON string | Required; must match Password.                                                                          |
-| Token                | Link / URL parameter         | Required; valid, unexpired, unused; invited email is displayed from the invitation and is not editable. |
+| Field                                                            | Control                      | Required/default/conditions                                                                             |
+| ---------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Full name (visible label; API key `fullName`)                    | Text input / JSON string     | Optional; trimmed; maximum 255 characters.                                                              |
+| Password (visible label; API key `password`)                     | Password input / JSON string | Required; 8–256 characters.                                                                             |
+| Confirm password (visible label; API key `passwordConfirmation`) | Password input / JSON string | Required; must match Password.                                                                          |
+| Token                                                            | Link / URL parameter         | Required; valid, unexpired, unused; invited email is displayed from the invitation and is not editable. |
 
 - Browser inspects the invitation before rendering the form. API `GET` returns invitation details for a valid token; proof responses use no-store/no-referrer headers.
 - Valid acceptance creates the invited account and team membership with the role attached to the invitation. Browser redirects to sign-in; API returns `201` with user ID, email, and verification state.
@@ -30,7 +30,9 @@ As an invitation recipient, I want to accept a valid invitation so that I can cr
 
 ```mermaid
 flowchart TD
-    A["Open the invitation link"] --> B["See whether it is available and which address it is for"]
+    A["Open the invitation link"] --> Z{"Account Kit blocker permits this request?"}
+    Z -->|No, during support mode| Z1["Request is refused; end support mode, then reopen the link"]
+    Z -->|Yes| B["See whether it is available and which address it is for"]
     B --> C{"Invitation valid on opening?"}
     C -->|Browser: no| D["See unavailable invitation; Inertia offers Sign in, Hypermedia has no page recovery control"]
     C -->|API: no| K["Receive invalid-token refusal"]
@@ -45,7 +47,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["GET /invitation/:token or GET /api/v1/auth/invitations/:token"] --> B["kit.invitations.inspect / accountKit.invitations.inspect"]
+    A["Request invitation route"] --> Z["Account Kit blocker"]
+    Z -->|Allowed| B["Controller inspects with invitations.inspect"]
+    Z -->|Blocked during support mode| Z1["Refuse before invitation inspection or acceptance"]
     B --> C{"Valid invitation?"}
     C -->|No| D["Render unavailable form / proofFailure E_ACCOUNT_KIT_INVALID_TOKEN"]
     C -->|Yes| E["POST handler validates optional name, password, and confirmation"]

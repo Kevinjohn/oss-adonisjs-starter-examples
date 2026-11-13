@@ -13,6 +13,7 @@ As an API scope manager, I want to resend an existing invitation so that the rec
 
 - The route ID must convert to a positive safe integer. No recipient/role replacement field is accepted by this handler; it resends the selected invitation under package authorization.
 - On normal completion, return 200 `{ id }`. A recognized delivery/post-commit failure is logged by `committedFollowUp` and returns 202 `{ requested: true }`; this acknowledges committed work without claiming delivery.
+- A completed resend invalidates the previous invitation link and makes a replacement proof current. A 202 means the request committed but delivery is uncertain; it does not restore the previous link or confirm that the replacement arrived.
 - Invalid identity, authorization or other unexpected failure propagates. Resend does not allow the caller to manage a foreign scope merely by knowing an ID.
 
 - Supplied notification delivery uses [development server output and API process-memory records](../REFERENCE.md#proof-delivery-boundary), rather than real inbox mail.
@@ -22,10 +23,11 @@ As an API scope manager, I want to resend an existing invitation so that the rec
 ```mermaid
 flowchart TD
     A["Manager submits resend for invitation ID"] --> B{"Package accepts request?"}
-    B -->|No| C["Receive refusal"]
-    B -->|Yes| D{"Follow-up delivery completed?"}
+    B -->|No| C1["Receive refusal"]
+    B -->|Yes| C2["Previous invitation proof is invalidated; replacement proof is current"]
+    C2 --> D{"Follow-up delivery completed?"}
     D -->|Yes| E["Receive 200 with invitation ID"]
-    D -->|Recognized failure| F["Receive 202; server logs committed follow-up failure"]
+    D -->|Recognized failure| F["Receive 202; request committed, delivery unconfirmed"]
 ```
 
 ## Code flow

@@ -3,7 +3,7 @@
 As the recipient of a reset link, I want to choose a new password so that I can sign in with a replacement credential.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Anyone holding a valid, unexpired, unused reset token; API proof responses and browser token page use no-store/no-referrer headers.
+**Access:** Anyone holding a valid, unexpired, unused reset token, unless the Account Kit blocker refuses the request during support mode; API proof responses and browser token page use no-store/no-referrer headers.
 **Entry:** Browser kits: `GET/POST /reset-password/:token`; API: `GET/POST /api/v1/auth/password-reset/:token`.
 **Documentation:** [Hypermedia reset form](../../apps/hypermedia/resources/views/pages/auth/reset_password.edge).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -21,6 +21,7 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 - A valid token and matching password replace the credential. Browser redirects to sign-in; API returns `202` with a password-reset acknowledgement. Recognized delivery or post-commit failures after the reset are logged and do not report the reset as uncommitted.
 - Invalid or expired tokens do not reset the password. Browser GET renders an unusable-link page; API GET returns the invalid-token proof response. Hypermedia offers **Request a new link**. React offers **Sign out** when signed in; otherwise **Request a new link** and **Sign in**. Vue always offers **Request a new link** and **Sign in**. Hypermedia invalid POST redirects to forgot-password; Inertia invalid POST follows the proof-recovery fallback: the token-page handler redirects to its safe fallback and flashes invalid-link feedback. API returns the invalid-token proof response. Password and confirmation validation errors do not change the credential.
 - The API limits reset completion requests through `accountPublicLimit('password-reset')`.
+- Inertia terminates the current raw web session after a successful reset when signed in; Hypermedia redirects to sign-in without terminating it. The proof does not sign the browser in as the token owner.
 
 - Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
 
@@ -28,7 +29,9 @@ As the recipient of a reset link, I want to choose a new password so that I can 
 
 ```mermaid
 flowchart TD
-    A["Open reset link"] --> B["See whether it can be used"]
+    A["Open reset link"] --> Z{"Account Kit blocker permits this request?"}
+    Z -->|No, during support mode| Z1["Request is refused; end support mode, then reopen the link"]
+    Z -->|Yes| B["See whether it can be used"]
     B --> C{"Link valid on opening?"}
     C -->|Browser: no| D["See unusable-link page: Hypermedia new link; React signed-in Sign out or guest new link/Sign in; Vue new link/Sign in"]
     C -->|API: no| L["Receive invalid-token refusal"]
@@ -47,7 +50,9 @@ Scope: the implemented app routes and controllers delegate account persistence t
 
 ```mermaid
 flowchart TD
-    A["GET /reset-password/:token or GET /api/v1/auth/password-reset/:token"] --> B["passwordReset.inspect"]
+    A["Request reset route"] --> Z["Account Kit blocker"]
+    Z -->|Allowed| B["Controller inspects with passwordReset.inspect"]
+    Z -->|Blocked during support mode| Z1["Refuse before token inspection or reset"]
     B --> C{"Valid token?"}
     C -->|No| D["GET renders unusable state or API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
     C -->|Yes| E["POST handler validates password and confirmation"]

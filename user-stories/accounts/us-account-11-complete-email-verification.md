@@ -3,7 +3,7 @@
 As the recipient of an email-verification link, I want to prove control of the address so that it becomes confirmed for account access.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Anyone holding a valid, unexpired, unused verification token; token page and API proof responses use no-store/no-referrer headers.
+**Access:** Anyone holding a valid, unexpired, unused verification token, unless the Account Kit blocker refuses the request during support mode; token page and API proof responses use no-store/no-referrer headers.
 **Entry:** Browser kits: `GET/POST /verify-email/:token`; API: `GET/POST /api/v1/auth/email-verification/:token`.
 **Documentation:** [Hypermedia verification form](../../apps/hypermedia/resources/views/pages/auth/verify_email.edge).
 **Source:** [Hypermedia routes](../../apps/hypermedia/start/routes.ts), [API routes](../../apps/api/start/routes.ts).
@@ -22,6 +22,7 @@ As the recipient of an email-verification link, I want to prove control of the a
 - Invalid, expired, or used token does not verify the address. Browser GET renders an unusable-link page; API GET returns invalid-token proof failure; Hypermedia invalid POST redirects to sign-in with a fresh-link message, and Inertia POST follows the proof-recovery fallback and flashes invalid-link feedback; API returns `E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN` proof failure.
 - Invalid-page recovery: Hypermedia offers **Sign in**. React offers **Go to dashboard** when signed in or **Sign in** otherwise. Vue offers **Sign in**.
 - A recognized delivery or post-commit failure after verification is logged. The browser still reports verification and redirects to sign-in; API still returns the result-shaped response, whose fallback value is `verified` when follow-up handling returns no result.
+- Inertia terminates the current raw web session after successful verification when signed in; Hypermedia redirects to sign-in without terminating it. The proof does not sign the browser in as the address owner.
 
 - Delivery availability follows the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary): development proof links use server output, and the API also records notices in process memory; no supplied adapter proves inbox delivery.
 
@@ -29,7 +30,9 @@ As the recipient of an email-verification link, I want to prove control of the a
 
 ```mermaid
 flowchart TD
-    A["Open the verification link"] --> B["See whether it can be used"]
+    A["Open the verification link"] --> Z{"Account Kit blocker permits this request?"}
+    Z -->|No, during support mode| Z1["Request is refused; end support mode, then reopen the link"]
+    Z -->|Yes| B["See whether it can be used"]
     B --> C{"Link valid on opening?"}
     C -->|Browser: no| D["See unusable-link page and the kit-specific dashboard or sign-in recovery"]
     C -->|API: no| L["Receive invalid-token refusal"]
@@ -48,7 +51,9 @@ Scope: the implemented app routes and controllers delegate account persistence t
 
 ```mermaid
 flowchart TD
-    A["GET /verify-email/:token or GET /api/v1/auth/email-verification/:token"] --> B["emailVerification.inspect"]
+    A["Request verification route"] --> Z["Account Kit blocker"]
+    Z -->|Allowed| B["Controller inspects with emailVerification.inspect"]
+    Z -->|Blocked during support mode| Z1["Refuse before token inspection or completion"]
     B --> C{"Valid token?"}
     C -->|No| D["Render invalid state or proofFailure with E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
     C -->|Yes| E["POST handler validates password and confirmation"]
