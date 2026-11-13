@@ -29,8 +29,8 @@ As a team editor, I want to rename a team so that its members see the current na
 
 ## Acceptance criteria
 
-| Field     | Control                         | Required/default/conditions                                                               |
-| --------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
+| Field     | Control                                  | Required/default/conditions                                  |
+| --------- | ---------------------------------------- | ------------------------------------------------------------ |
 | Team name | Required text input labelled “Team name” | Starts with the current team name; trimmed; 1–100 characters |
 
 - A successful rename returns to the team page with the updated name and “Team renamed.” success message.
