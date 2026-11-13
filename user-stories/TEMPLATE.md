@@ -21,45 +21,52 @@ than retaining the sample save flow.
 As a team editor, I want to rename a team so that its members see the current name.
 
 **Status:** Current; source-reviewed route, not runtime-tested.
-**Access:** Verified member with `team:write`; during Masquerade, the effective target must hold that permission and mode policy must permit mutation.
-**Entry:** Hypermedia `POST /teams/:scopeId`; corresponding session/Inertia and API routes use their kit-specific methods.
+**Access:** Authenticated, verified effective team member with `team:write` (editors and above). During Masquerade, the edit policy and route's `allowMutation()` marker must permit the write, and the effective target must have `team:write`.
+**Entry:** On the Hypermedia team page, use the **Rename team** form (`POST /teams/:scopeId`).
 **Documentation:** [Masquerade with Access Control](../../docs/cookbook/masquerade-with-access-control.md).
-**Source:** [TeamsController.update](../../apps/hypermedia/app/controllers/teams_controller.ts), [React team form](../../apps/inertia-react/inertia/pages/teams/show.tsx).
+**Source:** [Hypermedia team page](../../apps/hypermedia/resources/views/pages/teams/show.edge), [teams route](../../apps/hypermedia/start/routes.ts), [TeamsController.update](../../apps/hypermedia/app/controllers/teams_controller.ts).
 **Coverage:** [Team route tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
 
 ## Acceptance criteria
 
 | Field     | Control                         | Required/default/conditions                                                               |
 | --------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
-| Team name | Text input labelled “Team name” | Required; React editing form starts with the current team name; trimmed; 1–100 characters |
+| Team name | Required text input labelled “Team name” | Starts with the current team name; trimmed; 1–100 characters |
 
-- The controller checks `team:write`, validates the name, saves the team and returns to its page with success feedback.
-- Missing membership or permission is refused. Validation or authorization failure leaves the existing name unchanged.
+- A successful rename returns to the team page with the updated name and “Team renamed.” success message.
+- Missing membership or permission is refused; an invalid name returns with a field error. Neither path changes the existing name.
 
 ## User flow
 
 ```mermaid
 flowchart TD
-    A["Open a team page as an editor"] --> B["Enter Team name and submit Rename team"]
-    B --> C{"Membership and input accepted?"}
-    C -->|No| D["See refusal or field error; keep existing name"]
-    C -->|Yes| E["See saved team name and success message"]
+    A["Open a team page as a verified editor"] --> B["Edit Team name and submit Rename team"]
+    B --> C{"Route access allowed?"}
+    C -->|No| D["See refusal; stored name remains"]
+    C -->|Yes| E{"Name valid?"}
+    E -->|No| F["See field error and correct the name"]
+    F --> B
+    E -->|Yes| G["Return to the team page with its new name and success message"]
 ```
 
 ## Code flow
 
-Scope: route, controller, authorization, validation and Lucid persistence. API and browser transports share the team outcome but use different guards and response formats.
+Scope: Hypermedia route, controller, authorization, validation, Lucid persistence and redirect response.
 
 ```mermaid
 flowchart TD
-    A["teams.update route: POST or PATCH"] --> B["TeamsController.update"]
-    B --> C["bouncer.authorize team:write"]
-    C --> D["request.validateUsing(teamValidator)"]
-    D --> E["Team.findOrFail and team.save"]
-    E --> F["Return redirect or API response"]
+    A["POST teams.update"] --> B["auth, verified, scope, allowMutation"]
+    B --> C["TeamsController.update"]
+    C --> D["bouncer.authorize('team:write')"]
+    D --> E["request.validateUsing(teamValidator)"]
+    E --> F["Team.findOrFail; set name; team.save()"]
+    F --> G["Flash 'Team renamed.' and redirect to teams.show"]
+    B -->|"refused"| H["No rename"]
+    D -->|"refused"| H
+    E -->|"invalid"| H
 ```
 
-**Code references:** [route](../../apps/hypermedia/start/routes.ts), [controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [React form](../../apps/inertia-react/inertia/pages/teams/show.tsx), [validator](../../apps/hypermedia/app/validators/team.ts), [tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
+**Code references:** [Hypermedia team page](../../apps/hypermedia/resources/views/pages/teams/show.edge), [route and middleware](../../apps/hypermedia/start/routes.ts), [controller](../../apps/hypermedia/app/controllers/teams_controller.ts), [validator](../../apps/hypermedia/app/validators/team.ts), [flash messages](../../apps/hypermedia/resources/views/partials/flash_alerts.edge), [functional tests](../../apps/hypermedia/tests/functional/teams.spec.ts).
 ````
 
 ## Actions without input fields
