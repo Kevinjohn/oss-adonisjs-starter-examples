@@ -10,3 +10,7 @@
 The browser kits expose an explicit pending-change cancellation form and route; see [US-ACCOUNT-06](accounts/us-account-06-cancel-email-change.md). The API has no dedicated cancellation route. Its current profile PATCH can cancel a pending address by supplying the confirmed current address, as described in [US-ACCOUNT-05](accounts/us-account-05-request-email-change.md). The repository does not record a target requiring a separate API cancellation endpoint, so the catalogue records the existing route difference without treating endpoint parity as an agreed feature.
 
 No other mismatch between a current capability and an explicit accepted product target was identified in the reviewed app routes, cookbook contracts, and sandbox specification.
+
+## Remaining unverified details
+
+- Command output text and exit codes other than those quoted in [US-OPS-09](operations/us-ops-09-run-package-commands.md) and [US-OPS-10](operations/us-ops-10-run-admission-commands.md) are not recorded; no command was run.
