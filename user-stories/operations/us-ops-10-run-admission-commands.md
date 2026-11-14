@@ -11,7 +11,7 @@ As an API kit operator, I want to run the Account Kit admission commands so that
 ## Acceptance criteria
 
 - Only the API kit registers the admission command module; the browser kits do not.
-- These commands are the operator-side counterpart to the admission routes in [US-API-14](../api/us-api-14-read-admission.md) to [US-API-19](../api/us-api-19-revoke-admission.md); route access rules in those stories do not describe command access.
+- The module is registered beside the admission routes covered by [US-API-17](../api/us-api-17-approve-admission.md) and [US-API-19](../api/us-api-19-revoke-admission.md); route access rules in those stories do not describe command access. Which routes each command mirrors is defined by the pinned package and is not recorded here.
 - The commands act on the same configured admission data as the API routes; their inputs and outcomes are defined by the pinned package.
 
 ## User flow
