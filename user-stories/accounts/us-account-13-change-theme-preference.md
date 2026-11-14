@@ -4,7 +4,7 @@ As a visitor, I want to switch between light and dark themes so that the interfa
 
 **Status:** Current in Hypermedia and Inertia React; source-reviewed, not runtime-tested here.
 **Access:** Anyone who can open a page with the Hypermedia or React theme control and JavaScript enabled.
-**Entry:** Use the theme toggle in Hypermedia or React app and marketing layouts.
+**Entry:** Use the theme toggle in Hypermedia or React app, auth and marketing layouts.
 **Documentation:** [Hypermedia app](../../apps/hypermedia/README.md), [React app](../../apps/inertia-react/README.md).
 **Source:** [Hypermedia toggle](../../apps/hypermedia/resources/views/components/theme_toggle.edge), [theme persistence](../../apps/hypermedia/resources/js/app.js), [React toggle](../../apps/inertia-react/inertia/components/theme_toggle.tsx).
 
@@ -40,4 +40,4 @@ flowchart TD
     D --> E["Write app_theme cookie for one year, path /, SameSite=Lax"]
 ```
 
-**Code references:** [Hypermedia toggle](../../apps/hypermedia/resources/views/components/theme_toggle.edge), [Hypermedia JS](../../apps/hypermedia/resources/js/app.js), [React toggle](../../apps/inertia-react/inertia/components/theme_toggle.tsx), [React shared preference producer](../../apps/inertia-react/app/middleware/inertia_middleware.ts), [React layout](../../apps/inertia-react/inertia/layouts/app.tsx), [Vue layout cookie reader](../../apps/inertia-vue/resources/views/inertia_layout.edge).
+**Code references:** [Hypermedia toggle](../../apps/hypermedia/resources/views/components/theme_toggle.edge), [Hypermedia JS](../../apps/hypermedia/resources/js/app.js), [React toggle](../../apps/inertia-react/inertia/components/theme_toggle.tsx), [React shared preference producer](../../apps/inertia-react/app/middleware/inertia_middleware.ts), [Hypermedia layouts](../../apps/hypermedia/resources/views/components/layouts/auth.edge) (auth, app and marketing), [React app layout](../../apps/inertia-react/inertia/layouts/app.tsx), [React auth layout](../../apps/inertia-react/inertia/layouts/auth.tsx), [Vue layout cookie reader](../../apps/inertia-vue/resources/views/inertia_layout.edge).

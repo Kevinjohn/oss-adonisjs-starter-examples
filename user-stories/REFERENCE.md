@@ -2,7 +2,7 @@
 
 ## Source baseline and scope
 
-Fetched `origin/main` baseline: [`0317807ef03d27baa06a7dbdfeee9fd3593aa6d3`](https://github.com/Kevinjohn/oss-adonisjs-starter-examples/commit/0317807ef03d27baa06a7dbdfeee9fd3593aa6d3). Inventory covers four generated kits (`api`, `hypermedia`, `inertia-react`, `inertia-vue`), their routes, pages, controllers, validators, guards and tests, linked cookbooks, demo seeders, sandbox commands and assembly specification.
+Fetched `origin/main` baseline: [`96dc874c8a8a84a2f320ae6bb72699649a5926f7`](https://github.com/Kevinjohn/oss-adonisjs-starter-examples/commit/96dc874c8a8a84a2f320ae6bb72699649a5926f7). Inventory covers four generated kits (`api`, `hypermedia`, `inertia-react`, `inertia-vue`), their routes, pages, controllers, validators, guards and tests, linked cookbooks, demo seeders, sandbox commands and assembly specification.
 
 ## Roles and boundaries
 
@@ -65,7 +65,8 @@ The browser [protected account page](accounts/us-account-14-open-protected-accou
 
 - Demo app README and run commands: [Hypermedia app README](../apps/hypermedia/README.md).
 - Persistent demo data: browser-kit seeders create missing users and team fixtures; the [API seeder](../apps/api/database/seeders/demo_seeder.ts) also writes invitation-source and approved admission evidence only for newly created users. Existing API users are skipped without those rows. The kit-specific seeders are linked from [US-DEMO-01](demo/us-demo-01-seed-demo-data.md).
-- Sandbox command entry points: [assemble](../bin/assemble.ts), [resolve](../bin/resolve.ts), [app test](../bin/test_app.ts), [layer rebase](../bin/rebase_layer.ts), [release version recording](../bin/set_versions.ts).
+- Sandbox command entry points: [assemble](../bin/assemble.ts), [resolve](../bin/resolve.ts), [app test](../bin/test_app.ts), [layer rebase](../bin/rebase_layer.ts), [release version recording](../bin/set_versions.ts), [changed-file checks](../bin/check_changed.ts).
+- Package operator commands: each kit registers Account Kit, Masquerade and Access Control command modules, and the API kit also registers the admission module, in its `adonisrc.ts` ([Hypermedia](../apps/hypermedia/adonisrc.ts), [API](../apps/api/adonisrc.ts)); see [US-OPS-09](operations/us-ops-09-run-package-commands.md) and [US-OPS-10](operations/us-ops-10-run-admission-commands.md).
 - Accepted sandbox composition and release workflow: [assembly specification](../docs/specification.md).
 
 Assembly and operator details are source-reviewed contracts. The docs do not claim that any runtime app or command was exercised as part of this catalogue.
