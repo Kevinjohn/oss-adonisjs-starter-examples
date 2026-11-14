@@ -6,7 +6,7 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 **Access:** Kit operator with the kit's dependencies installed, a configured `.env` and, for commands that read or write application data, a migrated database.
 **Entry:** From `apps/<kit>`: `node ace <command>`, for a command registered by that kit's `commands` list in `adonisrc.ts`.
 **Documentation:** [Hypermedia app README](../../apps/hypermedia/README.md).
-**Source:** [Hypermedia Ace registration](../../apps/hypermedia/adonisrc.ts), [API Ace registration](../../apps/api/adonisrc.ts), [React Ace registration](../../apps/inertia-react/adonisrc.ts), [Vue Ace registration](../../apps/inertia-vue/adonisrc.ts), [package pins](../../config/sandbox.json); `@kevinjohn/adonisjs-account-kit` 0.3.4 `commands/main.ts`; `@kevinjohn/adonisjs-masquerade` 0.2.8 `commands/main.ts`, `src/active_modes.ts`, `src/prune.ts`; `@kevinjohn/adonisjs-access-control` 0.1.7 `commands/main.ts`.
+**Source:** [Hypermedia Ace registration](../../apps/hypermedia/adonisrc.ts), [API Ace registration](../../apps/api/adonisrc.ts), [React Ace registration](../../apps/inertia-react/adonisrc.ts), [Vue Ace registration](../../apps/inertia-vue/adonisrc.ts), [package pins](../../config/sandbox.json); `@kevinjohn/adonisjs-account-kit` 0.3.4 `commands/main.ts`; `@kevinjohn/adonisjs-masquerade` 0.2.8 `commands/main.ts`, `src/active_modes.ts`, `src/prune.ts`; `@kevinjohn/adonisjs-access-control` 0.1.7 `commands/main.ts`, `commands/doctor.ts`, `src/doctor.ts`.
 
 ## Acceptance criteria
 
@@ -39,9 +39,9 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 
 ### Access Control commands (0.1.7, `commands/main.ts`)
 
-| Command                 | Arguments and flags                                                        | Purpose (package description)                                                                                                                   |
-| ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `access-control:doctor` | `--scope` (restrict the row checks to one scope id), `--json` (print JSON) | Check the memberships table against `config/access_control.ts`; exit code 0 when clean, 1 when a check finds rows, 2 when a check could not run |
+| Command                 | Arguments and flags                                                        | Purpose (package description)                                                                                                                                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `access-control:doctor` | `--scope` (restrict the row checks to one scope id), `--json` (print JSON) | Check the memberships table against `config/access_control.ts`; exit code 0 when every check passes; 1 when any check fails, including a missing memberships table or column and an Account Kit version mismatch; 2 when the doctor could not run |
 
 ## User flow
 
