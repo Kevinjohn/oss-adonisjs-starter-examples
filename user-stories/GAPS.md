@@ -11,6 +11,7 @@ The browser kits expose an explicit pending-change cancellation form and route; 
 
 No other mismatch between a current capability and an explicit accepted product target was identified in the reviewed app routes, cookbook contracts, and sandbox specification.
 
-## Unverified package command names
+## Remaining unverified details
 
-The pinned Account Kit, Masquerade and Access Control packages are not installed in this checkout, so [US-OPS-09](operations/us-ops-09-run-package-commands.md) and [US-OPS-10](operations/us-ops-10-run-admission-commands.md) record command registration only. Command names, options and effects remain to be added after they are checked against the installed package source. [US-MASQ-05](support/us-masq-05-read-support-mode-status.md) likewise omits the browser `GET /masquerade` response fields other than `contextToken`, which the package controller defines.
+- The HTTP status and body of the `E_MASQUERADE_UNAVAILABLE` refusal on `GET /masquerade` are not recorded; the controller throws the error but its rendering is not read from the tagged source ([US-MASQ-05](support/us-masq-05-read-support-mode-status.md)).
+- Command output text and exit codes other than those quoted in [US-OPS-09](operations/us-ops-09-run-package-commands.md) and [US-OPS-10](operations/us-ops-10-run-admission-commands.md) are not recorded; no command was run.
