@@ -1,5 +1,13 @@
 import { test } from '@japa/runner'
-import { mkdirSync, readFileSync, rmSync, statSync, existsSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  existsSync,
+  writeFileSync,
+} from 'node:fs'
 import { join } from 'node:path'
 import { listFiles } from '../../src/file_tree.ts'
 import {
@@ -86,6 +94,48 @@ test.group('tree sources', (group) => {
     assert.notInclude(paths, 'node_modules/ignored.js')
     assert.isTrue(statSync(join(destination, 'bin/server.ts')).mode & 0o100 ? true : false)
   })
+
+  test('treats a local path under a folder replaced by a file as gone', ({ assert }) => {
+    world.commit('Kevinjohn/oss-adonisjs-account-kit', {
+      'examples/api/adonisrc.ts': 'x\n',
+      'examples/api/start/routes.ts': 'routes\n',
+    })
+    const root = world.workPath('Kevinjohn/oss-adonisjs-account-kit')
+    rmSync(join(root, 'examples/api/start'), { recursive: true })
+    writeFileSync(join(root, 'examples/api/start'), 'now a file\n')
+    const source = localPackageSource(root)
+    const destination = join(world.directory, 'out')
+    mkdirSync(destination)
+    source.copyFolder('examples/api', destination)
+
+    assert.deepEqual(
+      listFiles(destination).map((entry) => entry.path),
+      ['adonisrc.ts', 'start']
+    )
+    assert.isNull(source.readFile('examples/api/start/routes.ts'))
+    assert.isFalse(source.hasFolder('examples/api/start/nested'))
+  })
+
+  test('stops on a local file system error other than a missing path', ({ assert }) => {
+    world.commit('Kevinjohn/oss-adonisjs-account-kit', {
+      'examples/api/adonisrc.ts': 'x\n',
+      'examples/api/start/routes.ts': 'routes\n',
+    })
+    const root = world.workPath('Kevinjohn/oss-adonisjs-account-kit')
+    const locked = join(root, 'examples/api/start')
+    const source = localPackageSource(root)
+    const destination = join(world.directory, 'out')
+    mkdirSync(destination)
+    // No search permission on the folder: every lookup inside it fails with EACCES.
+    chmodSync(locked, 0o000)
+    try {
+      assert.throws(() => source.copyFolder('examples/api', destination), /EACCES/)
+      assert.throws(() => source.readFile('examples/api/start/routes.ts'), /EACCES/)
+      assert.throws(() => source.hasFolder('examples/api/start/nested'), /EACCES/)
+    } finally {
+      chmodSync(locked, 0o755)
+    }
+  }).skip(process.getuid?.() === 0, 'root ignores folder permissions')
 
   test('copies a local symlink as a symlink', ({ assert }) => {
     const root = temporaryDirectory()

@@ -138,16 +138,27 @@ export function committedPackageSource(
   )
 }
 
+/** Whether a file system error means the path is gone: it, or a folder above it, was removed. */
+function isMissing(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException).code
+  return code === 'ENOENT' || code === 'ENOTDIR'
+}
+
 /**
- * A package's working copy, including uncommitted files that git does not ignore (6.2).
+ * A package's working copy, including uncommitted files that git does not ignore (6.2). Paths
+ * that no longer exist are treated as absent; any other file system error stops the read.
  */
 export function localPackageSource(root: string): PackageSource {
   const git = new Git(root)
   return {
     description: `local ${root}`,
     readFile(path) {
-      const file = join(root, path)
-      return existsSync(file) ? readFileSync(file) : null
+      try {
+        return readFileSync(join(root, path))
+      } catch (error) {
+        if (isMissing(error)) return null
+        throw error
+      }
     },
     copyFolder(path, destination) {
       const files = git.list(['ls-files', '-co', '--exclude-standard', '-z', '--', path])
@@ -156,8 +167,9 @@ export function localPackageSource(root: string): PackageSource {
         let stats
         try {
           stats = lstatSync(source)
-        } catch {
-          continue
+        } catch (error) {
+          if (isMissing(error)) continue
+          throw error
         }
         const target = join(destination, file.slice(path.replace(/\/$/, '').length + 1))
         mkdirSync(dirname(target), { recursive: true })
@@ -170,7 +182,12 @@ export function localPackageSource(root: string): PackageSource {
       }
     },
     hasFolder(path) {
-      return existsSync(join(root, path)) && lstatSync(join(root, path)).isDirectory()
+      try {
+        return lstatSync(join(root, path)).isDirectory()
+      } catch (error) {
+        if (isMissing(error)) return false
+        throw error
+      }
     },
   }
 }
