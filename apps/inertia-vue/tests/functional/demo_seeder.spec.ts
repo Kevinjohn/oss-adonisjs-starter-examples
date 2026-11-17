@@ -7,7 +7,7 @@ import Team from '#models/team'
 import User from '#models/user'
 import DemoSeeder from '#database/seeders/demo_seeder'
 import { masqueradeOperatorEmails } from '#services/masquerade_operators'
-import { softDeleteAdminEmails } from '#services/soft_delete_admins'
+import { isSoftDeleteAdmin } from '#services/soft_delete_admins'
 import { setupAccountDatabase } from '#tests/helpers/account_database'
 import { InertiaSession } from '#tests/helpers/inertia_session'
 
@@ -18,12 +18,9 @@ test.group('demo seeder', (group) => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])
     const originalOperatorEmails = new Set(masqueradeOperatorEmails)
-    const originalAdminEmails = new Set(softDeleteAdminEmails)
     return async () => {
       masqueradeOperatorEmails.clear()
       originalOperatorEmails.forEach((email) => masqueradeOperatorEmails.add(email))
-      softDeleteAdminEmails.clear()
-      originalAdminEmails.forEach((email) => softDeleteAdminEmails.add(email))
       await cleanup()
     }
   })
@@ -32,15 +29,14 @@ test.group('demo seeder', (group) => {
     masqueradeOperatorEmails.clear()
     masqueradeOperatorEmails.add('operator@example.test')
     masqueradeOperatorEmails.add('second-operator@example.test')
-    softDeleteAdminEmails.clear()
-    softDeleteAdminEmails.add('Admin@example.test')
-    softDeleteAdminEmails.add('second-admin@example.test')
     const operatorEmail = 'operator@example.test'
     const existingAdmin = await User.create({
       email: 'Admin@example.test',
       password: 'ExistingPassword123!',
       emailVerifiedAt: DateTime.utc(),
     })
+    existingAdmin.isSoftDeleteAdmin = true
+    await existingAdmin.save()
     const existingAdminPassword = existingAdmin.password
 
     const seeder = new DemoSeeder(db.connection())
@@ -75,6 +71,8 @@ test.group('demo seeder', (group) => {
     assert.isNotNull(operator.emailVerifiedAt)
     assert.isNotNull(admin.emailVerifiedAt)
     assert.equal(admin.password, existingAdminPassword)
+    assert.isTrue(isSoftDeleteAdmin(admin))
+    for (const member of [alice, bob, operator]) assert.isFalse(isSoftDeleteAdmin(member))
 
     const teams = await Team.query().where('name', 'Demo team')
     assert.lengthOf(teams, 1)

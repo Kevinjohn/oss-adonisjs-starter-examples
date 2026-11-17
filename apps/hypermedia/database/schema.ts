@@ -242,7 +242,7 @@ export class TeamSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'credentialsChangedAt', 'deletedAt', 'email', 'emailVerifiedAt', 'fullName', 'id', 'password', 'unverifiedEmail', 'updatedAt'] as const
+  static $columns = ['createdAt', 'credentialsChangedAt', 'deletedAt', 'email', 'emailVerifiedAt', 'fullName', 'id', 'isSoftDeleteAdmin', 'password', 'unverifiedEmail', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -258,6 +258,8 @@ export class UserSchema extends BaseModel {
   declare fullName: string | null
   @column({ isPrimary: true })
   declare id: number
+  @column()
+  declare isSoftDeleteAdmin: boolean
   @column({ serializeAs: null })
   declare password: string | null
   @column()

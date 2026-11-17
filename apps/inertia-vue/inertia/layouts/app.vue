@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Form, Link } from '@adonisjs/inertia/vue'
+import { usePage } from '@inertiajs/vue3'
 import FlashMessages from '~/components/flash_messages.vue'
 import MasqueradeBanner from '~/components/masquerade_banner.vue'
+
+const page = usePage()
 </script>
 
 <template>
@@ -24,6 +27,10 @@ import MasqueradeBanner from '~/components/masquerade_banner.vue'
       <Link href="/teams" class="subnav__item">Teams</Link>
       <Link href="/account" class="subnav__item">Protected app</Link>
       <Link href="/settings/profile" class="subnav__item">Settings</Link>
+      <Link href="/account/delete" class="subnav__item">Delete account</Link>
+      <Link v-if="page.props.canManageDeletedUsers" href="/admin/deleted-users" class="subnav__item"
+        >Deleted accounts</Link
+      >
     </div>
   </nav>
   <FlashMessages />

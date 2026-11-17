@@ -2,6 +2,7 @@ import Logo from '~/components/logo'
 import { type ReactNode } from 'react'
 import { House, LogOut, Settings, Users } from 'lucide-react'
 import { Form } from '@adonisjs/inertia/react'
+import { usePage } from '@inertiajs/react'
 import FlashToasts from '~/components/flash_toasts'
 import MasqueradeBanner from '~/components/masquerade_banner'
 import ThemeToggle from '~/components/theme_toggle'
@@ -15,9 +16,12 @@ const nav: NavItem[] = [
   { label: 'Dashboard', route: 'dashboard', icon: House },
   { label: 'Teams', route: 'teams.index', icon: Users, section: '/teams' },
   { label: 'Settings', route: 'passwords.edit', icon: Settings, section: '/settings' },
+  { label: 'Delete account', route: 'account_deletion.show' },
 ]
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const { props } = usePage()
+
   return (
     <>
       <header className="header header--bar">
@@ -43,6 +47,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               {label}
             </NavLink>
           ))}
+          {props.canManageDeletedUsers && (
+            <NavLink route="deleted_users.index" className="subnav__item">
+              Deleted accounts
+            </NavLink>
+          )}
         </div>
       </nav>
 

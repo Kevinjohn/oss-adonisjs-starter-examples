@@ -12,8 +12,8 @@ As an example-app operator, I want to seed the configured demo accounts and team
 ## Acceptance criteria
 
 - There are no form fields; the operator runs the seeder after database migrations.
-- The seeder considers the first configured Masquerade operator address, first configured soft-delete administrator address, Alice, and Bob; duplicate addresses are de-duplicated. Existing users, including soft-deleted users, are preserved and not reset.
-- Hypermedia and API create missing accounts with a name from the email prefix; React and Vue name Alice “Alice Example” and Bob “Bob Example”, while configured operator/admin accounts have no full name. All use `DemoPassword123!` and confirmed email. API creates each missing user and its `account_admissions` row in the same transaction, recording invitation evidence as source `operator` and approval `approved`. Existing active or trashed API accounts are skipped entirely; no admission evidence is added for them. The number of created accounts depends on configured addresses and existing rows.
+- The seeder considers the first configured Masquerade operator address, Alice, and Bob; duplicate addresses are de-duplicated. Existing users, including soft-deleted users, are preserved and not reset.
+- Hypermedia and API create missing accounts with a name from the email prefix; React and Vue name Alice “Alice Example” and Bob “Bob Example”, while configured operator accounts have no full name. All use `DemoPassword123!` and confirmed email. API creates each missing user and its `account_admissions` row in the same transaction, recording invitation evidence as source `operator` and approval `approved`. Existing active or trashed API accounts are skipped entirely; no admission evidence is added for them. The number of created accounts depends on the configured operator address and existing rows.
 - Alice's owned `Demo team` is created with Bob as a viewer in one transaction when no matching team exists. If the matching owned team already exists, the seeder adds Bob as viewer only when he has no membership; an existing Bob membership is left as-is.
 - Database or transaction failures surface from the seeder. The configured database is used; no in-memory storage is substituted.
 
@@ -21,8 +21,8 @@ As an example-app operator, I want to seed the configured demo accounts and team
 
 ```mermaid
 flowchart TD
-    A["Operator runs node ace db:seed in a kit app"] --> B["Read configured operator/admin addresses"]
-    B --> C["De-duplicate those addresses with Alice and Bob"]
+    A["Operator runs node ace db:seed in a kit app"] --> B["Read configured operator address"]
+    B --> C["De-duplicate that address with Alice and Bob"]
     C --> D{"Kit and existing user?"}
     D -->|Browser missing| E["Create demo user; preserve existing users"]
     D -->|API missing| F["Create user and admission evidence in one transaction"]
@@ -39,8 +39,8 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["DemoSeeder.run"] --> B["Read first configured operator/admin addresses"]
-    B --> C["Set of configured addresses, Alice, and Bob"]
+    A["DemoSeeder.run"] --> B["Read first configured operator address"]
+    B --> C["Set of operator address, Alice, and Bob"]
     C --> D{"Account exists and which kit?"}
     D -->|Existing| E["Skip existing row; do not add API admission evidence"]
     D -->|Missing browser account| F["Create verified user with demo password"]
@@ -53,4 +53,4 @@ flowchart TD
     I -->|Yes| K["transaction: add Bob as viewer only when no membership exists"]
 ```
 
-**Code references:** [Hypermedia seeder](../../apps/hypermedia/database/seeders/demo_seeder.ts), [Masquerade operator configuration](../../apps/hypermedia/app/services/masquerade_operators.ts), [Soft-delete administrator configuration](../../apps/hypermedia/app/services/soft_delete_admins.ts), [Access Control configuration](../../apps/hypermedia/config/access_control.ts), [Demo seeder tests](../../apps/hypermedia/tests/functional/demo_seeder.spec.ts), [React seeder](../../apps/inertia-react/database/seeders/demo_seeder.ts), [Vue seeder](../../apps/inertia-vue/database/seeders/demo_seeder.ts), [API seeder](../../apps/api/database/seeders/demo_seeder.ts).
+**Code references:** [Hypermedia seeder](../../apps/hypermedia/database/seeders/demo_seeder.ts), [Masquerade operator configuration](../../apps/hypermedia/app/services/masquerade_operators.ts), [Access Control configuration](../../apps/hypermedia/config/access_control.ts), [Demo seeder tests](../../apps/hypermedia/tests/functional/demo_seeder.spec.ts), [React seeder](../../apps/inertia-react/database/seeders/demo_seeder.ts), [Vue seeder](../../apps/inertia-vue/database/seeders/demo_seeder.ts), [API seeder](../../apps/api/database/seeders/demo_seeder.ts).
