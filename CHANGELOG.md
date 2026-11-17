@@ -1,8 +1,17 @@
 # Changelog
 
-## Unreleased
+## v0.14.1
 
-Fix pending secure-note disclosure after account deletion and loss of newer confirmations when save requests overlap. Pending notes now belong to the registered sign-in and are consumed with the write in one transaction. Run migrations when adopting this fix; previously pending notes need a fresh confirmation. Hypermedia safely disables note submission without JavaScript. Tighten reading-list error assertions and CSRF coverage, and identify the v0.14.0 release.
+- Prevent pending secure-note text from appearing to another account after self-deletion and a new sign-in. Account deletion now revokes the registered sign-in and clears its browser session.
+- Preserve a newer password confirmation when an older save response arrives late. Pending notes belong to the registered sign-in; consuming the confirmation, removing the pending row and saving the note share one transaction.
+- Give Hypermedia's notes form an explicit POST action and disable submission until JavaScript initializes, preventing private draft text from entering a URL.
+- Add account-switch, overlapping-response, JavaScript-disabled and missing-CSRF regression coverage. Assert the intended safe reading-list error response and correct the v0.14.0 changelog heading.
+
+### Migration requirements
+
+For existing Hypermedia, React and Vue installations adopting these changes, run `node ace migration:run --force` from the app directory before serving the updated app. The new `1810000003003_create_pending_secure_notes.ts` migration creates `pending_secure_notes`, linked to the existing `account_sessions` and `password_confirmations` tables. Apply all outstanding migrations in order; do not copy this table into an unrelated application without its corresponding secure-note implementation.
+
+Previously pending session-based notes require fresh password confirmation. Already saved secure notes are preserved. The API needs no new migration for this patch and retains bearer-token authentication. Package versions, dependency declarations and lockfiles are unchanged.
 
 ## v0.14.0
 
