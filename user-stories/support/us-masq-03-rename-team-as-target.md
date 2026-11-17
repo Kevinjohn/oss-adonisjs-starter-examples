@@ -3,7 +3,7 @@
 As a configured support operator, I want to rename a team through an allowed target identity so that the write follows the target's actual team permission and the host's support policy.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Browser uses the effective session target and report-only context enforcement; target needs `team:write`, active mode must be edit, and the route must allow mutations. API access-token strategy uses `api_effective` and enforces current context on unsafe requests; API session strategy uses raw `web`, outside effective-mode context enforcement.
+**Access:** Browser uses the effective session target and report-only context enforcement; target needs `team:write`, active mode must be edit, and the route must allow mutations. The API combined example uses access tokens, `api_effective`, and enforces current context on unsafe requests. Its test harness can exercise a raw-`web` session branch; this is not a supported mixed-transport host configuration.
 **Entry:** Browser kits: `POST /teams/:scopeId`; API: `PATCH /api/v1/teams/:scopeId`.
 **Documentation:** [Masquerade and team scope guide](../../docs/cookbook/masquerade-with-access-control.md#keep-team-permissions-in-force).
 **Source:** [Hypermedia team routes](../../apps/hypermedia/start/routes.ts), [API team routes](../../apps/api/start/routes.ts).
@@ -11,16 +11,16 @@ As a configured support operator, I want to rename a team through an allowed tar
 
 ## Acceptance criteria
 
-| Field                                        | Control                                                 | Required/default/conditions                                                                                                                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Team name (visible label) / `name` (API key) | Text input / JSON string                                | Required; trimmed; 1–100 characters; browser field starts with the current team name. No API input default is supplied.                                                                                          |
-| Support context                              | Browser session context / `X-Masquerade-Context` header | Browser reports context mismatches and continues policy checks; API access-token routes enforce current context on unsafe requests, including while idle; raw API session routes skip this effective-mode check. |
-| Team scope                                   | Route ID and server-loaded membership                   | Caller must belong to the team and have `team:write` under the applicable guard.                                                                                                                                 |
+| Field                                        | Control                                                 | Required/default/conditions                                                                                                                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Team name (visible label) / `name` (API key) | Text input / JSON string                                | Required; trimmed; 1–100 characters; browser field starts with the current team name. No API input default is supplied.                                                                                                     |
+| Support context                              | Browser session context / `X-Masquerade-Context` header | Browser reports context mismatches and continues policy checks; API access-token routes enforce current context on unsafe requests, including while idle; the test-only API session branch skips this effective-mode check. |
+| Team scope                                   | Route ID and server-loaded membership                   | Caller must belong to the team and have `team:write` under the applicable guard.                                                                                                                                            |
 
 - The route resolves authentication, account eligibility, and team scope before `TeamsController.update` runs. The controller authorizes `team:write`, validates the name, loads the team, and saves it.
-- Browser effective identity is the target during support mode. In API token mode, the effective guard is `api_effective`; in session mode, the configured team guard is raw `web`.
+- Browser effective identity is the target during support mode. The API combined example uses `api_effective`; a test-only session branch uses raw `web` and does not represent a supported mixed-transport host configuration.
 - During browser support, a context mismatch is logged in report mode and does not by itself refuse the rename; the active mode must still be edit, the route must carry `allowMutation()`, and the effective target must have `team:write`.
-- API access-token team requests enforce current context on unsafe methods, including while idle; a mismatch is refused. During active token support, edit access, the route marker, and target permission are also required. API session team requests use raw `web` and skip effective-mode context and mutation checks; they still require the raw account to pass admission, scope and `team:write`. A denied mutation policy, missing permission or invalid name prevents the save.
+- API access-token team requests enforce current context on unsafe methods, including while idle; a mismatch is refused. During active token support, edit access, the route marker, and target permission are also required. The test-only API session branch uses raw `web` and skips effective-mode context and mutation checks; it still requires the raw account to pass admission, scope and `team:write`. A denied mutation policy, missing permission or invalid name prevents the save.
 - Browser redirects to the team page with confirmation; API returns the renamed team ID and name.
 
 ## User flow
@@ -30,7 +30,7 @@ flowchart TD
     A["Operator submits team name"] --> B{"Selected route guard?"}
     B -->|Browser effective session| C["Report context mismatch if present; resolve effective target"]
     B -->|API access token effective| D{"Current context valid?"}
-    B -->|API raw session| E["Use raw web account; skip effective-mode checks"]
+    B -->|API test harness session| E["Use raw web account; skip effective-mode checks"]
     D -->|No| F["Refuse unsafe request"]
     D -->|Yes| G["Resolve effective target"]
     C --> H{"Edit mode and mutable route allowed?"}
@@ -48,7 +48,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["masqueradeContext inspects selected route guard"] --> B{"Effective guard?"}
-    B -->|No: API raw web| C["Skip effective-mode context and mutation policy"]
+    B -->|API test harness only: raw web| C["Skip effective-mode context and mutation policy"]
     B -->|Yes| D{"Browser report or API token enforce?"}
     D -->|Browser| E["Log any unsafe context mismatch and continue"]
     D -->|API token| F["Require current unsafe context; refuse mismatch"]

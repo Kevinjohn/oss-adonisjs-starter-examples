@@ -3,7 +3,7 @@
 As a team editor, I want to change a team name so that members see the updated name.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Browser requires a verified effective member with `team:write`. API requires admitted membership and `team:write`; its session strategy uses raw `web`, token strategy uses `api_effective` and a current context header on unsafe requests. During support mode, target permission and edit-mode mutation policy apply.
+**Access:** Browser requires a verified effective member with `team:write`. The API combined example requires admitted membership and `team:write`; it uses `api_effective` with a current context header on unsafe requests. The API test harness can exercise a raw-`web` session branch, which is not a supported mixed-transport host configuration. During support mode, target permission and edit-mode mutation policy apply.
 **Entry:** Browser kits: `POST /teams/:scopeId`; API: `PATCH /api/v1/teams/:scopeId`.
 **Documentation:** [Masquerade and team scope guide](../../docs/cookbook/masquerade-with-access-control.md#keep-team-permissions-in-force).
 **Source:** [Hypermedia team routes](../../apps/hypermedia/start/routes.ts), [API team routes](../../apps/api/start/routes.ts).
@@ -11,11 +11,11 @@ As a team editor, I want to change a team name so that members see the updated n
 
 ## Acceptance criteria
 
-| Field                                        | Control                                                             | Required/default/conditions                                                                                                                                                                                             |
-| -------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Team name (visible label) / `name` (API key) | Text input / JSON string                                            | Required; defaults to the current team name in browser forms; trimmed; 1–100 characters.                                                                                                                                |
-| Support context                              | Browser session context / `X-Masquerade-Context` for API token mode | API token strategy requires current context on unsafe requests, including while idle; browser kits check unsafe effective requests too, but their configured report mode logs context mismatch rather than refusing it. |
-| CSRF                                         | Host form token                                                     | Required by the browser Shield middleware for the form submission.                                                                                                                                                      |
+| Field                                        | Control                                                             | Required/default/conditions                                                                                                                                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Team name (visible label) / `name` (API key) | Text input / JSON string                                            | Required; defaults to the current team name in browser forms; trimmed; 1–100 characters.                                                                                                                                   |
+| Support context                              | Browser session context / `X-Masquerade-Context` for API token mode | API access-token mode requires current context on unsafe requests, including while idle; browser kits check unsafe effective requests too, but their configured report mode logs context mismatch rather than refusing it. |
+| CSRF                                         | Host form token                                                     | Required by the browser Shield middleware for the form submission.                                                                                                                                                         |
 
 - The route resolves the member scope before the controller. The controller requires `team:write`, validates the name, loads the team, then saves it.
 - A successful browser rename flashes “Team renamed.” and redirects to the team page; API returns `id` and updated `name`.

@@ -8,9 +8,9 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 
 | Package                                 | Version | Example                                                                                                       |
 | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `@kevinjohn/adonisjs-account-kit`       | 0.3.4   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.3.4/examples/api)                     |
-| `@kevinjohn/adonisjs-masquerade`        | 0.2.8   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.2.8/examples/with_account_kit/api)     |
-| `@kevinjohn/adonisjs-access-control`    | 0.1.7   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.1.7/examples/with_account_kit/api) |
+| `@kevinjohn/adonisjs-account-kit`       | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.4.0/examples/api)                     |
+| `@kevinjohn/adonisjs-masquerade`        | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.4.0/examples/with_account_kit/api)     |
+| `@kevinjohn/adonisjs-access-control`    | 0.2.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.2.0/examples/with_account_kit/api) |
 | `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.7   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.7/examples/starter/api)       |
 
 ## Run it

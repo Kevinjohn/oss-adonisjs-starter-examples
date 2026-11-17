@@ -83,4 +83,4 @@ router
 
 <!-- prettier-ignore-end -->
 
-The Hypermedia, Inertia React and Inertia Vue apps use session-based effective guards; `apps/api` uses bearer tokens with the `masquerade` ability for scoped team reads and renames, and sends the `contextToken` from `GET /masquerade`, refreshed after mode changes, as `X-Masquerade-Context` on `PATCH` renames.
+The Hypermedia, Inertia React and Inertia Vue apps use session-based effective guards. The API combined example uses bearer-token authentication: its scoped team reads and renames require the token's `masquerade` ability and current context, read from `GET /masquerade` and refreshed after mode changes, in `X-Masquerade-Context` on `PATCH` renames.
