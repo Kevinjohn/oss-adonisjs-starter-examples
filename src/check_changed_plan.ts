@@ -8,12 +8,13 @@ const dependencies = /^(?:package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml)$/
 const formatConfig = /^(?:\.prettierignore|\.prettierrc[^/]*|prettier\.config\.[^/]+)$/
 const lintConfig = /^eslint\.config\.[^/]+$/
 const spec = /^tests\/.+\.spec\.ts$/
+const sourcedDocs = /^docs\/cookbook\/.+\.md$/
 // The tooling and what every spec shares: a change can break any spec.
 const suiteInput =
   /^(?:src\/.+|bin\/.+|tests\/helpers\/.+|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig[^/]*\.json)$/
-// What assembly reads besides the tooling, and what it writes.
-const assemblyInput =
-  /^(?:config\/.+|resolutions\/.+|layers\/.+|templates\/.+|apps\/.+|\.gitattributes)$/
+const appRunner = /^(?:bin\/.+|src\/.+)$/
+const appFile = /^apps\/([^/]+)\//
+const allKits = ['api', 'hypermedia', 'inertia-react', 'inertia-vue']
 
 const minute = 60_000
 
@@ -23,7 +24,7 @@ export type CheckStep =
 
 /**
  * Plans checks for files changed since the merge base, including deleted paths. The static
- * option leaves out the full Japa suite and the assembly check; changed specs still run.
+ * option leaves out the full Japa suite and direct app checks; changed specs still run.
  */
 export function planChecks(
   files: { path: string; deleted: boolean }[],
@@ -86,24 +87,43 @@ export function planChecks(
 
   const full = any(suiteInput)
   const specs = present.filter((path) => spec.test(path))
+  const targetedSpecs = [...specs, ...(any(sourcedDocs) ? ['tests/docs_sources.spec.ts'] : [])]
   if (full && !options.static) {
     step('tests', true, ['pnpm', 'test'], { tests: 'japa', timeoutMs: 15 * minute, skip: '' })
   } else {
-    step('tests', specs.length > 0, ['pnpm', 'test', ...specs.map((path) => `--files=${path}`)], {
-      tests: 'japa',
-      skip: full ? 'no changed spec files' : 'no spec or tooling file changed',
-    })
+    step(
+      'tests',
+      targetedSpecs.length > 0,
+      ['pnpm', 'test', ...targetedSpecs.map((path) => `--files=${path}`)],
+      {
+        tests: 'japa',
+        skip: full ? 'no changed spec files' : 'no spec or tooling file changed',
+      }
+    )
   }
   if (full && options.static) steps.push({ id: 'full-suite', skip: '--static leaves it out' })
 
-  const assembly = any(assemblyInput) || full
-  if (assembly && options.static) {
-    steps.push({ id: 'assemble-check', skip: '--static leaves it out' })
+  const changedApps = files.flatMap((file) => {
+    const kit = file.path.match(appFile)?.[1]
+    return kit && allKits.includes(kit) ? [kit] : []
+  })
+  const appKits = any(appRunner) || any(dependencies) ? allKits : [...new Set(changedApps)]
+  if (appKits.length > 0 && options.static) {
+    steps.push({ id: 'app-checks', skip: '--static leaves them out' })
   } else {
-    step('assemble-check', assembly, ['pnpm', 'assemble', '--check'], {
-      timeoutMs: 30 * minute,
-      skip: 'nothing assembly reads changed',
-    })
+    for (const kit of appKits) {
+      steps.push({
+        id: `app-${kit}`,
+        command: [
+          'pnpm',
+          'test:app',
+          '--kit',
+          kit,
+          ...(kit === 'api' ? [] : ['--install-browsers']),
+        ],
+        timeoutMs: 30 * minute,
+      })
+    }
   }
   return steps
 }

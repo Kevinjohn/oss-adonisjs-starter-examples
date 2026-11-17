@@ -4,10 +4,6 @@ on:
   pull_request:
     paths: &paths
       - 'apps/**'
-      - 'config/**'
-      - 'resolutions/**'
-      - 'layers/**'
-      - 'templates/**'
       - 'src/**'
       - 'bin/**'
       - 'package.json'
@@ -26,18 +22,6 @@ permissions:
   contents: read
 
 jobs:
-  assemble-check:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm assemble --check
-
   test:
     runs-on: ubuntu-24.04
     strategy:

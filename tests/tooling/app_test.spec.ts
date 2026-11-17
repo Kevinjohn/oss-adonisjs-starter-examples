@@ -1,11 +1,10 @@
 import { test } from '@japa/runner'
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { testApp } from '../../src/app_test.ts'
-import { listFiles } from '../../src/file_tree.ts'
 import { exactly } from '../helpers/exact_message.ts'
 import { fakeRunner } from '../helpers/fake_runner.ts'
-import { FixtureWorld, kitFiles, writeFiles } from '../helpers/fixture_repos.ts'
+import { AppTestWorld, appFiles, writeFiles } from '../helpers/app_fixture.ts'
 
 function writeApp(
   root: string,
@@ -14,7 +13,7 @@ function writeApp(
   kit = 'inertia-react'
 ) {
   writeFiles(join(root, 'apps', kit), {
-    ...kitFiles(kit),
+    ...appFiles(kit),
     'package.json': `${JSON.stringify(
       {
         name: 'app',
@@ -31,15 +30,21 @@ function writeApp(
 }
 
 function snapshot(folder: string): string {
-  return listFiles(folder)
-    .map((entry) => `${entry.path}:${readFileSync(join(folder, entry.path), 'utf8')}`)
+  const files = (directory: string, prefix = ''): string[] =>
+    readdirSync(join(directory, prefix), { withFileTypes: true }).flatMap((entry) => {
+      const path = join(prefix, entry.name)
+      return entry.isDirectory() ? files(directory, path) : [path]
+    })
+  return files(folder)
+    .sort()
+    .map((path) => `${path}:${readFileSync(join(folder, path), 'utf8')}`)
     .join('\n')
 }
 
 test.group('test:app', (group) => {
-  let world: FixtureWorld
+  let world: AppTestWorld
   group.each.setup(() => {
-    world = new FixtureWorld()
+    world = new AppTestWorld()
     return () => world.cleanup()
   })
 
@@ -54,7 +59,6 @@ test.group('test:app', (group) => {
       await testApp({
         root: world.sandboxRoot,
         kit,
-        directory: 'apps',
         installBrowsers: true,
         runner: fake.runner,
         waitForUrl: async (url) => {
@@ -87,19 +91,18 @@ test.group('test:app', (group) => {
     })
   }
 
-  test('installs without a frozen lockfile when the app has vendor/', async ({ assert }) => {
+  test('uses the checked-in lockfile when the app has vendor/', async ({ assert }) => {
     writeApp(world.sandboxRoot, {}, { 'vendor/kevinjohn-adonisjs-account-kit.tgz': 'archive' })
     const fake = fakeRunner()
     await testApp({
       root: world.sandboxRoot,
       kit: 'inertia-react',
-      directory: 'apps',
       installBrowsers: false,
       runner: fake.runner,
       waitForUrl: async () => {},
       log: () => {},
     })
-    assert.equal(fake.calls[0].args.join(' '), 'install --no-frozen-lockfile')
+    assert.equal(fake.calls[0].args.join(' '), 'install --frozen-lockfile')
     assert.deepEqual(fake.started, [])
   })
 
@@ -118,7 +121,6 @@ test.group('test:app', (group) => {
         testApp({
           root: world.sandboxRoot,
           kit: 'inertia-react',
-          directory: 'apps',
           installBrowsers: false,
           runner: failing,
           waitForUrl: async () => {},
@@ -131,26 +133,6 @@ test.group('test:app', (group) => {
     assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
   })
 
-  test('skips with the note when assembly left a peer-ahead note instead of an app', async ({
-    assert,
-  }) => {
-    writeFiles(join(world.sandboxRoot, 'tmp/combined/api'), { '.peer-ahead': 'the note\n' })
-    const fake = fakeRunner()
-    const logged: string[] = []
-    await testApp({
-      root: world.sandboxRoot,
-      kit: 'api',
-      directory: 'tmp/combined',
-      installBrowsers: false,
-      runner: fake.runner,
-      waitForUrl: async () => {},
-      log: (line) => logged.push(line),
-    })
-    assert.deepEqual(logged, ['the note'])
-    assert.deepEqual(fake.calls, [])
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/api')))
-  })
-
   test('refuses an unknown kit before touching any folder', async ({ assert }) => {
     writeApp(world.sandboxRoot)
     await assert.rejects(
@@ -158,7 +140,6 @@ test.group('test:app', (group) => {
         testApp({
           root: world.sandboxRoot,
           kit: '../../apps/inertia-react',
-          directory: 'tmp/test-app',
           installBrowsers: false,
           runner: fakeRunner().runner,
           waitForUrl: async () => {},
@@ -179,7 +160,6 @@ test.group('test:app', (group) => {
         testApp({
           root: world.sandboxRoot,
           kit: 'inertia-react',
-          directory: 'apps',
           installBrowsers: false,
           runner: fakeRunner().runner,
           waitForUrl: async () => {},
@@ -200,7 +180,6 @@ test.group('test:app', (group) => {
         testApp({
           root: world.sandboxRoot,
           kit: 'inertia-react',
-          directory: 'apps',
           installBrowsers: false,
           runner: fake.runner,
           waitForUrl: async () => {},
@@ -209,6 +188,76 @@ test.group('test:app', (group) => {
       /^inertia-react has no pnpm-workspace.yaml/
     )
     assert.deepEqual(fake.calls, [])
+    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+  })
+
+  test('runs only the checked-in app and does not mutate its source', async ({ assert }) => {
+    writeApp(world.sandboxRoot, {}, { 'app.ts': 'export const app = true\n' }, 'api')
+    const source = join(world.sandboxRoot, 'apps/api')
+    const before = snapshot(source)
+    const fake = fakeRunner()
+    await testApp({
+      root: world.sandboxRoot,
+      kit: 'api',
+      installBrowsers: false,
+      runner: fake.runner,
+      waitForUrl: async () => {},
+      log: () => {},
+    })
+    assert.equal(fake.calls[0].cwd, join(world.sandboxRoot, 'tmp/test-app/api'))
+    assert.isTrue(fake.calls[0].args.includes('--frozen-lockfile'))
+    assert.equal(snapshot(source), before)
+  })
+
+  test('removes the app copy when an install command fails', async ({ assert }) => {
+    writeApp(world.sandboxRoot)
+    const fake = fakeRunner()
+    const failing = {
+      ...fake.runner,
+      async run() {
+        throw new Error('install failed')
+      },
+    }
+    await assert.rejects(
+      () =>
+        testApp({
+          root: world.sandboxRoot,
+          kit: 'inertia-react',
+          installBrowsers: false,
+          runner: failing,
+          waitForUrl: async () => {},
+          log: () => {},
+        }),
+      exactly('install failed')
+    )
+    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(fake.started, [])
+  })
+
+  test('removes the app copy when Playwright browser installation fails', async ({ assert }) => {
+    writeApp(world.sandboxRoot, { '@japa/browser-client': '^2.0.0' })
+    const fake = fakeRunner()
+    const failing = {
+      ...fake.runner,
+      async run(command: string, args: string[], options: any) {
+        if (command === 'node') throw new Error('browser install failed')
+        await fake.runner.run(command, args, options)
+      },
+    }
+    await assert.rejects(
+      () =>
+        testApp({
+          root: world.sandboxRoot,
+          kit: 'inertia-react',
+          installBrowsers: true,
+          runner: failing,
+          waitForUrl: async () => {},
+          playwrightCli: () => '/playwright/cli.js',
+          log: () => {},
+        }),
+      exactly('browser install failed')
+    )
+    assert.deepEqual(fake.started, [])
     assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
   })
 })

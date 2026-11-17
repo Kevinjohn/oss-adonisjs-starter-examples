@@ -11,7 +11,7 @@ export interface BackgroundProcess {
 }
 
 /**
- * Runs commands for regeneration and app tests. Tests replace it with a fake.
+ * Runs app checks and tests. Tests replace it with a fake.
  */
 export interface CommandRunner {
   /** Runs to completion; rejects with the command and its full output when it fails. */
@@ -34,11 +34,7 @@ const PASSED_THROUGH = [
   'XDG_STATE_HOME',
 ]
 
-/**
- * The environment of specification 6.6: only `PATH`, `HOME`, `HOST`, `LIMITER_STORE` and pnpm's
- * own location variables, so no pnpm script variable reaches the app.
- * `extra` adds variables.
- */
+/** Keep package-manager paths and runtime settings without inheriting unrelated shell variables. */
 export function constructedEnvironment(
   extra: Record<string, string | undefined> = {}
 ): NodeJS.ProcessEnv {

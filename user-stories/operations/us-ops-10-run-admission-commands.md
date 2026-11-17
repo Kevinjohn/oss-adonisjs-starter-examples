@@ -5,8 +5,8 @@ As an API kit operator, I want to run the Account Kit admission commands so that
 **Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.4.0 `src/admission/commands/main.ts`), not runtime-tested here.
 **Access:** API kit operator with installed dependencies, a configured `.env` and a migrated database.
 **Entry:** From `apps/api`: `node ace <command>`, for a command exported by `@kevinjohn/adonisjs-account-kit/admission/commands`.
-**Documentation:** [API kit README](../../apps/api/README.md).
-**Source:** [API Ace registration](../../apps/api/adonisrc.ts), [admission provider registration](../../apps/api/adonisrc.ts), [package pin](../../config/sandbox.json); `@kevinjohn/adonisjs-account-kit` 0.4.0 `src/admission/commands/main.ts`, `src/admission/commands/bootstrap.ts`, `commands/main.ts`.
+**Documentation:** [Run an app](../../README.md#run-an-app).
+**Source:** [API Ace registration](../../apps/api/adonisrc.ts); command behavior is supplied by the installed Account Kit admission module.
 
 ## Acceptance criteria
 
@@ -46,4 +46,4 @@ flowchart TD
     C --> D["Package command runs against admission provider and database"]
 ```
 
-**Code references:** [API adonisrc](../../apps/api/adonisrc.ts), [package pin](../../config/sandbox.json), [admission functional tests](../../apps/api/tests/functional/admission.spec.ts).
+**Code references:** [API adonisrc](../../apps/api/adonisrc.ts), [admission functional tests](../../apps/api/tests/functional/admission.spec.ts).

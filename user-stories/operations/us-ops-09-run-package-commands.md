@@ -5,8 +5,8 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 **Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.4.0, `@kevinjohn/adonisjs-masquerade` 0.4.0, `@kevinjohn/adonisjs-access-control` 0.2.0), not runtime-tested here. Flag spellings are the kebab-case form Ace derives from each declared flag.
 **Access:** Kit operator with the kit's dependencies installed, a configured `.env` and, for commands that read or write application data, a migrated database.
 **Entry:** From `apps/<kit>`: `node ace <command>`, for a command registered by that kit's `commands` list in `adonisrc.ts`.
-**Documentation:** [Hypermedia app README](../../apps/hypermedia/README.md).
-**Source:** [Hypermedia Ace registration](../../apps/hypermedia/adonisrc.ts), [API Ace registration](../../apps/api/adonisrc.ts), [React Ace registration](../../apps/inertia-react/adonisrc.ts), [Vue Ace registration](../../apps/inertia-vue/adonisrc.ts), [package pins](../../config/sandbox.json); `@kevinjohn/adonisjs-account-kit` 0.4.0 `commands/main.ts`; `@kevinjohn/adonisjs-masquerade` 0.4.0 `commands/main.ts`, `src/active_modes.ts`, `src/prune.ts`; `@kevinjohn/adonisjs-access-control` 0.2.0 `commands/main.ts`, `commands/doctor.ts`, `src/doctor.ts`.
+**Documentation:** [Run an app](../../README.md#run-an-app).
+**Source:** [Hypermedia Ace registration](../../apps/hypermedia/adonisrc.ts), [API Ace registration](../../apps/api/adonisrc.ts), [React Ace registration](../../apps/inertia-react/adonisrc.ts), [Vue Ace registration](../../apps/inertia-vue/adonisrc.ts). Command behavior is supplied by the installed package modules.
 
 ## Acceptance criteria
 
@@ -75,4 +75,4 @@ flowchart TD
     G --> H
 ```
 
-**Code references:** [Hypermedia adonisrc](../../apps/hypermedia/adonisrc.ts), [API adonisrc](../../apps/api/adonisrc.ts), [React adonisrc](../../apps/inertia-react/adonisrc.ts), [Vue adonisrc](../../apps/inertia-vue/adonisrc.ts), [App Ace entry](../../apps/hypermedia/ace.js), [package pins](../../config/sandbox.json).
+**Code references:** [Hypermedia adonisrc](../../apps/hypermedia/adonisrc.ts), [API adonisrc](../../apps/api/adonisrc.ts), [React adonisrc](../../apps/inertia-react/adonisrc.ts), [Vue adonisrc](../../apps/inertia-vue/adonisrc.ts), [App Ace entry](../../apps/hypermedia/ace.js).

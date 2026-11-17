@@ -1,6 +1,6 @@
 # Soft Delete with Account Kit
 
-The assembled Hypermedia app uses Account Kit for sign-in and Soft Delete to keep deleted user rows available for restoration. Inertia React and Inertia Vue render these session flows with Inertia; `apps/api` uses bearer tokens, `DELETE /api/v1/account` for self-deletion and JSON responses under `/api/v1/admin/deleted-users`.
+The Hypermedia app uses Account Kit for sign-in and Soft Delete to keep deleted user rows available for restoration. Inertia React and Inertia Vue render these session flows with Inertia; `apps/api` uses bearer tokens, `DELETE /api/v1/account` for self-deletion and JSON responses under `/api/v1/admin/deleted-users`.
 
 ## Compose the user model
 
@@ -107,3 +107,5 @@ const users = createLucidAdapter(loadUser, {
 <!-- prettier-ignore-end -->
 
 `loadUser` loads this `User` model, and `SessionController.store` calls `kit.authentication.login` through this adapter. The adapter's normal Lucid lookup inherits the model's Soft Delete query filter, so a deleted account is not found and login fails with invalid credentials; Hypermedia displays its usual incorrect-email-or-password message. This is enforced by the model query filter, not `authentication.canAccess`, which returns `true` in this app.
+
+The integration tests exercise this recipe in [API](../../apps/api/tests/functional/account_kit_soft_delete.spec.ts), [Hypermedia](../../apps/hypermedia/tests/functional/soft_delete_sign_in.spec.ts), [React](../../apps/inertia-react/tests/functional/soft_delete_sign_in.spec.ts) and [Vue](../../apps/inertia-vue/tests/functional/soft_delete_sign_in.spec.ts).

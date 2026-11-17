@@ -95,3 +95,5 @@ router.use([
 `masquerade_context` runs after auth is initialised, so the request's Masquerade context is set before any route middleware or handler runs.
 
 `apps/inertia-react` and `apps/inertia-vue` use the same session guards and blocker as Hypermedia; `apps/api` uses bearer tokens, names its blocker `accountKitAccountBlocker` and keeps account routes on the raw Account Kit guard.
+
+The integration tests exercise this recipe in [API](../../apps/api/tests/functional/masquerade_account_blocker.spec.ts), [Hypermedia](../../apps/hypermedia/tests/functional/masquerade_account_blocker.spec.ts), [React](../../apps/inertia-react/tests/functional/masquerade_account_blocker.spec.ts) and [Vue](../../apps/inertia-vue/tests/functional/masquerade_account_blocker.spec.ts).
