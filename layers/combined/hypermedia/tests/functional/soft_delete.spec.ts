@@ -2,7 +2,6 @@ import { test } from '@japa/runner'
 import limiter from '@adonisjs/limiter/services/main'
 import User from '#models/user'
 import { setupAccountDatabase } from '#tests/helpers/account_database'
-import { softDeleteAdminEmails } from '#services/soft_delete_admins'
 import { FormSession } from '#tests/helpers/form_session'
 
 // Lucid Soft Delete's example spec, on Account Kit's test database.
@@ -12,15 +11,15 @@ test.group('soft delete', (group) => {
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])
-    softDeleteAdminEmails.add('admin@example.test')
     return async () => {
-      softDeleteAdminEmails.clear()
       await cleanup()
     }
   })
 
   test('an account deletes itself and an administrator restores it', async ({ assert }) => {
-    await User.create({ email: 'admin@example.test', password })
+    const adminAccount = await User.create({ email: 'admin@example.test', password })
+    adminAccount.isSoftDeleteAdmin = true
+    await adminAccount.save()
     const member = await User.create({ email: 'member@example.test', password })
 
     const session = new FormSession()
@@ -44,12 +43,12 @@ test.group('soft delete', (group) => {
   })
 
   test('a non-administrator and a guest cannot list or restore', async ({ assert }) => {
-    await User.create({ email: 'member@example.test', password })
+    await User.create({ email: 'admin@example.test', password })
     const deleted = await User.create({ email: 'deleted@example.test', password })
     await deleted.delete()
 
     const member = new FormSession()
-    await member.login('member@example.test', password)
+    await member.login('admin@example.test', password)
     const listed = await member.request('/admin/deleted-users')
     assert.equal(listed.status, 403)
     await member.request('/dashboard')

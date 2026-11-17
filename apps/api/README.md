@@ -11,7 +11,7 @@ Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https:/
 | `@kevinjohn/adonisjs-account-kit`       | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.4.0/examples/api)                     |
 | `@kevinjohn/adonisjs-masquerade`        | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.4.0/examples/with_account_kit/api)     |
 | `@kevinjohn/adonisjs-access-control`    | 0.2.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.2.0/examples/with_account_kit/api) |
-| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.1.7   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.1.7/examples/starter/api)       |
+| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.2.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.2.0/examples/starter/api)       |
 
 ## Run it
 
@@ -32,15 +32,14 @@ if the development server is running):
 node ace db:seed
 ```
 
-Every demo account uses the password `DemoPassword123!` and has a verified email. Running the
-seeder again skips accounts that exist.
+Seeded demo accounts use the password `DemoPassword123!` and have verified emails. Running the
+seeder again skips accounts that exist. The seeder does not grant deleted-account administration.
 
-| Account                   | Email                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| Masquerade operator       | First address in `MASQUERADE_OPERATOR_EMAILS` (default: `operator@example.com`) |
-| Soft-delete administrator | First address in `SOFT_DELETE_ADMIN_EMAILS` (default: `admin@example.com`)      |
-| Alice, team owner         | `alice@example.com`                                                             |
-| Bob, team viewer          | `bob@example.com`                                                               |
+| Account             | Email                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Masquerade operator | First address in `MASQUERADE_OPERATOR_EMAILS` (default: `operator@example.com`) |
+| Alice, team owner   | `alice@example.com`                                                             |
+| Bob, team viewer    | `bob@example.com`                                                               |
 
 Alice owns **Demo team**, with Bob as a viewer.
 
@@ -54,7 +53,7 @@ kit has no pages; use the [API section](#api) instead.
    start masquerading as Alice. Open the team's URL from step 1 directly; team listing is
    blocked during masquerade. Try renaming the team, then stop masquerading before switching accounts.
 3. Sign in as Bob, open `/account/delete`, and confirm deletion. His account can no longer sign in.
-4. Sign in as the administrator, open `/admin/deleted-users`, and restore Bob. Sign in as Bob again.
+4. Grant a separate existing verified account deleted-account administration through a trusted database operation by setting its `is_soft_delete_admin` field to true. Sign in as that account, open `/admin/deleted-users`, and restore Bob. Sign in as Bob again.
 
 ### API
 
@@ -62,8 +61,7 @@ Use the default access-token configuration. Send `POST /api/v1/auth/login` with 
 `{"email":"alice@example.com","password":"DemoPassword123!"}`. The response's `data.token`
 is the bearer token for subsequent requests. Log in separately for each account below.
 
-On a freshly migrated database the seeder creates the operator, the administrator, Alice and Bob
-as IDs 1 to 4, and **Demo team** as team 1.
+Use the IDs returned by the app for Alice, Bob and **Demo team**; they depend on existing data.
 
 1. With Alice's bearer token, read `GET /api/v1/teams/<team-id>` for **Demo team**.
 2. With the operator's bearer token, read `GET /masquerade`. Send its `contextToken` as
@@ -71,7 +69,7 @@ as IDs 1 to 4, and **Demo team** as team 1.
    `{"targetId":"<alice-id>","access":"edit"}`. Read the team as Alice, then refresh the
    context with `GET /masquerade` and use it on `POST /masquerade/stop`.
 3. With Bob's own bearer token, send `DELETE /api/v1/account` to soft-delete his account.
-4. With the administrator's bearer token, read `GET /api/v1/admin/deleted-users`, then send
+4. Grant a separate existing verified account deleted-account administration through a trusted database operation by setting its `is_soft_delete_admin` field to true. With that account's bearer token, read `GET /api/v1/admin/deleted-users`, then send
    `POST /api/v1/admin/deleted-users/<bob-id>/restore`. Bob can sign in again.
 
 ## Combined interactions

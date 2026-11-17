@@ -45,7 +45,7 @@ Current releases and API examples:
 | Account Kit    | 0.4.0   | `examples/api`                  |
 | Masquerade     | 0.4.0   | `examples/with_account_kit/api` |
 | Access Control | 0.2.0   | `examples/with_account_kit/api` |
-| Soft Delete    | 0.1.7   | `examples/starter/api`          |
+| Soft Delete    | 0.2.0   | `examples/starter/api`          |
 
 Every kit combines all four packages.
 

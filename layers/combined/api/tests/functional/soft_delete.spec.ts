@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 import { test } from '@japa/runner'
 import User from '#models/user'
-import { softDeleteAdminEmails } from '#services/soft_delete_admins'
 import { truncateDatabase } from '#tests/helpers/database'
 
 // Lucid Soft Delete's example spec, on Account Kit's test database and sign-in.
@@ -14,15 +13,15 @@ function createUser(email: string) {
 test.group('soft delete', (group) => {
   group.each.setup(async () => {
     const cleanup = await truncateDatabase()
-    softDeleteAdminEmails.add('admin@example.test')
     return async () => {
-      softDeleteAdminEmails.clear()
       await cleanup()
     }
   })
 
   test('an account deletes itself and an administrator restores it', async ({ client, assert }) => {
     const admin = await createUser('admin@example.test')
+    admin.isSoftDeleteAdmin = true
+    await admin.save()
     const member = await createUser('member@example.test')
 
     const deleted = await client.delete('/api/v1/account').loginAs(member)
@@ -50,7 +49,7 @@ test.group('soft delete', (group) => {
   })
 
   test('a non-administrator and a guest cannot list or restore', async ({ client, assert }) => {
-    const member = await createUser('member@example.test')
+    const member = await createUser('admin@example.test')
     const deleted = await createUser('deleted@example.test')
     await deleted.delete()
 

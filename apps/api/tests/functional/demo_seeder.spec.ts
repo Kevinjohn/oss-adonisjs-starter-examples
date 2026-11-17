@@ -5,7 +5,7 @@ import DemoSeeder from '#database/seeders/demo_seeder'
 import Team from '#models/team'
 import User from '#models/user'
 import { masqueradeOperatorEmails } from '#services/masquerade_operators'
-import { softDeleteAdminEmails } from '#services/soft_delete_admins'
+import { isSoftDeleteAdmin } from '#services/soft_delete_admins'
 import { isAdmitted } from '#services/account_admission_access'
 import { responseBody } from '#tests/helpers/response_body'
 import { truncateDatabase } from '#tests/helpers/database'
@@ -16,16 +16,11 @@ test.group('demo seeder', (group) => {
   group.each.setup(truncateDatabase)
   group.each.setup(() => {
     const operators = [...masqueradeOperatorEmails]
-    const admins = [...softDeleteAdminEmails]
     masqueradeOperatorEmails.clear()
     masqueradeOperatorEmails.add('operator@example.test')
-    softDeleteAdminEmails.clear()
-    softDeleteAdminEmails.add('admin@example.com')
     return () => {
       masqueradeOperatorEmails.clear()
       for (const email of operators) masqueradeOperatorEmails.add(email)
-      softDeleteAdminEmails.clear()
-      for (const email of admins) softDeleteAdminEmails.add(email)
     }
   })
 
@@ -33,6 +28,12 @@ test.group('demo seeder', (group) => {
     client,
     assert,
   }) => {
+    const existingAdmin = await User.create({
+      email: 'admin@example.com',
+      password: 'ExistingPassword123!',
+      isSoftDeleteAdmin: true,
+    })
+    const adminPasswordHash = existingAdmin.password
     await new DemoSeeder(db.connection()).run()
     const firstTeam = await Team.findByOrFail('name', 'Demo team')
     const firstBob = await User.findByOrFail('email', 'bob@example.com')
@@ -47,12 +48,7 @@ test.group('demo seeder', (group) => {
     assert.isString(operatorEmail, 'MASQUERADE_OPERATOR_EMAILS must configure an operator')
 
     const seededEmails = new Set(
-      [
-        operatorEmail!,
-        softDeleteAdminEmails.values().next().value,
-        'alice@example.com',
-        'bob@example.com',
-      ]
+      [operatorEmail!, 'alice@example.com', 'bob@example.com']
         .filter((email): email is string => Boolean(email))
         .map((email) => email.toLowerCase())
     )
@@ -62,8 +58,12 @@ test.group('demo seeder', (group) => {
       assert.lengthOf(matches, 1)
       assert.isNotNull(matches[0].emailVerifiedAt)
       assert.isTrue(await isAdmitted(matches[0].id))
+      assert.isFalse(isSoftDeleteAdmin(matches[0]))
     }
 
+    const admin = await User.findByOrFail('email', 'admin@example.com')
+    assert.isTrue(isSoftDeleteAdmin(admin))
+    assert.equal(admin.password, adminPasswordHash)
     const alice = await User.findByOrFail('email', 'alice@example.com')
     const bob = await User.findByOrFail('email', 'bob@example.com')
     const teams = await Team.query().where('name', 'Demo team')
@@ -80,6 +80,7 @@ test.group('demo seeder', (group) => {
       assert.isString(responseBody<{ data: { token: string } }>(login).data.token)
     }
 
+    assert.lengthOf(await User.query().where('email', 'admin@example.com'), 1)
     const reseededBob = await User.findByOrFail('email', 'bob@example.com')
     assert.equal(reseededBob.password, bobPasswordHash)
     await bob.delete()
