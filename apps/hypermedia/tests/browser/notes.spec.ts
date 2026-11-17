@@ -13,6 +13,40 @@ test.group('notes in the browser', (group) => {
     return cleanup
   })
 
+  test('notes cannot be submitted with JavaScript disabled', async ({ browser, assert }) => {
+    const user = await User.create({ email: 'notes@example.test', password })
+    const context = await browser.newContext({
+      baseURL: process.env.APP_URL!,
+      javaScriptEnabled: false,
+    })
+    try {
+      const page = await context.visit('/login')
+      await page.getByLabel('Email').fill(user.email)
+      await page.getByLabel('Password').fill(password)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+      await page.getByRole('heading', { name: 'Your account' }).waitFor()
+      await page.getByRole('link', { name: 'Notes' }).click()
+      await page.getByRole('heading', { name: 'Retry safe notes' }).waitFor()
+
+      assert.isTrue(
+        await page.getByText('Enable JavaScript to create and retry a note.').isVisible()
+      )
+      const form = page.locator('#note-form')
+      assert.equal(await form.getAttribute('method'), 'POST')
+      assert.equal(await form.getAttribute('action'), '/notes')
+      const notesUrl = page.url()
+      await page.getByLabel('Note', { exact: true }).fill('Private draft')
+      const submit = page.getByRole('button', { name: 'Create and retry' })
+      assert.isTrue(await submit.isDisabled())
+      await submit.click({ force: true })
+      assert.equal(page.url(), notesUrl)
+      assert.deepEqual(await db.from('notes').where('user_id', user.id).select('body'), [])
+      assert.deepEqual(await db.from('request_receipts').select('id'), [])
+    } finally {
+      await context.close()
+    }
+  })
+
   test('the retry form submits one note and displays the replay result', async ({
     visit,
     assert,
@@ -26,6 +60,20 @@ test.group('notes in the browser', (group) => {
 
     await page.getByRole('link', { name: 'Notes' }).click()
     await page.getByRole('heading', { name: 'Retry safe notes' }).waitFor()
+
+    const notesUrl = page.url()
+    const missingCsrf = await page.request.post(notesUrl, {
+      headers: { referer: notesUrl },
+      data: { body: 'No CSRF token', commandId: 'csrf-test-command', requestKey: 'csrf-test-key' },
+      maxRedirects: 0,
+    })
+    assert.equal(missingCsrf.status(), 302)
+    assert.equal(missingCsrf.headers().location, '/notes')
+    await page.reload()
+    await page.getByRole('alert').filter({ hasText: 'Invalid or expired CSRF token' }).waitFor()
+    assert.deepEqual(await db.from('notes').where('user_id', user.id).select('body'), [])
+    assert.deepEqual(await db.from('request_receipts').select('id'), [])
+
     await page.getByLabel('Note').fill('Remember the meeting')
     await page.getByRole('button', { name: 'Create and retry' }).click()
     await page.getByText(/retry returned the same result/).waitFor()

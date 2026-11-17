@@ -5,13 +5,16 @@
       Create a note with a stable command key. This demo sends the same request twice and shows that the retry returns the first result.
     </p>
     <input type="hidden" id="csrf-token" value="{{ csrfToken }}" />
-    <form id="note-form" class="auth__form">
+    <form id="note-form" class="auth__form" method="POST" action="/notes">
       <div class="field">
         <label class="field__label" for="note-body">Note</label>
         <textarea id="note-body" name="body" class="field__input" required></textarea>
       </div>
-      <button type="submit" class="btn btn--primary">Create and retry</button>
+      <button type="submit" class="btn btn--primary" disabled>Create and retry</button>
     </form>
+    <noscript>
+      <p>Enable JavaScript to create and retry a note.</p>
+    </noscript>
     <p id="result" role="status" aria-live="polite"></p>
     <h2>Your notes</h2>
     <ul id="notes-list">
@@ -33,11 +36,11 @@
           return;
         }
         const previousSubmission = submission;
-        const payload = submission ??= {
+        const payload = (submission ??= {
           body: noteBody.value,
           commandId: crypto.randomUUID(),
           requestKey: crypto.randomUUID(),
-        };
+        });
         noteBody.readOnly = true;
         submitButton.disabled = true;
         submitButton.textContent = 'Create and retry';
@@ -66,8 +69,7 @@
           const retry = await send();
           if (!retry.replayed || retry.result.noteId !== first.result.noteId)
             throw new Error('Expected the retry to return the first note');
-          resultStatus.textContent =
-            `Created note ${first.result.noteId}; retry returned the same result. ${JSON.stringify({ first, retry })}`;
+          resultStatus.textContent = `Created note ${first.result.noteId}; retry returned the same result. ${JSON.stringify({ first, retry })}`;
           const item = document.createElement('li');
           item.dataset.noteId = String(first.result.noteId);
           item.textContent = payload.body;
@@ -85,6 +87,7 @@
           submitButton.disabled = false;
         }
       });
+      submitButton.disabled = false;
     </script>
   @end
 @end
