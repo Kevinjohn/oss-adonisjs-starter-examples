@@ -34,27 +34,27 @@ Sessions created before this registry was enabled have no session handle. They a
 their next request and need to sign in once after adopting these examples.
 
 The Save form shows the confirmed note and submits its confirmation ID. The controller checks
-the submitted ID against the pending confirmation in the session before using the session's note
-body. If a later confirmation replaces the pending note, Save in an older tab is rejected and
+the submitted ID against the pending confirmation stored for the current registered sign-in before
+using its note body. If a later confirmation replaces the pending note, Save in an older tab is rejected and
 the newer confirmation remains available.
 
-The final write consumes the confirmation transactionally:
+The pending-note migration adds one row per registered sign-in, with cascading cleanup on logout.
+Account deletion uses the same managed logout to revoke the sign-in and clear browser session data.
+Run migrations when adopting this change. Previously pending browser-session notes are discarded
+and need a fresh confirmation.
+
+The controller uses Account Kit’s `withCurrent` transaction to check the sign-in, consume the matching
+confirmation, remove only its pending row, and save the note. An older response cannot overwrite a
+newer pending row through session storage.
 
 <!-- prettier-ignore-start -->
 
 <!-- source: apps/hypermedia/app/controllers/secure_notes_controller.ts -->
 ```ts
-      await confirmations.withConfirmation(
-        input,
-        { ...noteRequest(input.userId, pending.body), confirmationId: pending.confirmationId },
-        async ({ trx }) => {
-          await trx
-            .table('secure_notes')
-            .insert({ user_id: input.userId, body: pending.body })
-            .onConflict('user_id')
-            .merge()
-        }
-      )
+        await confirmations.consume(context, {
+          ...noteRequest(account.id, pending.body),
+          confirmationId,
+        })
 ```
 
 <!-- prettier-ignore-end -->

@@ -42,17 +42,17 @@ router
 
 <!-- source: apps/hypermedia/app/controllers/account_deletion_controller.ts -->
 ```ts
-  async destroy({ auth, response }: HttpContext) {
-    const user = auth.getUserOrFail()
-    await user.delete()
-    await auth.use('web').logout()
-    return response.redirect().toRoute('session.create')
+  async destroy(ctx: HttpContext) {
+    const current = currentBrowserSession(ctx)
+    await ctx.auth.getUserOrFail().delete()
+    await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, current)
+    return ctx.response.redirect().toRoute('session.create')
   }
 ```
 
 <!-- prettier-ignore-end -->
 
-The controller calls the model directly, logs out of `web` and redirects to the login page.
+The controller captures the registered sign-in, soft-deletes the account, and uses managed logout to revoke that sign-in and clear browser session data before redirecting to login. Pending secure-note rows are removed through their sign-in foreign key.
 
 ## Expose deleted-account administration
 

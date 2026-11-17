@@ -242,6 +242,17 @@ export class PasswordResetTokenSchema extends BaseModel {
   declare tokenableId: number
 }
 
+export class PendingSecureNoteSchema extends BaseModel {
+  static $columns = ['body', 'confirmationId', 'signInId'] as const
+  $columns = PendingSecureNoteSchema.$columns
+  @column()
+  declare body: string
+  @column()
+  declare confirmationId: string
+  @column({ isPrimary: true })
+  declare signInId: number
+}
+
 export class RateLimitSchema extends BaseModel {
   static $columns = ['expire', 'key', 'points'] as const
   $columns = RateLimitSchema.$columns

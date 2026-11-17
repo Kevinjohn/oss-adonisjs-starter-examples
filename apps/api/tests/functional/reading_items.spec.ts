@@ -72,6 +72,7 @@ test.group('reading items', (group) => {
       .get('/api/v1/account/reading-items')
       .bearerToken(token.value!.release())
     assert.equal(response.status(), 500)
+    assert.deepEqual(response.body(), { message: 'Reading list unavailable' })
     assert.notInclude(response.text(), 'Invalid persisted JSON in reading_items.labels')
   })
 })

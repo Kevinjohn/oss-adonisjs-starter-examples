@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import db from '@adonisjs/lucid/services/db'
+import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import confirmations from '@kevinjohn/adonisjs-confirm-action-with-password/services/main'
 import { errors } from '@kevinjohn/adonisjs-confirm-action-with-password'
 import { managedGuard } from '#services/account_kit_guard'
@@ -8,19 +8,28 @@ function noteRequest(userId: number | string, body: string) {
   return { action: 'save-secure-note', scope: String(userId), intent: { body } }
 }
 
-function pendingNote(ctx: HttpContext) {
-  const pending = ctx.session.get('pendingSecureNote') as
-    { body?: unknown; confirmationId?: unknown } | undefined
-  if (typeof pending?.body === 'string' && typeof pending.confirmationId === 'string') {
-    return { body: pending.body, confirmationId: pending.confirmationId }
-  }
+function requireSignInId(signInId: number | undefined) {
+  if (signInId === undefined) throw new errors.SessionRegistryRequiredException()
+  return signInId
 }
 
 export default class SecureNotesController {
   async edit(ctx: HttpContext) {
-    const userId = ctx.auth.use('web').getUserOrFail().id
-    const note = await db.from('secure_notes').where('user_id', userId).first()
-    const props = { body: note?.body ?? '', pending: pendingNote(ctx) ?? null }
+    // Discard drafts written by the previous session-based implementation.
+    if (ctx.session.has('pendingSecureNote')) ctx.session.forget('pendingSecureNote')
+    const input = await managedGuard.current(ctx)
+    const props = await kit.authentication.withCurrent(
+      input,
+      async ({ account, signInId, trx }) => {
+        const note = await trx.from('secure_notes').where('user_id', account.id).first()
+        const pending = await trx
+          .from('pending_secure_notes')
+          .where('sign_in_id', requireSignInId(signInId))
+          .select('body', 'confirmation_id as confirmationId')
+          .first()
+        return { body: note?.body ?? '', pending: pending ?? null }
+      }
+    )
     return ctx.view.render('pages/settings/secure_note', props)
   }
 
@@ -36,8 +45,10 @@ export default class SecureNotesController {
       ctx.session.flash('error', 'Enter a note of 1 to 500 characters and your password.')
       return ctx.response.redirect().back()
     }
-    ctx.session.forget('pendingSecureNote')
     const input = await managedGuard.current(ctx)
+    await kit.authentication.withCurrent(input, async ({ signInId, trx }) => {
+      await trx.from('pending_secure_notes').where('sign_in_id', requireSignInId(signInId)).delete()
+    })
     let confirmationId: string
     try {
       const issued = await confirmations.confirmPassword(input, {
@@ -60,45 +71,67 @@ export default class SecureNotesController {
       }
       throw error
     }
-    ctx.session.put('pendingSecureNote', { body, confirmationId })
+    await kit.authentication.withCurrent(input, async ({ signInId, trx }) => {
+      await trx
+        .table('pending_secure_notes')
+        .insert({ sign_in_id: requireSignInId(signInId), confirmation_id: confirmationId, body })
+        .onConflict('sign_in_id')
+        .merge()
+    })
     return ctx.response.redirect().toPath('/settings/secure-note')
   }
 
   async update(ctx: HttpContext) {
-    const pending = pendingNote(ctx)
-    if (!pending || ctx.request.input('confirmationId') !== pending.confirmationId) {
+    const confirmationId = ctx.request.input('confirmationId')
+    if (typeof confirmationId !== 'string' || confirmationId === '') {
       ctx.session.flash('error', 'Confirm your password again before saving.')
       return ctx.response.redirect().toPath('/settings/secure-note')
     }
     const input = await managedGuard.current(ctx)
-    try {
-      await confirmations.withConfirmation(
-        input,
-        { ...noteRequest(input.userId, pending.body), confirmationId: pending.confirmationId },
-        async ({ trx }) => {
-          await trx
-            .table('secure_notes')
-            .insert({ user_id: input.userId, body: pending.body })
-            .onConflict('user_id')
-            .merge()
-        }
-      )
-    } catch (error) {
-      if (
-        error instanceof errors.PasswordConfirmationRequiredException ||
-        error instanceof errors.PasswordConfirmationStaleException
-      ) {
-        ctx.session.forget('pendingSecureNote')
-        ctx.session.flash(
-          'error',
-          'Confirmation expired or was already used. Confirm your password again.'
-        )
-        return ctx.response.redirect().toPath('/settings/secure-note')
+    const status = await kit.authentication.withCurrent(input, async (context) => {
+      const { account, signInId, trx } = context
+      const match = {
+        sign_in_id: requireSignInId(signInId),
+        confirmation_id: confirmationId,
       }
-      throw error
+      const pending = await trx.from('pending_secure_notes').where(match).first()
+      if (!pending) return 'missing'
+
+      try {
+        await confirmations.consume(context, {
+          ...noteRequest(account.id, pending.body),
+          confirmationId,
+        })
+      } catch (error) {
+        if (
+          !(error instanceof errors.PasswordConfirmationRequiredException) &&
+          !(error instanceof errors.PasswordConfirmationStaleException)
+        ) {
+          throw error
+        }
+        await trx.from('pending_secure_notes').where(match).delete()
+        return 'expired'
+      }
+
+      await trx.from('pending_secure_notes').where(match).delete()
+      await trx
+        .table('secure_notes')
+        .insert({ user_id: account.id, body: pending.body })
+        .onConflict('user_id')
+        .merge()
+      return 'saved'
+    })
+
+    if (status === 'saved') {
+      ctx.session.flash('success', 'Secure note saved.')
+    } else if (status === 'expired') {
+      ctx.session.flash(
+        'error',
+        'Confirmation expired or was already used. Confirm your password again.'
+      )
+    } else {
+      ctx.session.flash('error', 'Confirm your password again before saving.')
     }
-    ctx.session.forget('pendingSecureNote')
-    ctx.session.flash('success', 'Secure note saved.')
     return ctx.response.redirect().toPath('/settings/secure-note')
   }
 }

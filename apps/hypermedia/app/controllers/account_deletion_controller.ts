@@ -1,4 +1,6 @@
+import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
+import { accountKitSessionGuard, currentBrowserSession } from '#services/session_guard'
 
 export default class AccountDeletionController {
   /** Shows the confirmation page. */
@@ -10,10 +12,10 @@ export default class AccountDeletionController {
    * Soft deletes the signed-in account and signs it out. The row stays, so an administrator can
    * restore it, but normal queries no longer find it, so it cannot sign in again.
    */
-  async destroy({ auth, response }: HttpContext) {
-    const user = auth.getUserOrFail()
-    await user.delete()
-    await auth.use('web').logout()
-    return response.redirect().toRoute('session.create')
+  async destroy(ctx: HttpContext) {
+    const current = currentBrowserSession(ctx)
+    await ctx.auth.getUserOrFail().delete()
+    await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, current)
+    return ctx.response.redirect().toRoute('session.create')
   }
 }
