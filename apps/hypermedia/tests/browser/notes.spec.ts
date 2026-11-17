@@ -28,8 +28,10 @@ test.group('notes in the browser', (group) => {
       await page.getByRole('link', { name: 'Notes' }).click()
       await page.getByRole('heading', { name: 'Retry safe notes' }).waitFor()
 
-      assert.isTrue(
-        await page.getByText('Enable JavaScript to create and retry a note.').isVisible()
+      await page.locator('noscript p').waitFor()
+      assert.equal(
+        await page.locator('noscript p').textContent(),
+        'Enable JavaScript to create and retry a note.'
       )
       const form = page.locator('#note-form')
       assert.equal(await form.getAttribute('method'), 'POST')
@@ -68,7 +70,7 @@ test.group('notes in the browser', (group) => {
       maxRedirects: 0,
     })
     assert.equal(missingCsrf.status(), 302)
-    assert.equal(missingCsrf.headers().location, '/notes')
+    assert.equal(new URL(missingCsrf.headers().location, notesUrl).pathname, '/notes')
     await page.reload()
     await page.getByRole('alert').filter({ hasText: 'Invalid or expired CSRF token' }).waitFor()
     assert.deepEqual(await db.from('notes').where('user_id', user.id).select('body'), [])

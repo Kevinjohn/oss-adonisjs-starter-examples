@@ -57,4 +57,6 @@ The app manifests pin the exact guard archive version they support. Each app inc
 
 The receipt migration keeps unique indexes on `(operation, command_id)` and `(operation, request_key)` to arbitrate concurrent reservations. Keep both indexes in place. See the [receipt migration](../../apps/hypermedia/database/migrations/1810000001000_create_request_receipts_table.ts).
 
-The app tests cover receipt replay, one-write behavior, account ownership, CSRF, and the browser retry journey in [API](../../apps/api/tests/functional/notes.spec.ts), [Hypermedia](../../apps/hypermedia/tests/browser/notes.spec.ts), [React](../../apps/inertia-react/tests/browser/notes.spec.ts) and [Vue](../../apps/inertia-vue/tests/browser/notes.spec.ts).
+The app tests cover receipt replay, one-write behavior, account ownership and the browser retry journey in [API](../../apps/api/tests/functional/notes.spec.ts), [Hypermedia](../../apps/hypermedia/tests/browser/notes.spec.ts), [React](../../apps/inertia-react/tests/browser/notes.spec.ts) and [Vue](../../apps/inertia-vue/tests/browser/notes.spec.ts).
+
+The Hypermedia browser tests also exercise missing-CSRF rejection and verify that no note or receipt is written. With JavaScript disabled, the submit button remains disabled and the page explains that JavaScript is required; note text cannot be submitted through a GET URL.

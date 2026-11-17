@@ -1,6 +1,7 @@
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
 import User from '#models/user'
+import SecureNotesController from '#controllers/secure_notes_controller'
 import { masqueradeOperatorEmails } from '#services/masquerade_operators'
 import { setupAccountDatabase } from '#tests/helpers/account_database'
 
@@ -100,6 +101,117 @@ test.group('secure note confirmation', (group) => {
       const notes = await db.from('secure_notes').select('body')
       assert.deepEqual(notes, [{ body: 'Note from the second tab' }])
     } finally {
+      await secondTab.close()
+    }
+  })
+
+  test('account deletion clears a pending secure note before the next sign-in', async ({
+    visit,
+    assert,
+  }) => {
+    const password = 'SignupPass123!'
+    const firstUser = await User.create({ email: 'first-note@example.test', password })
+    await User.create({ email: 'next-note@example.test', password })
+    const page = await visit('/login')
+    await page.getByLabel('Email').fill(firstUser.email)
+    await page.getByLabel('Password').fill(password)
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.waitForURL('**/dashboard')
+    await page.goto('/settings/secure-note')
+    await page.getByLabel('New note').fill('Private pending note')
+    await page.getByLabel('Current password').fill(password)
+    await page.getByRole('button', { name: 'Confirm password' }).click()
+    await page.getByText('Confirmed note: Private pending note').waitFor()
+
+    await page.goto('/account/delete')
+    await page.getByRole('button', { name: 'Delete my account' }).click()
+    await page.waitForURL('**/login')
+    assert.lengthOf(await db.from('account_sessions').where('user_id', firstUser.id), 0)
+    assert.lengthOf(await db.from('pending_secure_notes'), 0)
+
+    await page.getByLabel('Email').fill('next-note@example.test')
+    await page.getByLabel('Password').fill(password)
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.waitForURL('**/dashboard')
+    await page.goto('/settings/secure-note')
+    await page.getByLabel('New note').waitFor()
+    assert.equal(await page.getByText('Private pending note', { exact: false }).count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Save confirmed note' }).count(), 0)
+  })
+
+  test('a delayed save response cannot erase a newer confirmation', async ({ visit, assert }) => {
+    const password = 'SignupPass123!'
+    const page = await visit('/signup')
+    await page.getByLabel('Email').fill('overlapping-notes@example.test')
+    await page.getByLabel('Password', { exact: true }).fill(password)
+    await page.getByLabel('Confirm password').fill(password)
+    await page.getByRole('button', { name: 'Create account' }).click()
+    await page.waitForURL('**/dashboard')
+
+    await page.goto('/settings/secure-note')
+    await page.getByLabel('New note').fill('First confirmed note')
+    await page.getByLabel('Current password').fill(password)
+    await page.getByRole('button', { name: 'Confirm password' }).click()
+    await page.getByText('Confirmed note: First confirmed note').waitFor()
+
+    const secondTab = await page.context().newPage()
+    const saveFinished = Promise.withResolvers<void>()
+    const releaseResponse = Promise.withResolvers<void>()
+    const update = SecureNotesController.prototype.update
+    SecureNotesController.prototype.update = async function (ctx) {
+      try {
+        const result = await update.call(this, ctx)
+        // Pause after the controller saves the note and before session middleware commits.
+        saveFinished.resolve()
+        await releaseResponse.promise
+        return result
+      } catch (error) {
+        saveFinished.reject(error)
+        throw error
+      }
+    }
+
+    const firstResponse = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === '/settings/secure-note' &&
+        response.request().method() === 'POST'
+    )
+    const firstSave = page.getByRole('button', { name: 'Save confirmed note' }).click()
+    void firstSave.catch(saveFinished.reject)
+    try {
+      await Promise.race([
+        saveFinished.promise,
+        firstResponse.then((response) => {
+          throw new Error(`Save responded with ${response.status()} before reaching the barrier`)
+        }),
+      ])
+      assert.deepEqual(await db.from('secure_notes').select('body'), [
+        { body: 'First confirmed note' },
+      ])
+      await secondTab.goto(`${origin}/settings/secure-note`)
+      await secondTab.getByLabel('New note').fill('Second confirmed note')
+      await secondTab.getByLabel('Current password').fill(password)
+      await secondTab.getByRole('button', { name: 'Confirm password' }).click()
+      await secondTab.getByText('Confirmed note: Second confirmed note').waitFor()
+
+      releaseResponse.resolve()
+      SecureNotesController.prototype.update = update
+      await firstSave
+      const response = await firstResponse
+      assert.oneOf(response.status(), [302, 303])
+      await page.getByText('Saved note: First confirmed note').waitFor()
+
+      await secondTab.reload()
+      await secondTab.getByLabel('New note').waitFor()
+      assert.equal(await secondTab.getByText('Confirmed note: Second confirmed note').count(), 1)
+      await secondTab.getByRole('button', { name: 'Save confirmed note' }).click()
+      await secondTab.getByText('Saved note: Second confirmed note').waitFor()
+      assert.deepEqual(await db.from('secure_notes').select('body'), [
+        { body: 'Second confirmed note' },
+      ])
+    } finally {
+      releaseResponse.resolve()
+      SecureNotesController.prototype.update = update
       await secondTab.close()
     }
   })
