@@ -39,6 +39,19 @@ test.group('normalise', () => {
     })
   })
 
+  test('aligns the older API SQLite driver with the starter base', ({ assert }) => {
+    const manifest = { dependencies: { 'better-sqlite3': '^12.11.1' } }
+    const normalised = normalisePackageJson(manifest, 'api', new Map())
+    assert.equal(normalised.dependencies['better-sqlite3'], '^13.0.3')
+    assert.equal(manifest.dependencies['better-sqlite3'], '^12.11.1')
+    assert.equal(
+      normalisePackageJson(manifest, 'hypermedia', new Map()).dependencies['better-sqlite3'],
+      '^12.11.1'
+    )
+    const newer = { dependencies: { 'better-sqlite3': '^13.1.0' } }
+    assert.deepEqual(normalisePackageJson(newer, 'api', new Map()).dependencies, newer.dependencies)
+  })
+
   test('fails on one of our packages that is not in the kit', ({ assert }) => {
     assert.throws(
       () =>

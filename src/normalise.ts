@@ -45,6 +45,10 @@ export function normalisePackageJson(
       result[map][name] = specifier
     }
   }
+  // Released Account Kit API examples still carry the old driver. Keep newer input versions.
+  if (kit === 'api' && result.dependencies?.['better-sqlite3'] === '^12.11.1') {
+    result.dependencies['better-sqlite3'] = '^13.0.3'
+  }
   for (const map of DEPENDENCY_MAPS) {
     if (result[map]) result[map] = sortKeys(result[map])
   }
