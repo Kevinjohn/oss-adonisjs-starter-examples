@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react'
 
 const visitedKey = 'masquerade-identity-page-visited'
 
-/** Revalidate restored identity-bearing pages through the raw workspace. */
+/** Revalidate restored pages at their current URL before showing them. */
 export function installMasqueradeHistoryRecovery() {
   router.on('navigate', (event) => {
     if (/^\/(dashboard|account|settings|masquerade)(\/|$)/.test(event.detail.page.url)) {
@@ -12,7 +12,7 @@ export function installMasqueradeHistoryRecovery() {
   const recover = () => {
     if (sessionStorage.getItem(visitedKey) !== 'true') return
     document.documentElement.dataset.identityPending = 'true'
-    window.location.replace('/masquerade/accounts')
+    window.location.reload()
   }
   window.addEventListener('popstate', recover)
   window.addEventListener('pageshow', (event) => {

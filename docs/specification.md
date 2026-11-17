@@ -162,6 +162,10 @@ invitation routes. These account operations use the raw guard and are refused du
 mode, including edit mode; effective team reads and permitted renames remain available.
 Idle API team creation needs neither the Masquerade ability nor a context token.
 
+The React and Vue combined layers supply `inertia/masquerade_history.ts`. After an
+identity-bearing page has been visited, Back and Forward revalidate the selected URL with the
+server so team and public pages remain reachable. Recheck this override when updating Masquerade.
+
 ### 6.2 Reading trees and files
 
 - **Base.** Cache at `tmp/cache/repos/adonisjs__starter-kits.git`, created with

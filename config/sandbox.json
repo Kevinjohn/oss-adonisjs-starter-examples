@@ -38,7 +38,7 @@
         "inertia-react": "examples/with_account_kit/inertia_react",
         "inertia-vue": "examples/with_account_kit/inertia_vue"
       },
-      "exclude": ["compatibility/"]
+      "exclude": ["compatibility/", "inertia/masquerade_history.ts"]
     },
     {
       "name": "@kevinjohn/adonisjs-access-control",
