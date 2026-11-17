@@ -1,0 +1,90 @@
+@layouts.app({ title: 'Retry safe notes' })
+  @page()
+    <h1>Retry safe notes</h1>
+    <p>
+      Create a note with a stable command key. This demo sends the same request twice and shows that the retry returns the first result.
+    </p>
+    <input type="hidden" id="csrf-token" value="{{ csrfToken }}" />
+    <form id="note-form" class="auth__form">
+      <div class="field">
+        <label class="field__label" for="note-body">Note</label>
+        <textarea id="note-body" name="body" class="field__input" required></textarea>
+      </div>
+      <button type="submit" class="btn btn--primary">Create and retry</button>
+    </form>
+    <p id="result" role="status" aria-live="polite"></p>
+    <h2>Your notes</h2>
+    <ul id="notes-list">
+      @each(note in notes)
+        <li data-note-id="{{ note.id }}">{{ note.body }}</li>
+      @end
+    </ul>
+    <script>
+      const csrfToken = document.getElementById('csrf-token').value;
+      const noteBody = document.getElementById('note-body');
+      const submitButton = document.querySelector('#note-form button[type="submit"]');
+      const resultStatus = document.getElementById('result');
+      let submission;
+      document.getElementById('note-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (submitButton.disabled) return;
+        if (!noteBody.value.trim()) {
+          resultStatus.textContent = 'Enter a note.';
+          return;
+        }
+        const previousSubmission = submission;
+        const payload = submission ??= {
+          body: noteBody.value,
+          commandId: crypto.randomUUID(),
+          requestKey: crypto.randomUUID(),
+        };
+        noteBody.readOnly = true;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Create and retry';
+        resultStatus.textContent = '';
+        let rejected = false;
+        const send = async (allowCorrection = false) => {
+          const response = await fetch('/notes', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'content-type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify(payload),
+          });
+          if (allowCorrection && (response.status === 400 || response.status === 413)) {
+            rejected = true;
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const result = await response.json();
+          if (!response.ok) throw new Error(JSON.stringify(result));
+          return result;
+        };
+        try {
+          const first = await send(!previousSubmission);
+          const retry = await send();
+          if (!retry.replayed || retry.result.noteId !== first.result.noteId)
+            throw new Error('Expected the retry to return the first note');
+          resultStatus.textContent =
+            `Created note ${first.result.noteId}; retry returned the same result. ${JSON.stringify({ first, retry })}`;
+          const item = document.createElement('li');
+          item.dataset.noteId = String(first.result.noteId);
+          item.textContent = payload.body;
+          document.getElementById('notes-list').append(item);
+          submission = undefined;
+          noteBody.value = '';
+        } catch (error) {
+          if (rejected) submission = undefined;
+          resultStatus.textContent = rejected
+            ? 'The server rejected the note. Edit it and try again.'
+            : `The submission could not be confirmed. Retry the same note. ${error}`;
+        } finally {
+          noteBody.readOnly = Boolean(submission);
+          submitButton.textContent = submission ? 'Retry submission' : 'Create and retry';
+          submitButton.disabled = false;
+        }
+      });
+    </script>
+  @end
+@end

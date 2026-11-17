@@ -62,7 +62,11 @@ router
 <!-- source: apps/hypermedia/app/controllers/session_controller.ts -->
 ```ts
   async destroy(ctx: HttpContext) {
-    await kit.authentication.logout(accountKitSessionGuard(ctx))
+    await kit.authentication.logout(
+      accountKitSessionGuard(ctx),
+      undefined,
+      await managedGuard.current(ctx)
+    )
     return ctx.response.redirect().toRoute('session.create')
   }
 ```

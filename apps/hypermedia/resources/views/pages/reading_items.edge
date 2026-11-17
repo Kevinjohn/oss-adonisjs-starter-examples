@@ -1,0 +1,22 @@
+@layouts.app({ title: 'Reading list' })
+  @page()
+    <h1>Reading list</h1>
+    <form method="POST" action="/reading-items">
+      {{ csrfField() }}
+      <label for="title">Title</label>
+      <input id="title" name="title" required maxlength="200" />
+      <label for="label">Label</label>
+      <select id="label" name="label">
+        <option value="work">Work</option>
+        <option value="personal">Personal</option>
+        <option value="reference">Reference</option>
+      </select>
+      <button type="submit">Add item</button>
+    </form>
+    <ul>
+      @each(item in items)
+        <li>{{ item.title }} — {{ item.labels.join(', ') }}</li>
+      @end
+    </ul>
+  @end
+@end

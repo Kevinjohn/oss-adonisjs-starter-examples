@@ -3,8 +3,8 @@ import type { InferSocialProviders } from '@adonisjs/ally/types'
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
 import type { SocialProviderName } from '@kevinjohn/adonisjs-account-kit'
+import { publicOrigin } from '#start/public_origin'
 
-const base = env.get('APP_URL').replace(/\/$/, '')
 const tokenClientCallback = env.get('SOCIAL_CLIENT_CALLBACK_URL')
 if (!app.inTest) {
   for (const key of [
@@ -20,7 +20,7 @@ if (!app.inTest) {
   }
 }
 if (app.inProduction) {
-  if (new URL(base).protocol !== 'https:')
+  if (new URL(publicOrigin).protocol !== 'https:')
     throw new Error('APP_URL must use HTTPS for social authentication')
   if (tokenClientCallback && new URL(tokenClientCallback).protocol !== 'https:') {
     throw new Error('SOCIAL_CLIENT_CALLBACK_URL must use HTTPS in production')
@@ -28,8 +28,8 @@ if (app.inProduction) {
 }
 const callback = (provider: SocialProviderName) =>
   env.get('ACCOUNT_KIT_AUTH_STRATEGY') === 'session'
-    ? `${base}/api/v1/auth/oauth/${provider}/callback`
-    : (tokenClientCallback ?? `${base}/api/v1/auth/oauth/${provider}/callback`)
+    ? `${publicOrigin}/api/v1/auth/oauth/${provider}/callback`
+    : (tokenClientCallback ?? `${publicOrigin}/api/v1/auth/oauth/${provider}/callback`)
 
 const allyConfig = defineConfig({
   google: services.google({

@@ -1,17 +1,14 @@
 # inertia-react starter example
 
-The official AdonisJS `inertia-react` starter kit with our packages, assembled by
-[oss-adonisjs-starter-examples](https://github.com/Kevinjohn/oss-adonisjs-starter-examples).
-Do not edit this folder by hand: change a package's example, then run `pnpm assemble`.
+This runnable AdonisJS `inertia-react` app is maintained in [Starter Examples](../../README.md).
 
 Base: [`adonisjs/starter-kits@46d235932e3eb6472a16b740fa0b47b5f69fc6fc`](https://github.com/adonisjs/starter-kits/tree/46d235932e3eb6472a16b740fa0b47b5f69fc6fc/inertia-react)
 
-| Package                                 | Version | Example                                                                                                                 |
-| --------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `@kevinjohn/adonisjs-account-kit`       | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-account-kit/tree/v0.4.0/examples/inertia-react)                     |
-| `@kevinjohn/adonisjs-masquerade`        | 0.4.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-masquerade/tree/v0.4.0/examples/with_account_kit/inertia_react)     |
-| `@kevinjohn/adonisjs-access-control`    | 0.2.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-access-control/tree/v0.2.0/examples/with_account_kit/inertia_react) |
-| `@kevinjohn/adonisjs-lucid-soft-delete` | 0.2.0   | [example](https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/tree/v0.2.0/examples/starter/inertia_react)       |
+The [package manifest](package.json) records the released archives used by this app.
+See the cookbook for [public origin validation](../../docs/cookbook/public-origin.md),
+[replay-safe notes](../../docs/cookbook/duplicate-request-guard.md) and
+[checked reading-list labels](../../docs/cookbook/checked-columns.md). Open the dashboard after signing in to try these forms and
+[one-use password confirmation](../../docs/cookbook/password-confirmation.md).
 
 ## Run it
 

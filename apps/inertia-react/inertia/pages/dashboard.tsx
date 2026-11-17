@@ -12,13 +12,10 @@ export default function Dashboard() {
           <LayoutGrid size={22} />
         </div>
         <h1>Your dashboard is ready</h1>
-        <p>
-          It&apos;s empty on purpose. A clean starting point with nothing to undo. Add your first
-          route and component to begin.
-        </p>
-        <p className="mono" style={{ fontSize: 12.5, color: 'var(--subtle)', marginTop: 4 }}>
-          Start in <span className="kbd">inertia/pages/dashboard.tsx</span>
-        </p>
+        <nav aria-label="Examples">
+          <a href="/notes">Notes</a> · <a href="/reading-items">Reading list</a> ·{' '}
+          <a href="/settings/secure-note">Secure note</a>
+        </nav>
       </div>
     </Page>
   )

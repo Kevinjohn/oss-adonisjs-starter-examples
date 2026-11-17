@@ -268,6 +268,17 @@ export class MembershipSchema extends BaseModel {
   declare userId: number
 }
 
+export class NoteSchema extends BaseModel {
+  static $columns = ['body', 'id', 'userId'] as const
+  $columns = NoteSchema.$columns
+  @column()
+  declare body: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare userId: number
+}
+
 export class PasswordResetTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'email', 'expiresAt', 'hash', 'id', 'tokenableId'] as const
   $columns = PasswordResetTokenSchema.$columns
@@ -294,6 +305,44 @@ export class RateLimitSchema extends BaseModel {
   declare key: string
   @column()
   declare points: number
+}
+
+export class ReadingItemSchema extends BaseModel {
+  static $columns = ['id', 'labels', 'title', 'userId'] as const
+  $columns = ReadingItemSchema.$columns
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare labels: string
+  @column()
+  declare title: string
+  @column()
+  declare userId: number
+}
+
+export class RequestReceiptSchema extends BaseModel {
+  static $columns = ['commandId', 'createdAt', 'id', 'operation', 'payloadHash', 'requestKey', 'result', 'scopeId', 'state', 'updatedAt'] as const
+  $columns = RequestReceiptSchema.$columns
+  @column()
+  declare commandId: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: string
+  @column()
+  declare operation: string
+  @column()
+  declare payloadHash: string
+  @column()
+  declare requestKey: string
+  @column()
+  declare result: string | null
+  @column()
+  declare scopeId: string
+  @column()
+  declare state: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
 }
 
 export class RoleAssignmentSchema extends BaseModel {

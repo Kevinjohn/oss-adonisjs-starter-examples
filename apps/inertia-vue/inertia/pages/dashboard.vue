@@ -23,10 +23,10 @@ defineProps<{ emailVerified: boolean }>()
     <div class="empty">
       <div class="empty__mark" aria-hidden="true">◆</div>
       <h1>Your dashboard is ready</h1>
-      <p>It’s empty on purpose. Add your first route and component to begin.</p>
-      <p class="mono" style="font-size: 12.5px; color: var(--subtle); margin-top: 4px">
-        Start in <span class="kbd">inertia/pages/dashboard.vue</span>
-      </p>
+      <nav aria-label="Examples">
+        <a href="/notes">Notes</a> · <a href="/reading-items">Reading list</a> ·
+        <a href="/settings/secure-note">Secure note</a>
+      </nav>
     </div>
   </section>
 </template>

@@ -4,6 +4,13 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
+    'notes.index': { paramsTuple?: []; params?: {} }
+    'notes.store': { paramsTuple?: []; params?: {} }
+    'reading_items.index': { paramsTuple?: []; params?: {} }
+    'reading_items.store': { paramsTuple?: []; params?: {} }
+    'secure_notes.edit': { paramsTuple?: []; params?: {} }
+    'secure_notes.confirm': { paramsTuple?: []; params?: {} }
+    'secure_notes.update': { paramsTuple?: []; params?: {} }
     'home': { paramsTuple?: []; params?: {} }
     'new_account.create': { paramsTuple?: []; params?: {} }
     'new_account.store': { paramsTuple?: []; params?: {} }
@@ -45,6 +52,9 @@ export type ScannedRoutes = {
     'masquerade.stop': { paramsTuple?: []; params?: {} }
   }
   GET: {
+    'notes.index': { paramsTuple?: []; params?: {} }
+    'reading_items.index': { paramsTuple?: []; params?: {} }
+    'secure_notes.edit': { paramsTuple?: []; params?: {} }
     'home': { paramsTuple?: []; params?: {} }
     'new_account.create': { paramsTuple?: []; params?: {} }
     'session.create': { paramsTuple?: []; params?: {} }
@@ -66,6 +76,9 @@ export type ScannedRoutes = {
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
+    'notes.index': { paramsTuple?: []; params?: {} }
+    'reading_items.index': { paramsTuple?: []; params?: {} }
+    'secure_notes.edit': { paramsTuple?: []; params?: {} }
     'home': { paramsTuple?: []; params?: {} }
     'new_account.create': { paramsTuple?: []; params?: {} }
     'session.create': { paramsTuple?: []; params?: {} }
@@ -87,6 +100,10 @@ export type ScannedRoutes = {
     'masquerade.status': { paramsTuple?: []; params?: {} }
   }
   POST: {
+    'notes.store': { paramsTuple?: []; params?: {} }
+    'reading_items.store': { paramsTuple?: []; params?: {} }
+    'secure_notes.confirm': { paramsTuple?: []; params?: {} }
+    'secure_notes.update': { paramsTuple?: []; params?: {} }
     'new_account.store': { paramsTuple?: []; params?: {} }
     'session.store': { paramsTuple?: []; params?: {} }
     'password_resets.store': { paramsTuple?: []; params?: {} }
