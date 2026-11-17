@@ -26,7 +26,10 @@ export default class SessionRevisionMiddleware {
         })
       } catch (error) {
         if (!(error instanceof InvalidSessionError)) throw error
-        await accountKitSessionGuard(ctx).terminate()
+        await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, {
+          userId: guard.getUserOrFail().id,
+          sessionHandle: typeof storedHandle === 'string' ? storedHandle : undefined,
+        })
       }
     }
 
