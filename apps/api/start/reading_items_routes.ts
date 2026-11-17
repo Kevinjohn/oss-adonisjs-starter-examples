@@ -9,4 +9,8 @@ router
     router.post('reading-items', [controllers.ReadingItems, 'store']).as('reading_items.store')
   })
   .prefix('/api/v1/account')
-  .use([middleware.auth({ guards: [selectedGuardName()] }), middleware.accountKitAccountBlocker()])
+  .use([
+    middleware.auth({ guards: [selectedGuardName()] }),
+    middleware.accountAccess(),
+    middleware.accountKitAccountBlocker(),
+  ])

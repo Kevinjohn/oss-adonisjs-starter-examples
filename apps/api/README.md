@@ -9,6 +9,8 @@ See the cookbook for [public origin validation](../../docs/cookbook/public-origi
 [replay-safe notes](../../docs/cookbook/duplicate-request-guard.md) and
 [checked reading-list labels](../../docs/cookbook/checked-columns.md). Use an Account Kit bearer token for the note and reading-list requests.
 
+The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.1.0 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
+
 ## Run it
 
 ```sh

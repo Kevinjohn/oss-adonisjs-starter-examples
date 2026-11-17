@@ -3,6 +3,7 @@ import Page from '~/components/page'
 import AppLayout from '~/layouts/app'
 
 type Note = { id: number; body: string }
+type Submission = { body: string; commandId: string; requestKey: string }
 type Result = { replayed: boolean; result: { noteId: number } }
 
 export default function Notes({
@@ -16,13 +17,26 @@ export default function Notes({
   const [body, setBody] = useState('')
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState(false)
+  const [submission, setSubmission] = useState<Submission>()
 
   async function createAndRetry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
+    if (!body.trim()) {
+      setMessage('Enter a note.')
+      return
+    }
+    const previousSubmission = submission
+    const payload = previousSubmission ?? {
+      body,
+      commandId: crypto.randomUUID(),
+      requestKey: crypto.randomUUID(),
+    }
+    setSubmission(payload)
     setPending(true)
-    const payload = { body, commandId: crypto.randomUUID(), requestKey: crypto.randomUUID() }
-    const send = async (): Promise<Result> => {
+    setMessage('')
+    let rejected = false
+    const send = async (allowCorrection = false): Promise<Result> => {
       const response = await fetch('/notes', {
         method: 'POST',
         credentials: 'same-origin',
@@ -32,21 +46,31 @@ export default function Notes({
         },
         body: JSON.stringify(payload),
       })
+      if (allowCorrection && (response.status === 400 || response.status === 413)) {
+        rejected = true
+        throw new Error(`HTTP ${response.status}`)
+      }
       const result = await response.json()
       if (!response.ok) throw new Error(JSON.stringify(result))
       return result
     }
     try {
-      const first = await send()
+      const first = await send(!previousSubmission)
       const retry = await send()
       if (!retry.replayed || retry.result.noteId !== first.result.noteId) {
         throw new Error('Expected the retry to return the first note')
       }
-      setNotes((current) => [...current, { id: first.result.noteId, body }])
+      setNotes((current) => [...current, { id: first.result.noteId, body: payload.body }])
       setMessage(`Created note ${first.result.noteId}; retry returned the same result.`)
       setBody('')
+      setSubmission(undefined)
     } catch (error) {
-      setMessage(String(error))
+      if (rejected) {
+        setSubmission(undefined)
+        setMessage('The server rejected the note. Edit it and try again.')
+      } else {
+        setMessage(`The submission could not be confirmed. Retry the same note. ${error}`)
+      }
     } finally {
       setPending(false)
     }
@@ -68,11 +92,12 @@ export default function Notes({
             className="field__input"
             value={body}
             onChange={(event) => setBody(event.target.value)}
+            readOnly={Boolean(submission)}
             required
           />
         </div>
         <button className="btn btn--primary" type="submit" disabled={pending}>
-          Create and retry
+          {submission && !pending ? 'Retry submission' : 'Create and retry'}
         </button>
       </form>
       <p role="status" aria-live="polite">

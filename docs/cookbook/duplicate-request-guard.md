@@ -1,5 +1,7 @@
 # Duplicate request guard
 
+The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.1.0 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
+
 The starter apps use `@kevinjohn/adonisjs-duplicate-request-guard` to make a create-note command safe to retry. The client supplies a `commandId` and a `requestKey`; the server scopes both to the raw authenticated account, reserves a receipt, and commits the note and completed receipt in one transaction. Repeating the same request returns the original result without inserting another note.
 
 ## Register the routes
@@ -47,7 +49,7 @@ The controller gets the owner from the raw guard, validates the body and both re
 
 ## Keep retry identifiers stable
 
-Generate `commandId` and `requestKey` once for an intended command and reuse both on every retry, including after a dropped connection. A new intentional note gets new identifiers. The browser demo submits the same payload twice and displays the first response alongside the replay. See the implementation in [the Hypermedia page](../../apps/hypermedia/resources/views/pages/notes.edge), [React](../../apps/inertia-react/inertia/pages/notes.tsx) and [Vue](../../apps/inertia-vue/inertia/pages/notes.vue).
+Generate `commandId` and `requestKey` once for an intended command and reuse both on every retry, including after a dropped connection. The browser demo submits the same payload twice and confirms that both responses return the same note. It keeps that payload in the open form if either response is lost. The note stays read-only until the retry confirms the result, then the form is ready for a new note with fresh identifiers. See the implementation in [the Hypermedia page](../../apps/hypermedia/resources/views/pages/notes.edge), [React](../../apps/inertia-react/inertia/pages/notes.tsx) and [Vue](../../apps/inertia-vue/inertia/pages/notes.vue).
 
 ## Install the receipt table
 

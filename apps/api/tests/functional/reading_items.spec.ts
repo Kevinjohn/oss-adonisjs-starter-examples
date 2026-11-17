@@ -25,6 +25,34 @@ test.group('reading items', (group) => {
     assert.deepInclude(items[0], { title: 'Lucid guide', labels: ['reference'] })
   })
 
+  test('an existing bearer token cannot access reading items after the account is disabled', async ({
+    client,
+    assert,
+  }) => {
+    const user = await User.create({
+      email: 'disabled-reader@example.test',
+      password: 'password123',
+    })
+    const token = await User.accessTokens.create(user)
+    const bearer = token.value!.release()
+    const created = await client
+      .post('/api/v1/account/reading-items')
+      .bearerToken(bearer)
+      .json({ title: 'Before restriction', labels: ['reference'] })
+    assert.equal(created.status(), 201)
+    await db.table('role_assignments').insert({ user_id: user.id, role: 'disabled' })
+    const listed = await client.get('/api/v1/account/reading-items').bearerToken(bearer)
+    const refused = await client
+      .post('/api/v1/account/reading-items')
+      .bearerToken(bearer)
+      .json({ title: 'After restriction', labels: ['reference'] })
+    assert.equal(listed.status(), 401)
+    assert.equal(refused.status(), 401)
+    const rows = await db.from('reading_items').where('user_id', user.id)
+    assert.lengthOf(rows, 1)
+    assert.equal(rows[0].title, 'Before restriction')
+  })
+
   test('invalid persisted labels fail model hydration and return a safe server error', async ({
     client,
     assert,

@@ -3,7 +3,7 @@ import { Form } from '@adonisjs/inertia/vue'
 import AppLayout from '~/layouts/app.vue'
 import SettingsLayout from '~/layouts/settings.vue'
 defineOptions({ layout: [AppLayout, SettingsLayout] })
-defineProps<{ body: string; pending: boolean }>()
+defineProps<{ body: string; pending: { body: string; confirmationId: string } | null }>()
 </script>
 <template>
   <section>
@@ -16,6 +16,8 @@ defineProps<{ body: string; pending: boolean }>()
       <button type="submit" :disabled="processing">Confirm password</button>
     </Form>
     <Form v-if="pending" v-slot="{ processing }" method="post" route="secure_notes.update">
+      <p>Confirmed note: {{ pending.body }}</p>
+      <input type="hidden" name="confirmationId" :value="pending.confirmationId" />
       <button type="submit" :disabled="processing">Save confirmed note</button>
     </Form>
   </section>

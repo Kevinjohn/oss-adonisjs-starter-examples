@@ -21,14 +21,29 @@
     </ul>
     <script>
       const csrfToken = document.getElementById('csrf-token').value;
+      const noteBody = document.getElementById('note-body');
+      const submitButton = document.querySelector('#note-form button[type="submit"]');
+      const resultStatus = document.getElementById('result');
+      let submission;
       document.getElementById('note-form').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const payload = {
-          body: document.getElementById('note-body').value,
+        if (submitButton.disabled) return;
+        if (!noteBody.value.trim()) {
+          resultStatus.textContent = 'Enter a note.';
+          return;
+        }
+        const previousSubmission = submission;
+        const payload = submission ??= {
+          body: noteBody.value,
           commandId: crypto.randomUUID(),
           requestKey: crypto.randomUUID(),
         };
-        const send = async () => {
+        noteBody.readOnly = true;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Create and retry';
+        resultStatus.textContent = '';
+        let rejected = false;
+        const send = async (allowCorrection = false) => {
           const response = await fetch('/notes', {
             method: 'POST',
             credentials: 'same-origin',
@@ -38,23 +53,36 @@
             },
             body: JSON.stringify(payload),
           });
+          if (allowCorrection && (response.status === 400 || response.status === 413)) {
+            rejected = true;
+            throw new Error(`HTTP ${response.status}`);
+          }
           const result = await response.json();
           if (!response.ok) throw new Error(JSON.stringify(result));
           return result;
         };
         try {
-          const first = await send();
+          const first = await send(!previousSubmission);
           const retry = await send();
-          if (!retry.replayed)
-            throw new Error('Expected the second request to replay the first result');
-          document.getElementById('result').textContent =
+          if (!retry.replayed || retry.result.noteId !== first.result.noteId)
+            throw new Error('Expected the retry to return the first note');
+          resultStatus.textContent =
             `Created note ${first.result.noteId}; retry returned the same result. ${JSON.stringify({ first, retry })}`;
           const item = document.createElement('li');
           item.dataset.noteId = String(first.result.noteId);
           item.textContent = payload.body;
           document.getElementById('notes-list').append(item);
+          submission = undefined;
+          noteBody.value = '';
         } catch (error) {
-          document.getElementById('result').textContent = String(error);
+          if (rejected) submission = undefined;
+          resultStatus.textContent = rejected
+            ? 'The server rejected the note. Edit it and try again.'
+            : `The submission could not be confirmed. Retry the same note. ${error}`;
+        } finally {
+          noteBody.readOnly = Boolean(submission);
+          submitButton.textContent = submission ? 'Retry submission' : 'Create and retry';
+          submitButton.disabled = false;
         }
       });
     </script>

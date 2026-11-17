@@ -13,9 +13,11 @@ test.group('guarded notes', (group) => {
   }) => {
     const user = await User.create({ email: 'notes@example.test', password: 'NotesPass123!' })
     await grantAdmittedOwner(user)
+    const token = await User.accessTokens.create(user)
+    const bearer = token.value!.release()
     const input = { body: 'Remember the meeting', commandId: 'notes-1', requestKey: 'attempt-1' }
-    const first = await client.post('/api/v1/notes').withGuard('api').loginAs(user).json(input)
-    const replay = await client.post('/api/v1/notes').withGuard('api').loginAs(user).json(input)
+    const first = await client.post('/api/v1/notes').bearerToken(bearer).json(input)
+    const replay = await client.post('/api/v1/notes').bearerToken(bearer).json(input)
 
     assert.equal(first.status(), 201)
     assert.equal(replay.status(), 201)
@@ -27,7 +29,11 @@ test.group('guarded notes', (group) => {
       password: 'NotesPass123!',
     })
     await grantAdmittedOwner(otherUser)
-    const other = await client.post('/api/v1/notes').withGuard('api').loginAs(otherUser).json(input)
+    const otherToken = await User.accessTokens.create(otherUser)
+    const other = await client
+      .post('/api/v1/notes')
+      .bearerToken(otherToken.value!.release())
+      .json(input)
     assert.equal(other.status(), 201)
     assert.isFalse(other.body().replayed)
     assert.notEqual(other.body().result.noteId, first.body().result.noteId)
@@ -36,6 +42,6 @@ test.group('guarded notes', (group) => {
       { id: other.body().result.noteId, user_id: otherUser.id, body: input.body },
     ])
     const receiptCount = await db.from('request_receipts').count('* as total')
-    assert.equal(receiptCount[0].total, 2)
+    assert.equal(Number(receiptCount[0].total), 2)
   })
 })

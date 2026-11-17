@@ -8,11 +8,19 @@ function noteRequest(userId: number | string, body: string) {
   return { action: 'save-secure-note', scope: String(userId), intent: { body } }
 }
 
+function pendingNote(ctx: HttpContext) {
+  const pending = ctx.session.get('pendingSecureNote') as
+    { body?: unknown; confirmationId?: unknown } | undefined
+  if (typeof pending?.body === 'string' && typeof pending.confirmationId === 'string') {
+    return { body: pending.body, confirmationId: pending.confirmationId }
+  }
+}
+
 export default class SecureNotesController {
   async edit(ctx: HttpContext) {
     const userId = ctx.auth.use('web').getUserOrFail().id
     const note = await db.from('secure_notes').where('user_id', userId).first()
-    const props = { body: note?.body ?? '', pending: Boolean(ctx.session.get('pendingSecureNote')) }
+    const props = { body: note?.body ?? '', pending: pendingNote(ctx) ?? null }
     return ctx.inertia.render('settings/secure_note', props)
   }
 
@@ -57,13 +65,8 @@ export default class SecureNotesController {
   }
 
   async update(ctx: HttpContext) {
-    const pending = ctx.session.get('pendingSecureNote') as
-      { body?: unknown; confirmationId?: unknown } | undefined
-    if (
-      !pending ||
-      typeof pending.body !== 'string' ||
-      typeof pending.confirmationId !== 'string'
-    ) {
+    const pending = pendingNote(ctx)
+    if (!pending || ctx.request.input('confirmationId') !== pending.confirmationId) {
       ctx.session.flash('error', 'Confirm your password again before saving.')
       return ctx.response.redirect().toPath('/settings/secure-note')
     }

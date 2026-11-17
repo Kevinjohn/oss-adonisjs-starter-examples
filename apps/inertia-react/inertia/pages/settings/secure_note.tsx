@@ -3,7 +3,13 @@ import SettingsLayout from '~/layouts/settings'
 import Section from '~/components/section'
 import { Form } from '@adonisjs/inertia/react'
 
-export default function SecureNote({ body, pending }: { body: string; pending: boolean }) {
+export default function SecureNote({
+  body,
+  pending,
+}: {
+  body: string
+  pending: { body: string; confirmationId: string } | null
+}) {
   return (
     <Section title="Secure note" description="Save a note after confirming your current password.">
       <p>Saved note: {body}</p>
@@ -23,9 +29,13 @@ export default function SecureNote({ body, pending }: { body: string; pending: b
       {pending && (
         <Form method="post" action="/settings/secure-note">
           {({ processing }) => (
-            <button type="submit" disabled={processing}>
-              Save confirmed note
-            </button>
+            <>
+              <p>Confirmed note: {pending.body}</p>
+              <input type="hidden" name="confirmationId" value={pending.confirmationId} />
+              <button type="submit" disabled={processing}>
+                Save confirmed note
+              </button>
+            </>
           )}
         </Form>
       )}

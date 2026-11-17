@@ -33,6 +33,11 @@ row while ending other sign-ins; logout removes the current row.
 Sessions created before this registry was enabled have no session handle. They are signed out on
 their next request and need to sign in once after adopting these examples.
 
+The Save form shows the confirmed note and submits its confirmation ID. The controller checks
+the submitted ID against the pending confirmation in the session before using the session's note
+body. If a later confirmation replaces the pending note, Save in an older tab is rejected and
+the newer confirmation remains available.
+
 The final write consumes the confirmation transactionally:
 
 <!-- prettier-ignore-start -->

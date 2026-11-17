@@ -67,6 +67,43 @@ test.group('secure note confirmation', (group) => {
     assert.equal(unchanged.body, 'Remember this')
   })
 
+  test('a stale tab cannot save or discard a newer confirmation', async ({ visit, assert }) => {
+    const password = 'SignupPass123!'
+    const page = await visit('/signup')
+    await page.getByLabel('Email').fill('two-tabs@example.test')
+    await page.getByLabel('Password', { exact: true }).fill(password)
+    await page.getByLabel('Confirm password').fill(password)
+    await page.getByRole('button', { name: 'Create account' }).click()
+    await page.waitForURL('**/dashboard')
+
+    await page.goto('/settings/secure-note')
+    await page.getByLabel('New note').fill('Note from the first tab')
+    await page.getByLabel('Current password').fill(password)
+    await page.getByRole('button', { name: 'Confirm password' }).click()
+    await page.getByText('Confirmed note: Note from the first tab').waitFor()
+
+    const secondTab = await page.context().newPage()
+    try {
+      await secondTab.goto(`${origin}/settings/secure-note`)
+      await secondTab.getByLabel('New note').fill('Note from the second tab')
+      await secondTab.getByLabel('Current password').fill(password)
+      await secondTab.getByRole('button', { name: 'Confirm password' }).click()
+      await secondTab.getByText('Confirmed note: Note from the second tab').waitFor()
+
+      await page.getByText('Confirmed note: Note from the first tab').waitFor()
+      await page.getByRole('button', { name: 'Save confirmed note' }).click()
+      await page.getByText('Confirm your password again before saving.').waitFor()
+      assert.lengthOf(await db.from('secure_notes'), 0)
+
+      await secondTab.getByRole('button', { name: 'Save confirmed note' }).click()
+      await secondTab.getByText('Saved note: Note from the second tab').waitFor()
+      const notes = await db.from('secure_notes').select('body')
+      assert.deepEqual(notes, [{ body: 'Note from the second tab' }])
+    } finally {
+      await secondTab.close()
+    }
+  })
+
   test('a masquerading operator cannot confirm a sensitive note action', async ({
     visit,
     assert,
