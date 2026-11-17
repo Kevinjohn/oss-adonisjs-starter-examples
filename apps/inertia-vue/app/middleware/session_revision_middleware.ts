@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { InvalidSessionError } from '@kevinjohn/adonisjs-account-kit'
-import { accountKitSessionGuard } from '#services/session_guard'
+import { accountKitSessionGuard, currentBrowserSession } from '#services/session_guard'
 
 /**
  * Signs out a session that started before the latest password change or reset. Runs after the
@@ -14,22 +14,12 @@ export default class SessionRevisionMiddleware {
     // The raw `web` guard is the signed-in account, even while it masquerades as another.
     const guard = ctx.auth.use('web')
     if (await guard.check()) {
-      const revision = ctx.session.get('accountKitRevision')
-      const storedHandle = ctx.session.get('accountKitSession')
+      const current = currentBrowserSession(ctx)
       try {
-        await kit.authentication.current({
-          userId: guard.getUserOrFail().id,
-          // Every active session has a registry handle. A missing or malformed value fails closed.
-          sessionHandle: typeof storedHandle === 'string' ? storedHandle : '',
-          // '' means "signed in before any credential change"; a missing value fails closed.
-          ...(revision === undefined ? {} : { revision: revision === '' ? null : revision }),
-        })
+        await kit.authentication.current(current)
       } catch (error) {
         if (!(error instanceof InvalidSessionError)) throw error
-        await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, {
-          userId: guard.getUserOrFail().id,
-          sessionHandle: typeof storedHandle === 'string' ? storedHandle : undefined,
-        })
+        await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, current)
       }
     }
 

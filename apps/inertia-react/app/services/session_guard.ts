@@ -32,3 +32,14 @@ export function accountKitSessionGuard(ctx: HttpContext) {
     },
   }
 }
+
+/** Read the registered sign-in without changing the guard selected by the route. */
+export function currentBrowserSession(ctx: HttpContext) {
+  const handle = ctx.session.get('accountKitSession')
+  const revision = ctx.session.get('accountKitRevision')
+  return {
+    userId: ctx.auth.use('web').getUserOrFail().id,
+    sessionHandle: typeof handle === 'string' ? handle : undefined,
+    ...(typeof revision === 'string' ? { revision: revision === '' ? null : revision } : {}),
+  }
+}
