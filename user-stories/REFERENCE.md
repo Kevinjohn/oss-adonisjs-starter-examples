@@ -2,7 +2,7 @@
 
 ## Source baseline and scope
 
-Fetched `origin/main` baseline: [`96dc874c8a8a84a2f320ae6bb72699649a5926f7`](https://github.com/Kevinjohn/oss-adonisjs-starter-examples/commit/96dc874c8a8a84a2f320ae6bb72699649a5926f7). Inventory covers four generated kits (`api`, `hypermedia`, `inertia-react`, `inertia-vue`), their routes, pages, controllers, validators, guards and tests, linked cookbooks, demo seeders, sandbox commands and assembly specification.
+Source baseline: committed apps and catalogue inputs at Starter Examples `3c1c953006323476c10eac47bbfcff0a5ccfd3e8`. Inventory covers four owned apps (`api`, `hypermedia`, `inertia-react`, `inertia-vue`), their routes, pages, controllers, validators, guards and tests, linked cookbooks, demo seeders and app/repository operator commands.
 
 ## Roles and boundaries
 
@@ -11,7 +11,8 @@ Fetched `origin/main` baseline: [`96dc874c8a8a84a2f320ae6bb72699649a5926f7`](htt
 - **Configured support operator:** account listed by the kit's Masquerade configuration; host `canMasquerade` policy and, for edit, `canEdit` must approve. The target's normal business permission still applies.
 - **Soft-delete administrator:** existing account with `is_soft_delete_admin` set to true through a trusted database operation; route guard determines which account is checked.
 - **App operator:** runs migrations, development server and optional demo seeder for one kit.
-- **Sandbox maintainer:** assembles, resolves, checks, tests or rebases generated package examples.
+- **App maintainer:** makes shared app and cookbook changes in Starter Examples and validates affected committed apps.
+- **Package maintainer:** changes package implementation and validates package-local consumers and contracts in that package repository.
 
 Roles summarize actual config, route and policy checks; they do not imply a package-wide application role system. Host authentication, mail delivery, database, deployment, policy, scheduler and email environment values remain host-owned. Browser examples use Account Kit `createLogNotifications`: links go to the server log in development, and the apps refuse production boot until a host mailer is configured. The API adapter records notifications in process memory and logs proof links in development; production delivery requires a host integration. As supplied, none of these adapters sends real inbox email.
 
@@ -65,8 +66,8 @@ The browser [protected account page](accounts/us-account-14-open-protected-accou
 
 - Demo app README and run commands: [Hypermedia app README](../apps/hypermedia/README.md).
 - Persistent demo data: browser-kit seeders create missing users and team fixtures; the [API seeder](../apps/api/database/seeders/demo_seeder.ts) also writes invitation-source and approved admission evidence only for newly created users. Existing API users are skipped without those rows. The kit-specific seeders are linked from [US-DEMO-01](demo/us-demo-01-seed-demo-data.md).
-- Sandbox command entry points: [assemble](../bin/assemble.ts), [resolve](../bin/resolve.ts), [app test](../bin/test_app.ts), [layer rebase](../bin/rebase_layer.ts), [release version recording](../bin/set_versions.ts), [changed-file checks](../bin/check_changed.ts).
+- App and repository checks: [app test](../bin/test_app.ts), [repository check scripts](../package.json).
 - Package operator commands: each kit registers Account Kit, Masquerade and Access Control command modules, and the API kit also registers the admission module, in its `adonisrc.ts` ([Hypermedia](../apps/hypermedia/adonisrc.ts), [API](../apps/api/adonisrc.ts)); command names and flags are recorded from the tagged package source in [US-OPS-09](operations/us-ops-09-run-package-commands.md) (`account-kit:*`, `masquerade:*`, `access-control:doctor`) and [US-OPS-10](operations/us-ops-10-run-admission-commands.md) (`account-kit:admission:*`). The `GET /masquerade` response fields are recorded in [US-MASQ-05](support/us-masq-05-read-support-mode-status.md).
-- Accepted sandbox composition and release workflow: [assembly specification](../docs/specification.md).
+- App ownership and release guidance: [root README](../README.md).
 
-Assembly and operator details are source-reviewed contracts. The docs do not claim that any runtime app or command was exercised as part of this catalogue.
+App and operator details are source-reviewed contracts. The docs do not claim that any runtime app or command was exercised as part of this catalogue.

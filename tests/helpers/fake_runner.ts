@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import type { CommandOptions, CommandRunner } from '../../src/command_runner.ts'
+import type { CommandRunner } from '../../src/command_runner.ts'
 
 export interface FakeCall {
   command: string
@@ -15,12 +15,9 @@ function write(path: string, content: string): void {
 }
 
 /**
- * A command runner that records calls and imitates what the real commands write: install writes
- * `node_modules/` and the lockfile, `generate:key` rewrites `.env.example`, `migration:run`
- * creates the SQLite file and regenerates `database/schema.ts`, `pack` writes the archive.
- * `effects` adds extra writes per command, keyed by the last argument.
+ * A command runner that records calls and imitates the files app setup commands write.
  */
-export function fakeRunner(effects: Record<string, (options: CommandOptions) => void> = {}) {
+export function fakeRunner() {
   const calls: FakeCall[] = []
   const started: string[] = []
   const stopped: string[] = []
@@ -28,7 +25,6 @@ export function fakeRunner(effects: Record<string, (options: CommandOptions) => 
     async run(command, args, options) {
       calls.push({ command, args, cwd: options.cwd, env: options.env })
       const { cwd } = options
-      const last = args.at(-1)!
       if (args[0] === 'install') {
         write(join(cwd, 'node_modules/.modules.yaml'), 'installed\n')
         if (!args.includes('--frozen-lockfile') || !existsSync(join(cwd, 'pnpm-lock.yaml'))) {
@@ -40,8 +36,6 @@ export function fakeRunner(effects: Record<string, (options: CommandOptions) => 
         write(join(cwd, 'tmp/db.sqlite3'), 'sqlite')
         write(join(cwd, 'database/schema.ts'), 'export class RegeneratedSchema {}\n')
       }
-      if (args.includes('pack')) write(args[args.indexOf('--out') + 1], 'archive bytes')
-      effects[last]?.(options)
     },
     start(command, args) {
       started.push([command, ...args].join(' '))

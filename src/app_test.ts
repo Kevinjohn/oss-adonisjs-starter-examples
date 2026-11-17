@@ -7,15 +7,12 @@ import {
   constructedEnvironment,
 } from './command_runner.ts'
 import { SandboxError } from './errors.ts'
-import { PEER_AHEAD_FILE } from './peer_ahead.ts'
-import { requireOwnWorkspace } from './regenerate.ts'
-import { SUPPORTED_KITS } from './sandbox_config.ts'
+import { requireOwnWorkspace } from './own_workspace.ts'
+import { SUPPORTED_KITS } from './kits.ts'
 
 export interface AppTestOptions {
   root: string
   kit: string
-  /** Folder holding `<kit>/`, relative to the sandbox root: `apps` or a `--with-local` output. */
-  directory: string
   installBrowsers: boolean
   runner: CommandRunner
   /** Resolves when the URL answers, rejects after the timeout. */
@@ -55,12 +52,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
   if (!(SUPPORTED_KITS as readonly string[]).includes(options.kit)) {
     throw new SandboxError(`Unknown kit ${options.kit}`)
   }
-  const source = resolve(options.root, options.directory, options.kit)
-  const peerAhead = join(source, PEER_AHEAD_FILE)
-  if (existsSync(peerAhead) && !existsSync(join(source, 'package.json'))) {
-    options.log(readFileSync(peerAhead, 'utf8').trimEnd())
-    return
-  }
+  const source = resolve(options.root, 'apps', options.kit)
   if (!existsSync(join(source, 'package.json'))) throw new SandboxError(`No app at ${source}`)
   const app = join(options.root, 'tmp', 'test-app', options.kit)
   rmSync(app, { recursive: true, force: true })
@@ -81,8 +73,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
       filter: (path) => !path.split('/').includes('node_modules'),
     })
     requireOwnWorkspace(app, options.kit)
-    const frozen = existsSync(join(app, 'vendor')) ? '--no-frozen-lockfile' : '--frozen-lockfile'
-    await run('pnpm', ['install', frozen])
+    await run('pnpm', ['install', '--frozen-lockfile'])
     copyFileSync(join(app, '.env.example'), join(app, '.env'))
     await run('pnpm', ['exec', 'node', 'ace', 'generate:key', '--force'])
     await run('pnpm', ['exec', 'node', 'ace', 'codegen'])

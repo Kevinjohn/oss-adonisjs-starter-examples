@@ -1,17 +1,18 @@
 # oss-adonisjs-starter-examples
 
-The official [AdonisJS starter kits](https://github.com/adonisjs/starter-kits) with our AdonisJS
-packages added, one app per kit. The API app combines Account Kit, Masquerade, Access Control, and
-Soft Delete. Masquerade's API example uses Account Kit access tokens. Hypermedia, Inertia React and
-Inertia Vue also combine these packages. Each package
-repository keeps its own example apps; this repository reads them at their release tags, lets git
-merge their changes onto the pinned starter kit, and commits the combined apps under `apps/`.
+Four runnable AdonisJS apps show how Account Kit, Masquerade, Access Control and Lucid Soft Delete
+work together. The [API](apps/api) uses bearer tokens. [Hypermedia](apps/hypermedia),
+[React](apps/inertia-react) and [Vue](apps/inertia-vue) use browser sessions.
+
+Edit the app here and put shared recipes in [the cookbook](docs/cookbook/README.md). The assembly
+instructions at the top of the original app READMEs describe how these snapshots were produced.
+This repository now owns the application source, integration tests and shared recipes.
 
 ## Run an app
 
 ```sh
 cd apps/<kit>
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example .env
 node ace generate:key
 node ace migration:run
@@ -32,9 +33,20 @@ issue #311).
 [The cookbook](docs/cookbook/README.md) explains how the packages are combined, with code taken
 from these apps.
 
-## How it works
+## Choose and test a release
 
-See [the specification](docs/specification.md) and [AGENTS.md](AGENTS.md).
+Check out a release tag, then select one of the four app directories. Each has its own manifest
+and lockfile. A tag selects the entire tested package set. For example, to run the API checks
+from the root of a checkout of this release:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test:app --kit api
+```
+
+For a browser app, pass its kit name and add `--install-browsers` on a fresh machine.
+To adopt a package release, update the intended apps and their lockfiles, run the app checks,
+and record the verified set in the next Starter Examples release.
 
 ## User story catalogue
 

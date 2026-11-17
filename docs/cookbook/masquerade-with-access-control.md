@@ -84,3 +84,5 @@ router
 <!-- prettier-ignore-end -->
 
 The Hypermedia, Inertia React and Inertia Vue apps use session-based effective guards. The API combined example uses bearer-token authentication: its scoped team reads and renames require the token's `masquerade` ability and current context, read from `GET /masquerade` and refreshed after mode changes, in `X-Masquerade-Context` on `PATCH` renames.
+
+The integration tests exercise this recipe in [API](../../apps/api/tests/functional/masquerade_access_control.spec.ts), [Hypermedia](../../apps/hypermedia/tests/functional/masquerade_access_control.spec.ts), [React](../../apps/inertia-react/tests/functional/masquerade_access_control.spec.ts) and [Vue](../../apps/inertia-vue/tests/functional/masquerade_access_control.spec.ts).

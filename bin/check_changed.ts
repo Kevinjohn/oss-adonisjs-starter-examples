@@ -1,6 +1,6 @@
 // Run the checks that cover every file changed since the merge base with a base ref.
 // Usage: pnpm check:changed [--static] [base]   (default: origin/main, else main)
-// --static leaves out the full Japa suite and the assembly check; changed specs still run.
+// --static leaves out the full Japa suite and direct app checks; changed specs still run.
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'

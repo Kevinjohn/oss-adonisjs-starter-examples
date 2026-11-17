@@ -5,13 +5,12 @@ import { processRunner } from '../src/command_runner.ts'
 import { SandboxError } from '../src/errors.ts'
 
 /**
- * pnpm test:app --kit <kit> [--dir apps] [--install-browsers]
+ * pnpm test:app --kit <kit> [--install-browsers]
  */
 runCli(async () => {
   const { values } = parseArgs({
     options: {
       'kit': { type: 'string' },
-      'dir': { type: 'string', default: 'apps' },
       'install-browsers': { type: 'boolean', default: false },
     },
   })
@@ -19,7 +18,6 @@ runCli(async () => {
   await testApp({
     root: SANDBOX_ROOT,
     kit: values.kit,
-    directory: values.dir,
     installBrowsers: values['install-browsers'],
     runner: processRunner({ stream: true }),
     waitForUrl,
