@@ -9,7 +9,7 @@ Fetched `origin/main` baseline: [`96dc874c8a8a84a2f320ae6bb72699649a5926f7`](htt
 - **Application visitor/account owner:** registers, authenticates, manages their native account, joins teams and controls their own credentials.
 - **Team member/editor/inviter:** acts with the Access Control membership and permission resolved for the account authenticated on that route.
 - **Configured support operator:** account listed by the kit's Masquerade configuration; host `canMasquerade` policy and, for edit, `canEdit` must approve. The target's normal business permission still applies.
-- **Soft-delete administrator:** address listed by `SOFT_DELETE_ADMIN_EMAILS`; route guard determines which account is checked.
+- **Soft-delete administrator:** existing account with `is_soft_delete_admin` set to true through a trusted database operation; route guard determines which account is checked.
 - **App operator:** runs migrations, development server and optional demo seeder for one kit.
 - **Sandbox maintainer:** assembles, resolves, checks, tests or rebases generated package examples.
 

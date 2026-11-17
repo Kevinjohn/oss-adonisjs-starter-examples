@@ -36,8 +36,4 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   LIMITER_STORE: Env.schema.enum(['database', 'memory'] as const),
-
-  // Soft Delete: comma-separated emails that may list and restore deleted accounts.
-  // Missing means nobody.
-  SOFT_DELETE_ADMIN_EMAILS: Env.schema.string.optional(),
 })

@@ -72,7 +72,7 @@ router
 
 <!-- prettier-ignore-end -->
 
-`GET /admin/deleted-users` lists deleted accounts with `User.onlyTrashed()`, most recently deleted first; `POST /admin/deleted-users/:id/restore` restores one. Both controller actions check `isSoftDeleteAdmin`, which compares the account's email exactly against `SOFT_DELETE_ADMIN_EMAILS`; non-administrators receive 403.
+`GET /admin/deleted-users` lists deleted accounts with `User.onlyTrashed()`, most recently deleted first; `POST /admin/deleted-users/:id/restore` restores one. Both controller actions check `isSoftDeleteAdmin`, which reads the authenticated account's `is_soft_delete_admin` database flag; non-administrators receive 403.
 
 <!-- prettier-ignore-start -->
 

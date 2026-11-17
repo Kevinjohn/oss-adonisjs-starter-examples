@@ -7,7 +7,7 @@ import DemoSeeder from '#database/seeders/demo_seeder'
 import Team from '#models/team'
 import User from '#models/user'
 import { isMasqueradeOperator, masqueradeOperatorEmails } from '#services/masquerade_operators'
-import { isSoftDeleteAdmin, softDeleteAdminEmails } from '#services/soft_delete_admins'
+import { isSoftDeleteAdmin } from '#services/soft_delete_admins'
 import { setupAccountDatabase } from '#tests/helpers/account_database'
 import { FormSession } from '#tests/helpers/form_session'
 
@@ -20,17 +20,12 @@ test.group('demo seeder', (group) => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])
     const previousOperatorEmails = new Set(masqueradeOperatorEmails)
-    const previousAdminEmails = new Set(softDeleteAdminEmails)
     masqueradeOperatorEmails.clear()
     masqueradeOperatorEmails.add(operatorEmail)
-    softDeleteAdminEmails.clear()
-    softDeleteAdminEmails.add(adminEmail)
 
     return async () => {
       masqueradeOperatorEmails.clear()
       for (const email of previousOperatorEmails) masqueradeOperatorEmails.add(email)
-      softDeleteAdminEmails.clear()
-      for (const email of previousAdminEmails) softDeleteAdminEmails.add(email)
       await cleanup()
     }
   })
@@ -41,6 +36,8 @@ test.group('demo seeder', (group) => {
       password: 'ExistingPassword123!',
       emailVerifiedAt: DateTime.utc(),
     })
+    existingAdmin.isSoftDeleteAdmin = true
+    await existingAdmin.save()
     const existingAdminPassword = existingAdmin.password
 
     await new DemoSeeder(db.connection()).run()
@@ -51,11 +48,12 @@ test.group('demo seeder', (group) => {
     assert.equal(firstBobMembership?.role, 'viewer')
     await new DemoSeeder(db.connection()).run()
 
-    const seededEmails = [operatorEmail, adminEmail, 'alice@example.com', 'bob@example.com']
+    const seededEmails = [operatorEmail, 'alice@example.com', 'bob@example.com']
     for (const email of seededEmails) {
       const matches = await User.query().where('email', email)
       assert.lengthOf(matches, 1)
       assert.isNotNull(matches[0].emailVerifiedAt)
+      assert.isFalse(isSoftDeleteAdmin(matches[0]))
     }
 
     const operator = await User.findByOrFail('email', operatorEmail)

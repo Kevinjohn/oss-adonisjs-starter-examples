@@ -3,7 +3,7 @@
   app, and it shows up in the navigation bar with its active state handled.
 --}}
 @let(nav = [
-  { label: 'Dashboard', route: 'dashboard', icon: 'lucide:house' },
+  ...softDeleteNavigation(auth.user),
   { label: 'Teams', route: 'teams.index', icon: 'lucide:users' },
 ])
 @let(pageTitle = $props.get('title'))

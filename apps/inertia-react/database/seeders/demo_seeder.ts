@@ -6,7 +6,6 @@ import accessControl from '#config/access_control'
 import Team from '#models/team'
 import User from '#models/user'
 import { masqueradeOperatorEmails } from '#services/masquerade_operators'
-import { softDeleteAdminEmails } from '#services/soft_delete_admins'
 
 const demoUsers = [
   { email: 'alice@example.com', fullName: 'Alice Example' },
@@ -18,10 +17,9 @@ const demoPassword = 'DemoPassword123!'
 export default class DemoSeeder extends BaseSeeder {
   async run() {
     const configuredEmails = new Set(
-      [
-        masqueradeOperatorEmails.values().next().value,
-        softDeleteAdminEmails.values().next().value,
-      ].filter((email): email is string => typeof email === 'string')
+      [masqueradeOperatorEmails.values().next().value].filter(
+        (email): email is string => typeof email === 'string'
+      )
     )
     const userIds = new Map<string, number>()
 
