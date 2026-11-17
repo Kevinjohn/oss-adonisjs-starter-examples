@@ -241,6 +241,7 @@ After `git init`, write `* -text` to `.git/info/attributes`.
    specifier, 6.8). Fail with `<kit> app depends on <pkg>, which is not in the sandbox for this kit`
    if that package is not merged into this kit. Leave `peerDependencies` alone. Sort the four
    dependency maps and serialise with `JSON.stringify(value, null, 2) + '\n'`.
+   For the API kit, replace the older examples’ `better-sqlite3` range `^12.11.1` with the base starter’s `^13.0.3`. Preserve other driver ranges.
 2. Write `README.md` from `templates/app_readme.md` with `{{kit}}`, `{{baseCommit}}` and
    `{{packagesTable}}` (package, version, link to its example folder at the tag).
 3. Copy `layers/combined/<kit>/` if it exists. Fail on any existing path:
