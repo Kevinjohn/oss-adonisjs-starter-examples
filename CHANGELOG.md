@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+All four apps validate their public origin with Origin Guard 0.2.0, demonstrate note replay with Duplicate Request Guard 0.1.0, and validate reading-list labels with Lucid Checked Columns 0.2.0. Hypermedia, React and Vue also use Confirm Action with Password 0.2.0 and Account Kit session management for one-use secure-note writes. Existing browser sessions require one fresh sign-in when adopting this change. The API uses bearer tokens.
+
 ## v0.13.0
 
 Starter Examples now owns the four runnable apps and their integration tests. Edit an app in

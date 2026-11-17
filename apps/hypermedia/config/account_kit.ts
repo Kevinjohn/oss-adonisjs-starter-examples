@@ -1,5 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
+import { publicOrigin } from '#start/public_origin'
 import {
   createActionUrls,
   createLogNotifications,
@@ -44,6 +45,7 @@ export default defineConfig({
     'emailPasswordManagement',
     'registration',
     'invitations',
+    'sessionManagement',
   ],
   registration: {
     availability: 'open',
@@ -57,6 +59,7 @@ export default defineConfig({
      */
     canAccess: async () => true,
   },
+  sessionManagement: { idleExpiry: '30d' },
   limiterSecret: env.get('APP_KEY').release(),
   /**
    * Team admins and owners invite to their team; Access Control answers every invitation check.
@@ -69,8 +72,8 @@ export default defineConfig({
    * Links are built from APP_URL only, and must use HTTPS outside localhost.
    */
   urls: createActionUrls({
-    backendOrigin: env.get('APP_URL'),
-    appFrontendUrl: env.get('APP_URL'),
+    backendOrigin: publicOrigin,
+    appFrontendUrl: publicOrigin,
     environment,
     destinations: {
       passwordReset: 'reset-password',
@@ -87,8 +90,8 @@ export default defineConfig({
     ? accountKitNotify
     : createLogNotifications({ brandName: 'Account Kit Example', environment }),
   /**
-   * A no-op on purpose: session login checks the credential revision on every request, so older
-   * sessions end on their own. Nothing else holds credentials in this app.
+   * Account Kit revokes registered sessions and advances the credential revision; the middleware
+   * checks both on each request. The app has no separate credential store to update.
    */
   onCredentialsChangedTransaction: async () => {},
 })

@@ -15,9 +15,12 @@ export default class SessionRevisionMiddleware {
     const guard = ctx.auth.use('web')
     if (await guard.check()) {
       const revision = ctx.session.get('accountKitRevision')
+      const storedHandle = ctx.session.get('accountKitSession')
       try {
         await kit.authentication.current({
           userId: guard.getUserOrFail().id,
+          // Every active session has a registry handle. A missing or malformed value fails closed.
+          sessionHandle: typeof storedHandle === 'string' ? storedHandle : '',
           // '' means "signed in before any credential change"; a missing value fails closed.
           ...(revision === undefined ? {} : { revision: revision === '' ? null : revision }),
         })

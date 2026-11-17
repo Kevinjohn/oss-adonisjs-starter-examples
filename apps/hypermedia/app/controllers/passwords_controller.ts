@@ -2,6 +2,8 @@ import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors, passwordChangeRevision } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { changePasswordValidator } from '#validators/account'
+import { managedGuard } from '#services/account_kit_guard'
+import { accountKitSessionGuard } from '#services/session_guard'
 
 export default class PasswordsController {
   async edit({ view }: HttpContext) {
@@ -11,6 +13,7 @@ export default class PasswordsController {
   async update(ctx: HttpContext) {
     const { currentPassword, password } = await ctx.request.validateUsing(changePasswordValidator)
     const user = ctx.auth.getUserOrFail()
+    const current = await managedGuard.current(ctx)
     let notified = true
     let revision: string | null
     try {
@@ -18,6 +21,7 @@ export default class PasswordsController {
         actorId: user.id,
         currentPassword,
         newPassword: password,
+        keepCurrent: { sessionHandle: current.sessionHandle! },
       }))
     } catch (error) {
       // The new password is already saved; only the notification or another follow-up failed.
@@ -34,10 +38,9 @@ export default class PasswordsController {
       } else throw error
     }
     const unsent = notified ? '' : ' We could not send the confirmation email.'
-    // The change ended every session. Storing its revision keeps this one; regenerating gives it a
-    // new id, so a copied cookie for the old id does not survive.
-    ctx.session.regenerate()
-    ctx.session.put('accountKitRevision', revision ?? '')
+    // Account Kit keeps this registered sign-in and ends the others. Refreshing the session gives
+    // this browser a new cookie id and stores the new credential revision.
+    await accountKitSessionGuard(ctx).refresh(revision)
     ctx.session.flash('success', `Password changed. Other sessions have been signed out.${unsent}`)
     return ctx.response.redirect().toPath('/settings/password')
   }

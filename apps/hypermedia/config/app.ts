@@ -1,4 +1,4 @@
-import env from '#start/env'
+import { publicOrigin } from '#start/public_origin'
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
 
@@ -7,7 +7,7 @@ import { defineConfig } from '@adonisjs/core/http'
  * URLs to your application. For example, when sending emails, images should
  * use absolute URLs.
  */
-export const appUrl = env.get('APP_URL')
+export const appUrl = publicOrigin
 
 /**
  * The configuration settings used by the HTTP server

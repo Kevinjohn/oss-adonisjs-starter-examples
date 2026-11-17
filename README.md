@@ -4,9 +4,9 @@ Four runnable AdonisJS apps show how Account Kit, Masquerade, Access Control and
 work together. The [API](apps/api) uses bearer tokens. [Hypermedia](apps/hypermedia),
 [React](apps/inertia-react) and [Vue](apps/inertia-vue) use browser sessions.
 
-Edit the app here and put shared recipes in [the cookbook](docs/cookbook/README.md). The assembly
-instructions at the top of the original app READMEs describe how these snapshots were produced.
-This repository now owns the application source, integration tests and shared recipes.
+All four apps validate their public origin, create replay-safe notes, and store checked JSON labels
+on reading-list entries. The three session apps also demonstrate one-use password confirmation for a
+secure note. Edit the apps here and find the setup and tested journeys in [the cookbook](docs/cookbook/README.md).
 
 ## Run an app
 

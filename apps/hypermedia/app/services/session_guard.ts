@@ -11,11 +11,20 @@ export function accountKitSessionGuard(ctx: HttpContext) {
   return {
     strategy: 'session' as const,
     name: 'web',
-    async establish(userId: number | string, revision: string | null) {
+    async establish(userId: number | string, revision: string | null, handle?: string) {
       ctx.session.regenerate()
       await guard.login(await User.findOrFail(userId))
       ctx.session.put('accountKitRevision', revision ?? '')
+      if (handle) ctx.session.put('accountKitSession', handle)
       return undefined
+    },
+    previousHandle() {
+      const handle = ctx.session.get('accountKitSession')
+      return typeof handle === 'string' && handle !== '' ? handle : undefined
+    },
+    async refresh(revision: string | null) {
+      ctx.session.regenerate()
+      ctx.session.put('accountKitRevision', revision ?? '')
     },
     async terminate() {
       await guard.logout()

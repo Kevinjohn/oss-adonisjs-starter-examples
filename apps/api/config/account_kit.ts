@@ -3,6 +3,7 @@ import type { NotificationCallbacks } from '@kevinjohn/adonisjs-account-kit/type
 
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
+import { publicOrigin } from '#start/public_origin'
 import { createLucidAdapter, defineConfig } from '@kevinjohn/adonisjs-account-kit'
 import {
   withAdmissionCleanup,
@@ -22,11 +23,9 @@ const socialProvider = app.inTest
   ? (await import('#tests/helpers/social_provider_fixture')).fixtureProvider
   : allySocialProvider
 
-const normalizeBaseUrl = (value: string) => (value.endsWith('/') ? value : `${value}/`)
-const appUrl = normalizeBaseUrl(env.get('APP_URL'))
 const authStrategy = env.get('ACCOUNT_KIT_AUTH_STRATEGY') ?? 'access_tokens'
 const accountUrl = (path: string, token: string) =>
-  new URL(`api/v1/auth/${path}/${encodeURIComponent(token)}`, appUrl).toString()
+  new URL(`api/v1/auth/${path}/${encodeURIComponent(token)}`, publicOrigin).toString()
 
 if (env.get('ACCOUNT_KIT_AUTH_STRATEGY') === 'session' && env.get('SESSION_DRIVER') === 'cookie') {
   throw new Error('account_kit: session authentication requires a server-side session store')

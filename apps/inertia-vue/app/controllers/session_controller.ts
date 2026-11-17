@@ -2,6 +2,7 @@ import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { loginValidator } from '#validators/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import { accountKitSessionGuard } from '#services/session_guard'
+import { managedGuard } from '#services/account_kit_guard'
 
 export default class SessionController {
   async create({ inertia }: HttpContext) {
@@ -19,7 +20,11 @@ export default class SessionController {
   }
 
   async destroy(ctx: HttpContext) {
-    await kit.authentication.logout(accountKitSessionGuard(ctx))
+    await kit.authentication.logout(
+      accountKitSessionGuard(ctx),
+      undefined,
+      await managedGuard.current(ctx)
+    )
     ctx.session.flash('masqueradeClearHistory', true)
     return ctx.response.redirect().toRoute('session.create')
   }

@@ -3,6 +3,7 @@ import { errors } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { loginValidator } from '#validators/user'
 import { accountKitSessionGuard } from '#services/session_guard'
+import { managedGuard } from '#services/account_kit_guard'
 
 export default class SessionController {
   async create({ view }: HttpContext) {
@@ -38,7 +39,11 @@ export default class SessionController {
   }
 
   async destroy(ctx: HttpContext) {
-    await kit.authentication.logout(accountKitSessionGuard(ctx))
+    await kit.authentication.logout(
+      accountKitSessionGuard(ctx),
+      undefined,
+      await managedGuard.current(ctx)
+    )
     return ctx.response.redirect().toRoute('session.create')
   }
 }

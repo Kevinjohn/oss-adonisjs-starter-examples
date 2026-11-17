@@ -60,6 +60,8 @@ export default defineConfig({
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@kevinjohn/adonisjs-account-kit/account_kit_provider'),
+    () =>
+      import('@kevinjohn/adonisjs-confirm-action-with-password/password_confirmations_provider'),
     () => import('#providers/masquerade_native_provider'),
     () => import('@kevinjohn/adonisjs-masquerade/masquerade_provider'),
     () => import('@kevinjohn/adonisjs-masquerade/account-kit/provider'),
