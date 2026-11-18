@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.15.0
 
-- Add SQLite Backup 0.3.1 to the API starter with a cookbook recipe for verifying a backup and reading a staged restore.
+- The API starter now includes SQLite Backup 0.3.1. Set `SQLITE_BACKUP_DIRECTORY` when using its SQLite connection to enable the backup commands.
+- The [recovery recipe](docs/cookbook/sqlite-backup.md) walks through creating and verifying a backup, staging a restore to a separate file and reading a seeded account from that file. The API integration test also checks that an edit made after the backup remains in the live database.
+
+Hypermedia, React and Vue carry forward from v0.14.1 unchanged. No new database migration is required.
 
 ## v0.14.1
 
