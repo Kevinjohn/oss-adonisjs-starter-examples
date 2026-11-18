@@ -34,6 +34,7 @@ export default defineConfig({
     () => import('@kevinjohn/adonisjs-masquerade/commands'),
     () => import('@kevinjohn/adonisjs-access-control/commands'),
     () => import('@adonisjs/bouncer/commands'),
+    () => import('@kevinjohn/adonisjs-sqlite-backup/commands'),
   ],
 
   /*
@@ -56,6 +57,7 @@ export default defineConfig({
     () => import('@adonisjs/session/session_provider'),
     () => import('@adonisjs/shield/shield_provider'),
     () => import('@adonisjs/lucid/database_provider'),
+    () => import('@kevinjohn/adonisjs-sqlite-backup/sqlite_backup_provider'),
     () => import('@adonisjs/cors/cors_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@adonisjs/ally/ally_provider'),

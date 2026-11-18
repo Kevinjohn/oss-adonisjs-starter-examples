@@ -23,6 +23,7 @@ const env = await Env.create(new URL('../', import.meta.url), {
   // App
   APP_KEY: Env.schema.secret(),
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
+  SQLITE_BACKUP_DIRECTORY: Env.schema.string.optional(),
   DB_CONNECTION: Env.schema.enum(['sqlite', 'postgres'] as const),
   DB_HOST: Env.schema.string.optional(),
   DB_PORT: Env.schema.number.optional(),

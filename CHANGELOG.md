@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add SQLite Backup 0.3.1 to the API starter with a cookbook recipe for verifying a backup and reading a staged restore.
+
 ## v0.14.1
 
 - Prevent pending secure-note text from appearing to another account after self-deletion and a new sign-in. Account deletion now revokes the registered sign-in and clears its browser session.
