@@ -44,6 +44,7 @@ test.group('SQLite backup', (group) => {
     } finally {
       staged.close()
     }
-    assert.equal((await User.findOrFail(user.id)).email, 'updated.diana@example.test')
+    const liveUser = await User.findOrFail(user.id)
+    assert.equal(liveUser.email, 'updated.diana@example.test')
   }).skip(env.get('DB_CONNECTION') !== 'sqlite', 'The backup command uses a SQLite database')
 })
