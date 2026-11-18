@@ -11,12 +11,15 @@ See the cookbook for [public origin validation](../../docs/cookbook/public-origi
 
 The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.1.0 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
 
+See [Recover a row from an API starter backup](../../docs/cookbook/sqlite-backup.md) to verify a SQLite backup and read a seeded account from a staged restore.
+
 ## Run it
 
 ```sh
 pnpm install
 cp .env.example .env
 node ace generate:key
+node ace codegen
 node ace migration:run
 pnpm dev
 ```

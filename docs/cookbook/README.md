@@ -7,3 +7,4 @@
 - [Duplicate Request Guard](duplicate-request-guard.md) for replay-safe note creation.
 - [Lucid Checked Columns](checked-columns.md) for validated reading-list labels.
 - [Password confirmation](password-confirmation.md) for a one-use secure-note write in the session apps.
+- [Recover a row from an API starter backup](sqlite-backup.md) using the SQLite backup and restore commands.
