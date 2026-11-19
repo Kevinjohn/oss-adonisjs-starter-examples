@@ -1,7 +1,12 @@
 import { test } from '@japa/runner'
+import { once } from 'node:events'
 import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { type RequestListener, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { setTimeout as delay } from 'node:timers/promises'
 import { join } from 'node:path'
-import { testApp } from '../../src/app_test.ts'
+import { testApp, waitForUrl } from '../../src/app_test.ts'
+import { processRunner } from '../../src/command_runner.ts'
 import { exactly } from '../helpers/exact_message.ts'
 import { fakeRunner } from '../helpers/fake_runner.ts'
 import { AppTestWorld, appFiles, writeFiles } from '../helpers/app_fixture.ts'
@@ -41,6 +46,46 @@ function snapshot(folder: string): string {
     .join('\n')
 }
 
+async function localServer(listener: RequestListener) {
+  const server = createServer(listener)
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  return {
+    port: (server.address() as AddressInfo).port,
+    close() {
+      server.close()
+      server.closeAllConnections()
+    },
+  }
+}
+
+test.group('Vite readiness', () => {
+  test('times out even when an accepted request never receives headers', async ({ assert }) => {
+    let handled = false
+    const server = await localServer(() => {
+      handled = true
+    })
+    const url = `http://127.0.0.1:${server.port}/@vite/client`
+    const watchdog = new AbortController()
+    try {
+      await assert.rejects(
+        () =>
+          Promise.race([
+            waitForUrl(url, 150),
+            delay(1_500, undefined, { signal: watchdog.signal }).then(() => {
+              throw new Error('Test watchdog fired before the readiness deadline')
+            }),
+          ]),
+        exactly(`${url} did not answer within 0.15s`)
+      )
+      assert.isTrue(handled)
+    } finally {
+      watchdog.abort()
+      server.close()
+    }
+  })
+})
+
 test.group('test:app', (group) => {
   let world: AppTestWorld
   group.each.setup(() => {
@@ -68,7 +113,7 @@ test.group('test:app', (group) => {
         log: () => {},
       })
 
-      const app = join(world.sandboxRoot, 'tmp/test-app', kit)
+      const app = fake.calls[0].cwd
       assert.deepEqual(
         fake.calls.map((call) => [call.command, ...call.args].join(' ')),
         [
@@ -83,13 +128,118 @@ test.group('test:app', (group) => {
         ]
       )
       assert.isTrue(fake.calls.every((call) => call.cwd === app))
-      assert.deepEqual(fake.started, ['pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort'])
+      assert.lengthOf(fake.started, 1)
+      assert.include(fake.started[0], '/vite_server.mjs 5173 /@starter-runner/')
       assert.deepEqual(fake.stopped, fake.started)
-      assert.deepEqual(waited, ['http://127.0.0.1:5173/@vite/client'])
+      assert.lengthOf(waited, 1)
+      assert.include(waited[0], 'http://127.0.0.1:5173/@starter-runner/')
+      assert.isTrue(fake.started[0].endsWith(new URL(waited[0]).pathname))
       assert.isFalse(existsSync(app))
       assert.equal(snapshot(source), before)
     })
   }
+
+  test('keeps overlapping copies private and removes only owned files', async ({ assert }) => {
+    writeApp(world.sandboxRoot)
+    const copies = join(world.sandboxRoot, 'tmp/test-app')
+    const options = {
+      root: world.sandboxRoot,
+      kit: 'inertia-react',
+      installBrowsers: false,
+      waitForUrl: async () => {},
+      log: () => {},
+    }
+    const firstRunner = fakeRunner().runner
+    const second = fakeRunner()
+    const firstCopy = Promise.withResolvers<string>()
+    const resume = Promise.withResolvers<void>()
+    const first = testApp({
+      ...options,
+      runner: {
+        ...firstRunner,
+        async run(command, args, commandOptions) {
+          if (args[0] === 'install') {
+            firstCopy.resolve(commandOptions.cwd)
+            await resume.promise
+            assert.isTrue(existsSync(join(commandOptions.cwd, '.env.example')))
+          }
+          await firstRunner.run(command, args, commandOptions)
+        },
+      },
+    })
+    try {
+      const ownedByFirst = await Promise.race([
+        firstCopy.promise,
+        first.then(() => {
+          throw new Error('The first runner finished before reaching install')
+        }),
+      ])
+      await testApp({ ...options, runner: second.runner })
+      const ownedBySecond = second.calls[0].cwd
+      assert.notEqual(ownedBySecond, ownedByFirst)
+      assert.isTrue(existsSync(join(ownedByFirst, 'package.json')))
+      assert.isFalse(existsSync(ownedBySecond))
+    } finally {
+      resume.resolve()
+      await first
+    }
+    assert.deepEqual(readdirSync(copies), [])
+  })
+
+  test('reports an occupied Vite port before starting browser tests', async ({ assert }) => {
+    writeApp(world.sandboxRoot, { '@japa/browser-client': '^2.0.0' })
+    const fake = fakeRunner()
+    // Exercise the real child launcher without installing the starter's dependencies in this test.
+    const viteFixture = `
+      import { createServer as createHttpServer } from 'node:http'
+      export async function createServer({ server: options, plugins }) {
+        const server = createHttpServer()
+        for (const plugin of plugins) {
+          plugin.configureServer({ middlewares: { use: (handler) => server.on('request', handler) } })
+        }
+        return {
+          listen() {
+            return new Promise((resolve, reject) => {
+              server.once('error', reject)
+              server.listen(options.port, options.host, resolve)
+            })
+          },
+          close() { server.close() },
+        }
+      }
+    `
+    const stale = await localServer((_request, response) => response.end('stale server'))
+    try {
+      await assert.rejects(
+        () =>
+          testApp({
+            root: world.sandboxRoot,
+            kit: 'inertia-react',
+            installBrowsers: false,
+            vitePort: stale.port,
+            waitForUrl,
+            runner: {
+              ...processRunner({ stream: false }),
+              async run(command, args, options) {
+                await fake.runner.run(command, args, options)
+                if (args[0] === 'install') {
+                  writeFiles(join(options.cwd, 'node_modules/vite'), {
+                    'package.json': JSON.stringify({ type: 'module', main: 'index.js' }),
+                    'index.js': viteFixture,
+                  })
+                }
+              },
+            },
+            log: () => {},
+          }),
+        new RegExp(`EADDRINUSE: address already in use 127.0.0.1:${stale.port}`)
+      )
+      assert.isFalse(fake.calls.some((call) => call.args[0] === 'test'))
+      assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
+    } finally {
+      stale.close()
+    }
+  })
 
   test('uses the checked-in lockfile when the app has vendor/', async ({ assert }) => {
     writeApp(world.sandboxRoot, {}, { 'vendor/kevinjohn-adonisjs-account-kit.tgz': 'archive' })
@@ -130,7 +280,7 @@ test.group('test:app', (group) => {
     )
     assert.deepEqual(fake.stopped, fake.started)
     assert.lengthOf(fake.started, 1)
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
   })
 
   test('refuses an unknown kit before touching any folder', async ({ assert }) => {
@@ -169,7 +319,7 @@ test.group('test:app', (group) => {
     } finally {
       chmodSync(unreadable, 0o644)
     }
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
   })
 
   test('refuses an app without pnpm-workspace.yaml before installing', async ({ assert }) => {
@@ -188,7 +338,7 @@ test.group('test:app', (group) => {
       /^inertia-react has no pnpm-workspace.yaml/
     )
     assert.deepEqual(fake.calls, [])
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
   })
 
   test('runs only the checked-in app and does not mutate its source', async ({ assert }) => {
@@ -204,7 +354,7 @@ test.group('test:app', (group) => {
       waitForUrl: async () => {},
       log: () => {},
     })
-    assert.equal(fake.calls[0].cwd, join(world.sandboxRoot, 'tmp/test-app/api'))
+    assert.include(fake.calls[0].cwd, join(world.sandboxRoot, 'tmp/test-app/api-'))
     assert.isTrue(fake.calls[0].args.includes('--frozen-lockfile'))
     assert.equal(snapshot(source), before)
   })
@@ -230,7 +380,7 @@ test.group('test:app', (group) => {
         }),
       exactly('install failed')
     )
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
     assert.deepEqual(fake.started, [])
   })
 
@@ -258,6 +408,6 @@ test.group('test:app', (group) => {
       exactly('browser install failed')
     )
     assert.deepEqual(fake.started, [])
-    assert.isFalse(existsSync(join(world.sandboxRoot, 'tmp/test-app/inertia-react')))
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
   })
 })

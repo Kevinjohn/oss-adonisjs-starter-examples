@@ -7,6 +7,8 @@ export interface CommandOptions {
 }
 
 export interface BackgroundProcess {
+  /** Resolves with the startup failure or the reason the command exited. */
+  exited: Promise<Error>
   stop(): Promise<void>
 }
 
@@ -78,15 +80,42 @@ export function processRunner(options: { stream: boolean }): CommandRunner {
       })
     },
     start(command, args, { cwd, env }) {
-      const child = spawn(command, args, { cwd, env, detached: true, stdio: 'ignore' })
-      const exited = new Promise<void>((resolve) => child.on('exit', () => resolve()))
+      const shown = [command, ...args].join(' ')
+      const child = spawn(command, args, {
+        cwd,
+        env,
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      const output: Buffer[] = []
+      child.stdout.on('data', (chunk: Buffer) => {
+        if (options.stream) process.stdout.write(chunk)
+        output.push(chunk)
+      })
+      child.stderr.on('data', (chunk: Buffer) => {
+        if (options.stream) process.stderr.write(chunk)
+        output.push(chunk)
+      })
+      const exited = new Promise<Error>((resolve) => {
+        child.once('error', resolve)
+        child.once('close', (code, signal) =>
+          resolve(
+            new SandboxError(
+              `Background command exited (${signal ?? code}): ${shown}\n  in ${cwd}\n${Buffer.concat(output).toString('utf8')}`
+            )
+          )
+        )
+      })
       return {
+        exited,
         async stop() {
-          if (child.exitCode !== null || child.pid === undefined) return
+          if (child.exitCode !== null || child.signalCode !== null || child.pid === undefined)
+            return
           try {
             process.kill(-child.pid, 'SIGTERM')
-          } catch {
-            return
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === 'ESRCH') return
+            throw error
           }
           await exited
         },
