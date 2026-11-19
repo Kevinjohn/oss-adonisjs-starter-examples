@@ -1,6 +1,6 @@
 # Duplicate request guard
 
-The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.1.0 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
+The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.1.1 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
 
 The starter apps use `@kevinjohn/adonisjs-duplicate-request-guard` to make a create-note command safe to retry. The client supplies a `commandId` and a `requestKey`; the server scopes both to the raw authenticated account, reserves a receipt, and commits the note and completed receipt in one transaction. Repeating the same request returns the original result without inserting another note.
 

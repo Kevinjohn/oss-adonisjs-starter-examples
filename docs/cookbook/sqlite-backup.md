@@ -1,6 +1,6 @@
 # Recover a row from an API starter backup
 
-The API starter includes SQLite Backup 0.3.1. This local drill creates a backup of its SQLite database, verifies the bundle, and reads a seeded account from a separate restore file. Run the commands from `apps/api` after completing the [API setup](../../apps/api/README.md#run-it) with `DB_CONNECTION=sqlite`.
+The API starter includes SQLite Backup 0.3.2. This local drill creates a backup of its SQLite database, verifies the bundle, and reads a seeded account from a separate restore file. Run the commands from `apps/api` after completing the [API setup](../../apps/api/README.md#run-it) with `DB_CONNECTION=sqlite`.
 
 Seed the demo accounts. Use a fresh directory for this run so the newest bundle is the one you just created.
 
