@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { setTimeout as delay } from 'node:timers/promises'
 import { SandboxError } from './errors.ts'
 
 export interface CommandOptions {
@@ -96,28 +97,50 @@ export function processRunner(options: { stream: boolean }): CommandRunner {
         if (options.stream) process.stderr.write(chunk)
         output.push(chunk)
       })
+      let closed = false
+      const drained = new Promise<void>((resolve) => {
+        child.once('close', () => {
+          closed = true
+          resolve()
+        })
+      })
       const exited = new Promise<Error>((resolve) => {
         child.once('error', resolve)
-        child.once('close', (code, signal) =>
-          resolve(
-            new SandboxError(
-              `Background command exited (${signal ?? code}): ${shown}\n  in ${cwd}\n${Buffer.concat(output).toString('utf8')}`
+        child.once('exit', (code, signal) => {
+          // Let ordinary stderr drain briefly without waiting on a descendant's inherited pipe.
+          void Promise.race([drained, delay(100, undefined, { ref: false })]).then(() =>
+            resolve(
+              new SandboxError(
+                `Background command exited (${signal ?? code}): ${shown}\n  in ${cwd}\n${Buffer.concat(output).toString('utf8')}`
+              )
             )
           )
-        )
+        })
       })
+      const signalGroup = (signal: NodeJS.Signals) => {
+        if (closed || child.pid === undefined) return
+        try {
+          process.kill(-child.pid, signal)
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
+        }
+      }
       return {
         exited,
         async stop() {
-          if (child.exitCode !== null || child.signalCode !== null || child.pid === undefined)
-            return
+          if (closed || child.pid === undefined) return
           try {
-            process.kill(-child.pid, 'SIGTERM')
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ESRCH') return
-            throw error
+            signalGroup('SIGTERM')
+            await Promise.race([drained, delay(1000)])
+            if (closed) return
+            signalGroup('SIGKILL')
+            await Promise.race([drained, delay(1000)])
+            if (!closed) throw new SandboxError(`Background command did not close: ${shown}`)
+          } finally {
+            child.stdout.destroy()
+            child.stderr.destroy()
+            child.unref()
           }
-          await exited
         },
       }
     },
