@@ -283,6 +283,39 @@ test.group('test:app', (group) => {
     assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
   })
 
+  test('retains a browser test failure when stopping Vite also fails', async ({ assert }) => {
+    writeApp(world.sandboxRoot, { '@japa/browser-client': '^2.0.0' })
+    const fake = fakeRunner()
+    const testFailure = new Error('browser tests failed')
+    const cleanupFailure = new Error('Vite could not stop')
+    const failure = await testApp({
+      root: world.sandboxRoot,
+      kit: 'inertia-react',
+      installBrowsers: false,
+      runner: {
+        ...fake.runner,
+        async run(command, args, options) {
+          if (args[0] === 'test') throw testFailure
+          await fake.runner.run(command, args, options)
+        },
+        start() {
+          return {
+            exited: new Promise(() => {}),
+            async stop() {
+              throw cleanupFailure
+            },
+          }
+        },
+      },
+      waitForUrl: async () => {},
+      log: () => {},
+    }).catch((error: unknown) => error)
+    if (!(failure instanceof AggregateError))
+      throw new Error('Expected both failures', { cause: failure })
+    assert.deepEqual(failure.errors, [testFailure, cleanupFailure])
+    assert.deepEqual(readdirSync(join(world.sandboxRoot, 'tmp/test-app')), [])
+  })
+
   test('refuses an unknown kit before touching any folder', async ({ assert }) => {
     writeApp(world.sandboxRoot)
     await assert.rejects(

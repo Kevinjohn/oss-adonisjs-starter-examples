@@ -96,6 +96,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
     return options.runner.run(command, args, { cwd: app, env })
   }
   let vite: BackgroundProcess | undefined
+  const failures: unknown[] = []
   try {
     cpSync(source, app, {
       recursive: true,
@@ -144,11 +145,19 @@ export async function testApp(options: AppTestOptions): Promise<void> {
     }
 
     await run('pnpm', ['test'])
-  } finally {
-    try {
-      await vite?.stop()
-    } finally {
-      rmSync(app, { recursive: true, force: true })
-    }
+  } catch (error) {
+    failures.push(error)
   }
+  try {
+    await vite?.stop()
+  } catch (error) {
+    failures.push(error)
+  }
+  try {
+    rmSync(app, { recursive: true, force: true })
+  } catch (error) {
+    failures.push(error)
+  }
+  if (failures.length > 1) throw new AggregateError(failures, 'App check and cleanup failed')
+  if (failures.length === 1) throw failures[0]
 }
