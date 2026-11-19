@@ -1,6 +1,17 @@
-import { copyFileSync, cpSync, existsSync, readFileSync, rmSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
+import { setTimeout as delay } from 'node:timers/promises'
+import { fileURLToPath } from 'node:url'
 import {
   type BackgroundProcess,
   type CommandRunner,
@@ -15,14 +26,15 @@ export interface AppTestOptions {
   kit: string
   installBrowsers: boolean
   runner: CommandRunner
-  /** Resolves when the URL answers, rejects after the timeout. */
-  waitForUrl: (url: string, timeoutMs: number) => Promise<void>
+  /** Resolves when the owned endpoint answers, rejects after the timeout. */
+  waitForUrl: typeof waitForUrl
+  vitePort?: number
   /** Path of the Playwright CLI that the app's `@japa/browser-client` uses. */
   playwrightCli?: (appDirectory: string) => string
   log: (line: string) => void
 }
 
-const VITE_URL = 'http://127.0.0.1:5173/@vite/client'
+const VITE_SCRIPT = fileURLToPath(new URL('./vite_server.mjs', import.meta.url))
 
 function playwrightCliFor(appDirectory: string): string {
   const browserClient = createRequire(join(appDirectory, 'package.json')).resolve(
@@ -32,21 +44,38 @@ function playwrightCliFor(appDirectory: string): string {
   return join(dirname(playwright), 'cli.js')
 }
 
-export async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
+export async function waitForUrl(
+  url: string,
+  timeoutMs: number,
+  options: { signal?: AbortSignal; expectedReadiness?: string } = {}
+): Promise<void> {
+  const deadline = performance.now() + timeoutMs
+  while (performance.now() < deadline) {
+    options.signal?.throwIfAborted()
+    const remaining = Math.ceil(deadline - performance.now())
+    const timeout = AbortSignal.timeout(Math.max(0, remaining))
+    const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout
     try {
-      const response = await fetch(url)
-      if (response.ok) return
-    } catch {}
-    await new Promise((done) => setTimeout(done, 500))
+      const response = await fetch(url, { signal, redirect: 'error' })
+      await response.body?.cancel()
+      if (
+        response.ok &&
+        (options.expectedReadiness === undefined ||
+          response.headers.get('x-starter-runner-readiness') === options.expectedReadiness)
+      ) {
+        return
+      }
+    } catch {
+      options.signal?.throwIfAborted()
+    }
+    const pause = Math.min(100, deadline - performance.now())
+    if (pause > 0) await delay(pause, undefined, { signal: options.signal })
   }
   throw new SandboxError(`${url} did not answer within ${timeoutMs / 1000}s`)
 }
 
 /**
- * `pnpm test:app` (Task 1.5): installs, checks and tests one app in a copy under
- * `tmp/test-app/<kit>/`, which is deleted afterwards.
+ * Installs, checks and tests one app in a private copy under `tmp/test-app/`.
  */
 export async function testApp(options: AppTestOptions): Promise<void> {
   if (!(SUPPORTED_KITS as readonly string[]).includes(options.kit)) {
@@ -54,8 +83,9 @@ export async function testApp(options: AppTestOptions): Promise<void> {
   }
   const source = resolve(options.root, 'apps', options.kit)
   if (!existsSync(join(source, 'package.json'))) throw new SandboxError(`No app at ${source}`)
-  const app = join(options.root, 'tmp', 'test-app', options.kit)
-  rmSync(app, { recursive: true, force: true })
+  const copies = join(options.root, 'tmp', 'test-app')
+  mkdirSync(copies, { recursive: true })
+  const app = mkdtempSync(join(copies, `${options.kit}-`))
 
   const env = constructedEnvironment({
     // Lets an old locked Playwright run on a host it does not recognise; CI never sets it.
@@ -66,6 +96,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
     return options.runner.run(command, args, { cwd: app, env })
   }
   let vite: BackgroundProcess | undefined
+  const failures: unknown[] = []
   try {
     cpSync(source, app, {
       recursive: true,
@@ -89,21 +120,44 @@ export async function testApp(options: AppTestOptions): Promise<void> {
         const cli = (options.playwrightCli ?? playwrightCliFor)(app)
         await run('node', [cli, 'install', '--with-deps', 'chromium'])
       }
-      options.log('$ pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort')
-      vite = options.runner.start(
-        'pnpm',
-        ['exec', 'vite', '--host', '127.0.0.1', '--port', '5173', '--strictPort'],
-        {
-          cwd: app,
-          env,
-        }
-      )
-      await options.waitForUrl(VITE_URL, 30_000)
+      const port = options.vitePort ?? 5173
+      // A response from another listener on this port cannot satisfy this run's probe.
+      const readinessPath = `/@starter-runner/${randomUUID()}`
+      const controller = new AbortController()
+      options.log(`$ vite --host 127.0.0.1 --port ${port} --strictPort`)
+      vite = options.runner.start(process.execPath, [VITE_SCRIPT, String(port), readinessPath], {
+        cwd: app,
+        env,
+      })
+      try {
+        await Promise.race([
+          vite.exited.then((error) => {
+            throw error
+          }),
+          options.waitForUrl(`http://127.0.0.1:${port}${readinessPath}`, 30_000, {
+            signal: controller.signal,
+            expectedReadiness: readinessPath,
+          }),
+        ])
+      } finally {
+        controller.abort()
+      }
     }
 
     await run('pnpm', ['test'])
-  } finally {
-    await vite?.stop()
-    rmSync(app, { recursive: true, force: true })
+  } catch (error) {
+    failures.push(error)
   }
+  try {
+    await vite?.stop()
+  } catch (error) {
+    failures.push(error)
+  }
+  try {
+    rmSync(app, { recursive: true, force: true })
+  } catch (error) {
+    failures.push(error)
+  }
+  if (failures.length > 1) throw new AggregateError(failures, 'App check and cleanup failed')
+  if (failures.length === 1) throw failures[0]
 }

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { setTimeout as delay } from 'node:timers/promises'
 import { SandboxError } from './errors.ts'
 
 export interface CommandOptions {
@@ -7,6 +8,8 @@ export interface CommandOptions {
 }
 
 export interface BackgroundProcess {
+  /** Resolves with the startup failure or the reason the command exited. */
+  exited: Promise<Error>
   stop(): Promise<void>
 }
 
@@ -78,17 +81,66 @@ export function processRunner(options: { stream: boolean }): CommandRunner {
       })
     },
     start(command, args, { cwd, env }) {
-      const child = spawn(command, args, { cwd, env, detached: true, stdio: 'ignore' })
-      const exited = new Promise<void>((resolve) => child.on('exit', () => resolve()))
+      const shown = [command, ...args].join(' ')
+      const child = spawn(command, args, {
+        cwd,
+        env,
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      const output: Buffer[] = []
+      child.stdout.on('data', (chunk: Buffer) => {
+        if (options.stream) process.stdout.write(chunk)
+        output.push(chunk)
+      })
+      child.stderr.on('data', (chunk: Buffer) => {
+        if (options.stream) process.stderr.write(chunk)
+        output.push(chunk)
+      })
+      let closed = false
+      const drained = new Promise<void>((resolve) => {
+        child.once('close', () => {
+          closed = true
+          resolve()
+        })
+      })
+      const exited = new Promise<Error>((resolve) => {
+        child.once('error', resolve)
+        child.once('exit', (code, signal) => {
+          // Let ordinary stderr drain briefly without waiting on a descendant's inherited pipe.
+          void Promise.race([drained, delay(100, undefined, { ref: false })]).then(() =>
+            resolve(
+              new SandboxError(
+                `Background command exited (${signal ?? code}): ${shown}\n  in ${cwd}\n${Buffer.concat(output).toString('utf8')}`
+              )
+            )
+          )
+        })
+      })
+      const signalGroup = (signal: NodeJS.Signals) => {
+        if (closed || child.pid === undefined) return
+        try {
+          process.kill(-child.pid, signal)
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
+        }
+      }
       return {
+        exited,
         async stop() {
-          if (child.exitCode !== null || child.pid === undefined) return
+          if (closed || child.pid === undefined) return
           try {
-            process.kill(-child.pid, 'SIGTERM')
-          } catch {
-            return
+            signalGroup('SIGTERM')
+            await Promise.race([drained, delay(1000)])
+            if (closed) return
+            signalGroup('SIGKILL')
+            await Promise.race([drained, delay(1000)])
+            if (!closed) throw new SandboxError(`Background command did not close: ${shown}`)
+          } finally {
+            child.stdout.destroy()
+            child.stderr.destroy()
+            child.unref()
           }
-          await exited
         },
       }
     },

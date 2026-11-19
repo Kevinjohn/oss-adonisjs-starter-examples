@@ -15,8 +15,8 @@ As an app maintainer, I want to check one selected committed app in a disposable
 | `--kit`              | String  | Required; one of the four supported kits                                                                                     |
 | `--install-browsers` | Boolean | Defaults false; installs Chromium with dependencies only for browser-enabled apps; does not select or suppress browser tests |
 
-- `testApp` copies the selected `apps/<kit>` app without node_modules under `tmp/test-app/<kit>`, installs dependencies, copies environment defaults, generates key/code, migrates, and runs available formatting/lint/types/build scripts followed by `pnpm test`.
-- If the app has `@japa/browser-client`, it starts Vite on `127.0.0.1:5173` and waits for readiness before tests. Browser binaries must already exist unless installation is requested; omit the flag only to skip installation, not browser testing.
+- `testApp` copies the selected `apps/<kit>` app without `node_modules` into a private directory under `tmp/test-app/`, installs dependencies, copies environment defaults, generates key/code, migrates, and runs available formatting/lint/types/build scripts followed by `pnpm test`.
+- If the app has `@japa/browser-client`, it starts Vite on `127.0.0.1:5173` and waits up to 30 seconds for that child to answer before tests. An occupied port fails the browser check. Browser binaries must already exist unless installation is requested; omit the flag only to skip installation, not browser testing.
 - Missing app or failed setup/check/test reports failure.
 - The command stops its Vite process and removes its disposable copy in `finally`; it covers only the selected kit. This catalogue did not run the command.
 
@@ -40,12 +40,12 @@ Scope: App test CLI through its implementation; the command's result covers only
 ```mermaid
 flowchart TD
     A["bin/test_app.ts parseArgs and runCli"] --> B["testApp validates selected committed kit"]
-    B --> C["Copy app and requireOwnWorkspace"]
+    B --> C["Create private copy and requireOwnWorkspace"]
     C --> D["Install; generate:key; codegen; migration:run"]
     D --> E["Run available format:check, lint, typecheck and build"]
     E --> F["Browser dependency triggers optional install plus Vite readiness"]
     F --> G["pnpm test"]
-    G --> H["finally stops Vite and removes tmp/test-app kit"]
+    G --> H["finally stops Vite and removes its private copy"]
 ```
 
 **Code references:** [Test CLI](../../bin/test_app.ts), [testApp](../../src/app_test.ts), [App test specifications](../../tests/tooling/app_test.spec.ts).
