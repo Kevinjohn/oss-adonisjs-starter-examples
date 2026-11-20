@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.15.2
+
+- The Hypermedia browser test now verifies that signing out clears an unspent secure-note draft
+  and password confirmation. The saved note survives sign-out, and the same account can sign
+  back in, confirm a fresh draft and save it.
+
+All four starters retain the dependency versions listed in [v0.15.1](#v0151). This release
+requires no new migrations.
+
 ## v0.15.1
 
 All four starters adopt these package patches:
