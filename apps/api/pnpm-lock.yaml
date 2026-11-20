@@ -39,14 +39,14 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1(@japa/assert@4.2.0(@japa/runner@5.4.0))(@japa/runner@5.4.0)(supports-color@10.2.2)
       '@kevinjohn/adonisjs-access-control':
-        specifier: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.1/kevinjohn-adonisjs-access-control-0.2.1.tgz
-        version: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.1/kevinjohn-adonisjs-access-control-0.2.1.tgz(@adonisjs/auth@10.1.0(8f2e5027b8da777d55cdfe6ddc939e43))(@adonisjs/bouncer@4.0.1(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))(@kevinjohn/adonisjs-account-kit@https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz(981914f4fdd833ef4f8184ade726a325))(luxon@3.7.2)(typescript@6.0.3)
+        specifier: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.2/kevinjohn-adonisjs-access-control-0.2.2.tgz
+        version: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.2/kevinjohn-adonisjs-access-control-0.2.2.tgz(@adonisjs/auth@10.1.0(8f2e5027b8da777d55cdfe6ddc939e43))(@adonisjs/bouncer@4.0.1(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))(@kevinjohn/adonisjs-account-kit@https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz(981914f4fdd833ef4f8184ade726a325))(luxon@3.7.2)(typescript@6.0.3)
       '@kevinjohn/adonisjs-account-kit':
         specifier: https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz
         version: https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz(981914f4fdd833ef4f8184ade726a325)
       '@kevinjohn/adonisjs-duplicate-request-guard':
-        specifier: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.1/kevinjohn-adonisjs-duplicate-request-guard-0.1.1.tgz
-        version: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.1/kevinjohn-adonisjs-duplicate-request-guard-0.1.1.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))
+        specifier: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.2/kevinjohn-adonisjs-duplicate-request-guard-0.1.2.tgz
+        version: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.2/kevinjohn-adonisjs-duplicate-request-guard-0.1.2.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))
       '@kevinjohn/adonisjs-lucid-checked-columns':
         specifier: https://github.com/Kevinjohn/oss-adonisjs-lucid-checked-columns/releases/download/v0.2.1/kevinjohn-adonisjs-lucid-checked-columns-0.2.1.tgz
         version: https://github.com/Kevinjohn/oss-adonisjs-lucid-checked-columns/releases/download/v0.2.1/kevinjohn-adonisjs-lucid-checked-columns-0.2.1.tgz(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))
@@ -54,8 +54,8 @@ importers:
         specifier: https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/releases/download/v0.2.1/kevinjohn-adonisjs-lucid-soft-delete-0.2.1.tgz
         version: https://github.com/Kevinjohn/oss-adonisjs-lucid-soft-delete/releases/download/v0.2.1/kevinjohn-adonisjs-lucid-soft-delete-0.2.1.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))(luxon@3.7.2)(typescript@6.0.3)
       '@kevinjohn/adonisjs-masquerade':
-        specifier: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.1/kevinjohn-adonisjs-masquerade-0.4.1.tgz
-        version: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.1/kevinjohn-adonisjs-masquerade-0.4.1.tgz(d08f477686beeed688530131f29f8be9)
+        specifier: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.2/kevinjohn-adonisjs-masquerade-0.4.2.tgz
+        version: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.2/kevinjohn-adonisjs-masquerade-0.4.2.tgz(d08f477686beeed688530131f29f8be9)
       '@kevinjohn/adonisjs-origin-guard':
         specifier: https://github.com/Kevinjohn/oss-adonisjs-origin-guard/releases/download/v0.2.1/kevinjohn-adonisjs-origin-guard-0.2.1.tgz
         version: https://github.com/Kevinjohn/oss-adonisjs-origin-guard/releases/download/v0.2.1/kevinjohn-adonisjs-origin-guard-0.2.1.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))
@@ -674,9 +674,9 @@ packages:
     resolution: {integrity: sha512-/hunigyNpc4RCjC0VaW3f5RCUZVM2+WQ65qP7z083Gmvac7or2LI50XVNOtE4YPgBpV0yxYiAgorAPGniCoJmg==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@kevinjohn/adonisjs-access-control@https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.1/kevinjohn-adonisjs-access-control-0.2.1.tgz':
-    resolution: {integrity: sha512-HQlDiOi633klqlph29+MdZIywIEyg3kXV78cPaZxWlP60ZD/PehWCmLbxEjaLPj66WAUYzZ/kwTzCtZSHTCPiA==, tarball: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.1/kevinjohn-adonisjs-access-control-0.2.1.tgz}
-    version: 0.2.1
+  '@kevinjohn/adonisjs-access-control@https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.2/kevinjohn-adonisjs-access-control-0.2.2.tgz':
+    resolution: {integrity: sha512-m5hK2kWMC7vdZQ4wNZ10e7s6E93jZu+ALnN92qkUUWjxHILF/vlQvjg2apESnrRsNV0Agg6NRf5AXMmM16yQ7g==, tarball: https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.2/kevinjohn-adonisjs-access-control-0.2.2.tgz}
+    version: 0.2.2
     engines: {node: '>=24.0.0'}
     peerDependencies:
       '@adonisjs/auth': ^10.0.0
@@ -716,9 +716,9 @@ packages:
       typescript:
         optional: true
 
-  '@kevinjohn/adonisjs-duplicate-request-guard@https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.1/kevinjohn-adonisjs-duplicate-request-guard-0.1.1.tgz':
-    resolution: {integrity: sha512-aL2k3k4XKBxat4EPwLc1960vtwa065Z+8RnucXz/O655LF9MV2KcTOSIb4eezRJ/skRPLMWIxopysQ7HWTVYMA==, tarball: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.1/kevinjohn-adonisjs-duplicate-request-guard-0.1.1.tgz}
-    version: 0.1.1
+  '@kevinjohn/adonisjs-duplicate-request-guard@https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.2/kevinjohn-adonisjs-duplicate-request-guard-0.1.2.tgz':
+    resolution: {integrity: sha512-kUTmGvZeK3h8YU5ET1ei/ky3I+hXZeNIaBOe40YxV4vwe8HTS3LHxtf/d6LtZmDjf4Am6krsoIA77V0KQ0JDKw==, tarball: https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.2/kevinjohn-adonisjs-duplicate-request-guard-0.1.2.tgz}
+    version: 0.1.2
     engines: {node: '>=24.0.0'}
     peerDependencies:
       '@adonisjs/core': ^7.0.0
@@ -744,9 +744,9 @@ packages:
       typescript:
         optional: true
 
-  '@kevinjohn/adonisjs-masquerade@https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.1/kevinjohn-adonisjs-masquerade-0.4.1.tgz':
-    resolution: {integrity: sha512-v1pMpvdgn3O4jzgzidhVdYuMZ1wrF+kTp1699Oktd2hTAaqU1K6G64ajGTer/PoVyW35OmD84TM5N9OKgqUe/w==, tarball: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.1/kevinjohn-adonisjs-masquerade-0.4.1.tgz}
-    version: 0.4.1
+  '@kevinjohn/adonisjs-masquerade@https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.2/kevinjohn-adonisjs-masquerade-0.4.2.tgz':
+    resolution: {integrity: sha512-Nj49LkHMOeOzCtm6yph96n5DogoRCeu9Jr/+gnRb6jB4lhoVEn1Jig4wX4j7wxlQZQxmGZfTDBZtZy7lXmtiGQ==, tarball: https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.2/kevinjohn-adonisjs-masquerade-0.4.2.tgz}
+    version: 0.4.2
     engines: {node: '>=24.0.0'}
     peerDependencies:
       '@adonisjs/assembler': ^8.0.0
@@ -3229,7 +3229,7 @@ snapshots:
     dependencies:
       '@sinclair/typebox': 0.34.52
 
-  ? '@kevinjohn/adonisjs-access-control@https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.1/kevinjohn-adonisjs-access-control-0.2.1.tgz(@adonisjs/auth@10.1.0(8f2e5027b8da777d55cdfe6ddc939e43))(@adonisjs/bouncer@4.0.1(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))(@kevinjohn/adonisjs-account-kit@https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz(981914f4fdd833ef4f8184ade726a325))(luxon@3.7.2)(typescript@6.0.3)'
+  ? '@kevinjohn/adonisjs-access-control@https://github.com/Kevinjohn/oss-adonisjs-access-control/releases/download/v0.2.2/kevinjohn-adonisjs-access-control-0.2.2.tgz(@adonisjs/auth@10.1.0(8f2e5027b8da777d55cdfe6ddc939e43))(@adonisjs/bouncer@4.0.1(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))(@kevinjohn/adonisjs-account-kit@https://github.com/Kevinjohn/oss-adonisjs-account-kit/releases/download/v0.4.1/kevinjohn-adonisjs-account-kit-0.4.1.tgz(981914f4fdd833ef4f8184ade726a325))(luxon@3.7.2)(typescript@6.0.3)'
   : dependencies:
       '@adonisjs/auth': 10.1.0(8f2e5027b8da777d55cdfe6ddc939e43)
       '@adonisjs/bouncer': 4.0.1(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))
@@ -3252,7 +3252,7 @@ snapshots:
       '@vinejs/vine': 4.4.0
       typescript: 6.0.3
 
-  '@kevinjohn/adonisjs-duplicate-request-guard@https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.1/kevinjohn-adonisjs-duplicate-request-guard-0.1.1.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))':
+  '@kevinjohn/adonisjs-duplicate-request-guard@https://github.com/Kevinjohn/oss-adonisjs-duplicate-request-guard/releases/download/v0.1.2/kevinjohn-adonisjs-duplicate-request-guard-0.1.2.tgz(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@adonisjs/lucid@22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2))':
     dependencies:
       '@adonisjs/core': 7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)
       '@adonisjs/lucid': 22.4.2(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@adonisjs/core@7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1))(@vinejs/vine@4.4.0)(better-sqlite3@13.0.3)(luxon@3.7.2)(pg@8.23.1)(supports-color@10.2.2)
@@ -3269,7 +3269,7 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@kevinjohn/adonisjs-masquerade@https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.1/kevinjohn-adonisjs-masquerade-0.4.1.tgz(d08f477686beeed688530131f29f8be9)':
+  '@kevinjohn/adonisjs-masquerade@https://github.com/Kevinjohn/oss-adonisjs-masquerade/releases/download/v0.4.2/kevinjohn-adonisjs-masquerade-0.4.2.tgz(d08f477686beeed688530131f29f8be9)':
     dependencies:
       '@adonisjs/auth': 10.1.0(8f2e5027b8da777d55cdfe6ddc939e43)
       '@adonisjs/core': 7.6.0(@adonisjs/assembler@8.6.0(typescript@6.0.3))(@vinejs/vine@4.4.0)(pino-pretty@13.2.0)(supports-color@10.2.2)(youch@4.1.1)
