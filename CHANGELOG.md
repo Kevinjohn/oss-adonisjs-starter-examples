@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.15.1
+
+All four starters adopt these package patches:
+
+- Account Kit 0.4.1, Access Control 0.2.1 and Masquerade 0.4.1.
+- Duplicate Request Guard 0.1.1, Lucid Checked Columns 0.2.1, Lucid Soft Delete 0.2.1 and Origin Guard 0.2.1.
+
+Hypermedia, React and Vue also adopt Confirm Action with Password 0.2.1. The API adopts SQLite Backup 0.3.2 and continues to use bearer tokens.
+
+This release adds no app migrations. Existing deployments upgrading from an earlier release should apply the migrations listed for that release before deploying.
+
 ## v0.15.0
 
 - The API starter now includes SQLite Backup 0.3.1. Set `SQLITE_BACKUP_DIRECTORY` when using its SQLite connection to enable the backup commands.
