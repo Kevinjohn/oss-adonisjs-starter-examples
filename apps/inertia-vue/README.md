@@ -13,9 +13,10 @@ See the cookbook for [public origin validation](../../docs/cookbook/public-origi
 ## Run it
 
 ```sh
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example .env
 node ace generate:key
+node ace codegen
 node ace migration:run
 pnpm dev
 ```

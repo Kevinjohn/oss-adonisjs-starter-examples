@@ -15,6 +15,7 @@ cd apps/<kit>
 pnpm install --frozen-lockfile
 cp .env.example .env
 node ace generate:key
+node ace codegen
 node ace migration:run
 pnpm dev
 ```
