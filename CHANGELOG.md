@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.15.5
 
 - The API starter adopts SQLite Backup 0.3.3. `db:upgrade` now exits non-zero when a migration
   fails, and generates the schema only after a successful migration.
