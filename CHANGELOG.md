@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- All four starters adopt Account Kit 0.4.2, Access Control 0.2.3, Masquerade 0.4.3 and
+  Duplicate Request Guard 0.1.3. Hypermedia, React and Vue adopt Confirm Action with Password 0.2.2.
+  This is the compatible set for these releases.
+
+The API continues to use bearer tokens. This release requires no new migrations.
+
 ## v0.15.3
 
 - All four starters adopt Access Control 0.2.2, Masquerade 0.4.2 and Duplicate Request Guard 0.1.2.
