@@ -40,6 +40,7 @@ export function fakeRunner() {
     start(command, args) {
       started.push([command, ...args].join(' '))
       return {
+        exited: new Promise(() => {}),
         async stop() {
           stopped.push([command, ...args].join(' '))
         },
