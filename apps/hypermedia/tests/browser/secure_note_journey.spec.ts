@@ -68,6 +68,76 @@ test.group('secure note confirmation', (group) => {
     assert.equal(unchanged.body, 'Remember this')
   })
 
+  test('signing out clears an unspent draft before the same account signs in again', async ({
+    visit,
+    assert,
+  }) => {
+    const password = 'SignupPass123!'
+    const user = await User.create({ email: 'signout-note@example.test', password })
+    const page = await visit('/login')
+
+    async function signIn() {
+      await page.getByLabel('Email').fill(user.email)
+      await page.getByLabel('Password').fill(password)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+      await page.waitForURL('**/dashboard')
+      await page.goto('/settings/secure-note')
+    }
+
+    async function confirmNote(body: string) {
+      await page.getByLabel('New note').fill(body)
+      await page.getByLabel('Current password').fill(password)
+      await page.getByRole('button', { name: 'Confirm password' }).click()
+      await page.getByText(`Confirmed note: ${body}`, { exact: true }).waitFor()
+    }
+
+    async function saveNote(body: string) {
+      await page.getByRole('button', { name: 'Save confirmed note' }).click()
+      await page.getByText(`Saved note: ${body}`, { exact: true }).waitFor()
+    }
+
+    await signIn()
+    await confirmNote('Keep this saved note')
+    await saveNote('Keep this saved note')
+    const savedNotes = await db.from('secure_notes')
+    assert.lengthOf(savedNotes, 1)
+
+    await confirmNote('Discard this pending note')
+    const pendingNotes = await db.from('pending_secure_notes')
+    assert.lengthOf(pendingNotes, 1)
+    const pendingNote = pendingNotes[0]
+    assert.equal(pendingNote.body, 'Discard this pending note')
+    const confirmations = await db
+      .from('password_confirmations')
+      .where('id', pendingNote.confirmation_id)
+    assert.lengthOf(confirmations, 1)
+    assert.equal(confirmations[0].sign_in_id, pendingNote.sign_in_id)
+    assert.isNull(confirmations[0].consumed_at)
+
+    await page.getByRole('button', { name: 'Log out' }).click()
+    await page.waitForURL('**/login')
+    await signIn()
+    await page.getByRole('heading', { name: 'Secure note' }).waitFor()
+    await page.getByText('Saved note: Keep this saved note', { exact: true }).waitFor()
+    assert.equal(await page.getByText('Confirmed note: Discard this pending note').count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Save confirmed note' }).count(), 0)
+    assert.lengthOf(
+      await db.from('pending_secure_notes').where('sign_in_id', pendingNote.sign_in_id),
+      0
+    )
+    assert.lengthOf(
+      await db.from('password_confirmations').where('id', pendingNote.confirmation_id),
+      0
+    )
+    assert.deepEqual(await db.from('secure_notes'), savedNotes)
+
+    await confirmNote('Save from the new sign-in')
+    await saveNote('Save from the new sign-in')
+    assert.deepEqual(await db.from('secure_notes').select('body'), [
+      { body: 'Save from the new sign-in' },
+    ])
+  })
+
   test('a stale tab cannot save or discard a newer confirmation', async ({ visit, assert }) => {
     const password = 'SignupPass123!'
     const page = await visit('/signup')
