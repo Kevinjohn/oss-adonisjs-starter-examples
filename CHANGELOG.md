@@ -1,10 +1,15 @@
 # Changelog
 
-## Unreleased
+## v0.15.4
 
 - All four starters adopt Account Kit 0.4.2, Access Control 0.2.3, Masquerade 0.4.3 and
   Duplicate Request Guard 0.1.3. Hypermedia, React and Vue adopt Confirm Action with Password 0.2.2.
   This is the compatible set for these releases.
+- The root, React and Vue quickstarts run `node ace codegen` before `node ace migration:run`, and
+  the React and Vue guides use frozen installs.
+- `pnpm test:app` gives each run its own working copy, so overlapping checks no longer delete each
+  other's files. Browser runs wait for the Vite instance they started within one startup deadline,
+  and fail with Vite's error when its port is already taken.
 
 The API continues to use bearer tokens. This release requires no new migrations.
 
