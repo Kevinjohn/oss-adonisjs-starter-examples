@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- The API starter adopts SQLite Backup 0.3.3. `db:upgrade` now exits non-zero when a migration
+  fails, and generates the schema only after a successful migration.
+
+The API continues to use bearer tokens. This release requires no new migrations.
+
 ## v0.15.4
 
 - All four starters adopt Account Kit 0.4.2, Access Control 0.2.3, Masquerade 0.4.3 and
