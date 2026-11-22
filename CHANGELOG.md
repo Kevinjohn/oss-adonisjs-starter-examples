@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- All four starters adopt Account Kit 0.5.0, Access Control 0.3.0 and Masquerade 0.5.0.
+  Hypermedia, React and Vue also adopt Confirm Action with Password 0.3.0.
+
+The API continues to use bearer tokens. This update adds no migrations.
+
 ## v0.15.5
 
 - The API starter adopts SQLite Backup 0.3.3. `db:upgrade` now exits non-zero when a migration
