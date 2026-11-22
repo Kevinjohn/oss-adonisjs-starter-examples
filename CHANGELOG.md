@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.16.0
 
 - All four starters adopt Account Kit 0.5.0, Access Control 0.3.0 and Masquerade 0.5.0.
   Hypermedia, React and Vue also adopt Confirm Action with Password 0.3.0.
+- Hypermedia now resolves Assembler 8.6.0, matching the other three starters and satisfying
+  Access Control's optional peer requirement.
 
 The API continues to use bearer tokens. This update adds no migrations.
 
