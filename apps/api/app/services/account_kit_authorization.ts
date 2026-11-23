@@ -1,9 +1,10 @@
 import db from '@adonisjs/lucid/services/db'
 import type { AccountUser, Trx } from '@kevinjohn/adonisjs-account-kit'
-import type { AdmissionAuthorizeCallbacks } from '@kevinjohn/adonisjs-account-kit/admission'
-import { isAdmitted } from './account_admission_access.js'
+import type {
+  AccountAdmission,
+  AdmissionAuthorizeCallbacks,
+} from '@kevinjohn/adonisjs-account-kit/admission'
 
-export { isAdmitted }
 export { exportAccountData } from './account_kit_export.js'
 
 /**
@@ -16,8 +17,12 @@ export async function isOwner(userId: number | string, trx?: Trx): Promise<boole
 }
 
 /** An admitted owner: the authority for account inspection. */
-export async function isAdmittedOwner(userId: number | string, trx?: Trx): Promise<boolean> {
-  return (await isAdmitted(userId, trx)) && isOwner(userId, trx)
+export async function isAdmittedOwner(
+  admission: AccountAdmission,
+  userId: number | string,
+  trx?: Trx
+): Promise<boolean> {
+  return (await admission.isAdmitted(userId, trx)) && isOwner(userId, trx)
 }
 
 /** Denies access to accounts that carry the `disabled` role. */

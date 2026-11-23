@@ -1,47 +1,41 @@
-import app from '@adonisjs/core/services/app'
+import { inject } from '@adonisjs/core'
 import { AccountAccessDeniedError, AccountKit } from '@kevinjohn/adonisjs-account-kit'
+import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 import { isAdmittedOwner } from './account_kit_authorization.js'
 
 type AuthenticatedActor = { id: number | string }
 
-/** Inspect an account only after the authenticated application actor passes its owner policy. */
-export async function inspectAccountForOwner(
-  actor: AuthenticatedActor,
-  targetUserId: number | string
-) {
-  if (!(await isAdmittedOwner(actor.id))) return null
+@inject()
+export class AccountAccessInspection {
+  constructor(
+    private readonly accountKit: AccountKit,
+    private readonly admission: AccountAdmission
+  ) {}
 
-  const accountKit = await app.container.make(AccountKit)
-  try {
-    return await accountKit.authentication.inspectAccountAccess({
-      userId: targetUserId,
-      requireActive: false,
-    })
-  } catch (error) {
-    if (error instanceof AccountAccessDeniedError) return null
-    throw error
+  /** Inspect an account only after the authenticated application actor passes its owner policy. */
+  async inspectForOwner(actor: AuthenticatedActor, targetUserId: number | string) {
+    if (!(await isAdmittedOwner(this.admission, actor.id))) return null
+
+    try {
+      return await this.accountKit.authentication.inspectAccountAccess({
+        userId: targetUserId,
+        requireActive: false,
+      })
+    } catch (error) {
+      if (error instanceof AccountAccessDeniedError) return null
+      throw error
+    }
   }
-}
 
-/** Compare a protected captured revision with a fresh inspection after reauthorizing the caller. */
-export async function compareAccountRevisionForOwner(
-  actor: AuthenticatedActor,
-  targetUserId: number | string,
-  expectedRevision: string | null
-) {
-  if (!(await isAdmittedOwner(actor.id))) return { outcome: 'denied' as const }
-
-  const accountKit = await app.container.make(AccountKit)
-  let current
-  try {
-    current = await accountKit.authentication.inspectAccountAccess({
-      userId: targetUserId,
-      requireActive: false,
-    })
-  } catch (error) {
-    if (error instanceof AccountAccessDeniedError) return { outcome: 'denied' as const }
-    throw error
+  /** Compare a protected captured revision with a fresh inspection after reauthorizing the caller. */
+  async compareRevisionForOwner(
+    actor: AuthenticatedActor,
+    targetUserId: number | string,
+    expectedRevision: string | null
+  ) {
+    const current = await this.inspectForOwner(actor, targetUserId)
+    if (!current) return { outcome: 'denied' as const }
+    if (current.revision !== expectedRevision) return { outcome: 'changed' as const }
+    return { outcome: 'current' as const, snapshot: current }
   }
-  if (current.revision !== expectedRevision) return { outcome: 'changed' as const }
-  return { outcome: 'current' as const, snapshot: current }
 }

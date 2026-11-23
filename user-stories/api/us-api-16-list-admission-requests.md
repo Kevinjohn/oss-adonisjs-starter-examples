@@ -5,7 +5,7 @@ As an admitted API instance owner, I want to filter and page admission records s
 **Status:** Current under the stated kit and configuration conditions; source-reviewed availability.
 **Access:** Raw authenticated account passing admittedAccount; package list callback requires instance owner role in role_assignments, separate from team owner.
 **Entry:** `GET /api/v1/account/admissions`.
-**Documentation:** [API app instructions](../../apps/api/README.md#api).
+**Documentation:** [API app instructions](../../apps/api/README.md#account-admission).
 **Source:** [API routes](../../apps/api/start/routes.ts), [AdmissionsController](../../apps/api/app/controllers/admissions_controller.ts).
 **Coverage:** [Existing scenario source](../../apps/api/tests/functional/admission.spec.ts).
 
@@ -17,7 +17,7 @@ As an admitted API instance owner, I want to filter and page admission records s
 | `limit`  | Number | Optional; from 1 to 100; default 25 when omitted |
 | `cursor` | String | Optional opaque page continuation                |
 
-- `AdmissionsController.index` derives actor ID from the raw guard and passes validated filters to `service.list`. Results are the package page.
+- `AdmissionsController.index` derives actor ID from the raw guard and passes validated filters to `this.admission.list`. Results are the package page.
 - Neither team ownership nor knowing another user ID grants this list. An unadmitted actor or a non-instance-owner is refused.
 - Listing is separate from approval/rejection/revocation and does not change a record.
 
@@ -32,13 +32,13 @@ flowchart TD
 
 ## Code flow
 
-Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result. No runtime journey was exercised.
+Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result.
 
 ```mermaid
 flowchart TD
-    A["admittedAccount middleware"] --> B["AdmissionsController.index"]
-    B --> C["admissionListValidator and raw actor.id"]
-    C --> D["service.list({ actorId, status, cursor, limit })"]
+    A["AdmittedAccountMiddleware calls injected AccountAdmission.require"] --> B["AdmissionsController.index"]
+    B --> C["Read raw actor.id, then validate with admissionListValidator"]
+    C --> D["Injected AccountAdmission.list({ actorId, status, cursor, limit })"]
     D --> E["Owner authorize.list policy; return page"]
 ```
 

@@ -1,3 +1,4 @@
+import app from '@adonisjs/core/services/app'
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
 import accessControl from '#config/access_control'
@@ -6,7 +7,7 @@ import Team from '#models/team'
 import User from '#models/user'
 import { masqueradeOperatorEmails } from '#services/masquerade_operators'
 import { isSoftDeleteAdmin } from '#services/soft_delete_admins'
-import { isAdmitted } from '#services/account_admission_access'
+import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 import { responseBody } from '#tests/helpers/response_body'
 import { truncateDatabase } from '#tests/helpers/database'
 
@@ -53,11 +54,12 @@ test.group('demo seeder', (group) => {
         .map((email) => email.toLowerCase())
     )
 
+    const admission = await app.container.make(AccountAdmission)
     for (const email of seededEmails) {
       const matches = await User.query().where('email', email)
       assert.lengthOf(matches, 1)
       assert.isNotNull(matches[0].emailVerifiedAt)
-      assert.isTrue(await isAdmitted(matches[0].id))
+      assert.isTrue(await admission.isAdmitted(matches[0].id))
       assert.isFalse(isSoftDeleteAdmin(matches[0]))
     }
 
