@@ -32,7 +32,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["NotesController.store gets raw web or API user"] --> B{"Body and identifiers valid?"}
+    A["NotesController.store gets raw web or API user"] --> B{"createNoteValidator accepts body and identifiers?"}
     B -->|No| C["Return 400"]
     B -->|Yes| D["Pass actor, scope, payload and command to Request Guard execute"]
     D --> E["Guard calls host authorizeAccess before receipt resolution"]
@@ -46,4 +46,4 @@ flowchart TD
     G --> I["Browser checks replay and updates list; API returns result to client"]
 ```
 
-**Code references:** [api](../../apps/api/start/notes_routes.ts), [hypermedia](../../apps/hypermedia/start/notes_routes.ts), [inertia-react](../../apps/inertia-react/start/notes_routes.ts), [inertia-vue](../../apps/inertia-vue/start/notes_routes.ts); [api](../../apps/api/app/controllers/notes_controller.ts), [hypermedia](../../apps/hypermedia/app/controllers/notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/notes_controller.ts). The guard contract is linked in the cookbook. [Package handoffs](../REFERENCE.md#package-handoffs).
+**Code references:** [api](../../apps/api/start/notes_routes.ts), [hypermedia](../../apps/hypermedia/start/notes_routes.ts), [inertia-react](../../apps/inertia-react/start/notes_routes.ts), [inertia-vue](../../apps/inertia-vue/start/notes_routes.ts); [api](../../apps/api/app/controllers/notes_controller.ts), [hypermedia](../../apps/hypermedia/app/controllers/notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/notes_controller.ts). [Vine validator](../../apps/hypermedia/app/validators/note.ts). The guard contract is linked in the cookbook. [Package handoffs](../REFERENCE.md#package-handoffs).

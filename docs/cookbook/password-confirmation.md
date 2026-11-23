@@ -14,9 +14,9 @@ The intent binds the confirmation to the exact note content and owner:
 
 <!-- prettier-ignore-start -->
 
-<!-- source: apps/hypermedia/app/controllers/secure_notes_controller.ts -->
+<!-- source: apps/hypermedia/app/services/secure_notes.ts -->
 ```ts
-function noteRequest(userId: number | string, body: string) {
+export function noteRequest(userId: number | string, body: string) {
   return { action: 'save-secure-note', scope: String(userId), intent: { body } }
 }
 ```
@@ -33,9 +33,11 @@ row while ending other sign-ins; logout removes the current row.
 Sessions created before this registry was enabled have no session handle. They are signed out on
 their next request and need to sign in once after adopting these examples.
 
-The Save form shows the confirmed note and submits its confirmation ID. The controller checks
-the submitted ID against the pending confirmation stored for the current registered sign-in before
-using its note body. If a later confirmation replaces the pending note, Save in an older tab is rejected and
+The controller uses [Vine validators](../../apps/hypermedia/app/validators/secure_note.ts) to check
+the draft length, password type and submitted confirmation ID. It passes the parsed draft text unchanged
+into the confirmation request. The Save form shows the confirmed draft and submits its confirmation
+ID. The service looks up the pending draft by the submitted ID and registered sign-in before using
+its note body. If a later confirmation replaces the pending note, Save in an older tab is rejected and
 the newer confirmation remains available.
 
 The pending-note migration adds one row per registered sign-in, with cascading cleanup on logout.
@@ -43,18 +45,20 @@ Account deletion uses the same managed logout to revoke the sign-in and clear br
 Run migrations when adopting this change. Previously pending browser-session notes are discarded
 and need a fresh confirmation.
 
-The controller uses Account Kit’s `withCurrent` transaction to check the sign-in, consume the matching
-confirmation, remove only its pending row, and save the note. An older response cannot overwrite a
-newer pending row through session storage.
+The controller opens Account Kit’s `withCurrent` transaction and passes its current-account context
+and the validated confirmation ID to [`saveSecureNote`](../../apps/hypermedia/app/services/secure_notes.ts).
+The service uses that transaction to consume the matching confirmation, remove only its pending row,
+and save the note. The controller uses the returned status to flash feedback and redirect. An older
+response cannot overwrite a newer pending row through session storage.
 
 <!-- prettier-ignore-start -->
 
-<!-- source: apps/hypermedia/app/controllers/secure_notes_controller.ts -->
+<!-- source: apps/hypermedia/app/services/secure_notes.ts -->
 ```ts
-        await confirmations.consume(context, {
-          ...noteRequest(account.id, pending.body),
-          confirmationId,
-        })
+    await confirmations.consume(context, {
+      ...noteRequest(account.id, pending.body),
+      confirmationId,
+    })
 ```
 
 <!-- prettier-ignore-end -->

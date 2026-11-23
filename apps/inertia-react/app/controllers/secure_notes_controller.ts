@@ -3,52 +3,38 @@ import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import confirmations from '@kevinjohn/adonisjs-confirm-action-with-password/services/main'
 import { errors } from '@kevinjohn/adonisjs-confirm-action-with-password'
 import { managedGuard } from '#services/account_kit_guard'
-
-function noteRequest(userId: number | string, body: string) {
-  return { action: 'save-secure-note', scope: String(userId), intent: { body } }
-}
-
-function requireSignInId(signInId: number | undefined) {
-  if (signInId === undefined) throw new errors.SessionRegistryRequiredException()
-  return signInId
-}
+import {
+  clearSecureNoteDraft,
+  noteRequest,
+  readSecureNote,
+  saveSecureNote,
+  storeSecureNoteDraft,
+} from '#services/secure_notes'
+import { confirmSecureNoteValidator, saveSecureNoteValidator } from '#validators/secure_note'
 
 export default class SecureNotesController {
   async edit(ctx: HttpContext) {
     // Discard drafts written by the previous session-based implementation.
     if (ctx.session.has('pendingSecureNote')) ctx.session.forget('pendingSecureNote')
     const input = await managedGuard.current(ctx)
-    const props = await kit.authentication.withCurrent(
-      input,
-      async ({ account, signInId, trx }) => {
-        const note = await trx.from('secure_notes').where('user_id', account.id).first()
-        const pending = await trx
-          .from('pending_secure_notes')
-          .where('sign_in_id', requireSignInId(signInId))
-          .select('body', 'confirmation_id as confirmationId')
-          .first()
-        return { body: note?.body ?? '', pending: pending ?? null }
-      }
-    )
+    const props = await kit.authentication.withCurrent(input, readSecureNote)
     return ctx.inertia.render('settings/secure_note', props)
   }
 
   async confirm(ctx: HttpContext) {
-    const body = ctx.request.input('body')
-    const password = ctx.request.input('password')
-    if (
-      typeof body !== 'string' ||
-      body.length < 1 ||
-      body.length > 500 ||
-      typeof password !== 'string'
-    ) {
+    const [validationError, note] = await ctx.request.tryValidateUsing(confirmSecureNoteValidator, {
+      data: {
+        body: ctx.request.input('body'),
+        password: ctx.request.input('password'),
+      },
+    })
+    if (validationError) {
       ctx.session.flash('error', 'Enter a note of 1 to 500 characters and your password.')
       return ctx.response.redirect().back()
     }
+    const { body, password } = note
     const input = await managedGuard.current(ctx)
-    await kit.authentication.withCurrent(input, async ({ signInId, trx }) => {
-      await trx.from('pending_secure_notes').where('sign_in_id', requireSignInId(signInId)).delete()
-    })
+    await kit.authentication.withCurrent(input, clearSecureNoteDraft)
     let confirmationId: string
     try {
       const issued = await confirmations.confirmPassword(input, {
@@ -71,56 +57,24 @@ export default class SecureNotesController {
       }
       throw error
     }
-    await kit.authentication.withCurrent(input, async ({ signInId, trx }) => {
-      await trx
-        .table('pending_secure_notes')
-        .insert({ sign_in_id: requireSignInId(signInId), confirmation_id: confirmationId, body })
-        .onConflict('sign_in_id')
-        .merge()
-    })
+    await kit.authentication.withCurrent(input, (context) =>
+      storeSecureNoteDraft(context, confirmationId, body)
+    )
     return ctx.response.redirect().toPath('/settings/secure-note')
   }
 
   async update(ctx: HttpContext) {
-    const confirmationId = ctx.request.input('confirmationId')
-    if (typeof confirmationId !== 'string' || confirmationId === '') {
+    const [validationError, proof] = await ctx.request.tryValidateUsing(saveSecureNoteValidator, {
+      data: { confirmationId: ctx.request.input('confirmationId') },
+    })
+    if (validationError) {
       ctx.session.flash('error', 'Confirm your password again before saving.')
       return ctx.response.redirect().toPath('/settings/secure-note')
     }
     const input = await managedGuard.current(ctx)
-    const status = await kit.authentication.withCurrent(input, async (context) => {
-      const { account, signInId, trx } = context
-      const match = {
-        sign_in_id: requireSignInId(signInId),
-        confirmation_id: confirmationId,
-      }
-      const pending = await trx.from('pending_secure_notes').where(match).first()
-      if (!pending) return 'missing'
-
-      try {
-        await confirmations.consume(context, {
-          ...noteRequest(account.id, pending.body),
-          confirmationId,
-        })
-      } catch (error) {
-        if (
-          !(error instanceof errors.PasswordConfirmationRequiredException) &&
-          !(error instanceof errors.PasswordConfirmationStaleException)
-        ) {
-          throw error
-        }
-        await trx.from('pending_secure_notes').where(match).delete()
-        return 'expired'
-      }
-
-      await trx.from('pending_secure_notes').where(match).delete()
-      await trx
-        .table('secure_notes')
-        .insert({ user_id: account.id, body: pending.body })
-        .onConflict('user_id')
-        .merge()
-      return 'saved'
-    })
+    const status = await kit.authentication.withCurrent(input, (context) =>
+      saveSecureNote(context, proof.confirmationId)
+    )
 
     if (status === 'saved') {
       ctx.session.flash('success', 'Secure note saved.')

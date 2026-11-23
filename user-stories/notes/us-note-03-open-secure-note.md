@@ -32,11 +32,11 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["SecureNotesController.edit discards legacy session draft"] --> B["managedGuard.current and authentication.withCurrent"]
-    B --> C["Read secure_notes by account and pending_secure_notes by signInId"]
+    B --> C["readSecureNote reads saved note by account and pending draft by signInId"]
     C --> D["Map empty body and nullable pending draft"]
     D --> E{"Browser transport"}
     E -->|Hypermedia| F["Render Edge settings page"]
     E -->|React or Vue| G["Render Inertia settings page"]
 ```
 
-**Code references:** [hypermedia](../../apps/hypermedia/start/secure_note_routes.ts), [inertia-react](../../apps/inertia-react/start/secure_note_routes.ts), [inertia-vue](../../apps/inertia-vue/start/secure_note_routes.ts); [hypermedia](../../apps/hypermedia/app/controllers/secure_notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/secure_notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/secure_notes_controller.ts). [Package handoffs](../REFERENCE.md#package-handoffs).
+**Code references:** [hypermedia](../../apps/hypermedia/start/secure_note_routes.ts), [inertia-react](../../apps/inertia-react/start/secure_note_routes.ts), [inertia-vue](../../apps/inertia-vue/start/secure_note_routes.ts); [hypermedia](../../apps/hypermedia/app/controllers/secure_notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/secure_notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/secure_notes_controller.ts). [Secure-note service](../../apps/hypermedia/app/services/secure_notes.ts). [Package handoffs](../REFERENCE.md#package-handoffs).
