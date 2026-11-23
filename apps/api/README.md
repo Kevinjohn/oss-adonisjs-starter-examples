@@ -73,6 +73,24 @@ Use the IDs returned by the app for Alice, Bob and **Demo team**; they depend on
 4. Grant a separate existing verified account deleted-account administration through a trusted database operation by setting its `is_soft_delete_admin` field to true. With that account's bearer token, read `GET /api/v1/admin/deleted-users`, then send
    `POST /api/v1/admin/deleted-users/<bob-id>/restore`. Bob can sign in again.
 
+### Account admission
+
+The Account Kit provider binds `AccountAdmission`. The
+[admissions controller](app/controllers/admissions_controller.ts) and
+[admitted-account middleware](app/middleware/admitted_account_middleware.ts) receive
+it through `@inject()` and their constructors.
+
+Account holders use `GET /api/v1/account/admission` and
+`POST /api/v1/account/admission/request` while their approval is pending. The owner
+routes under `/api/v1/account/admissions` require an admitted account. The controller
+takes the actor ID from the raw guard, validates the list filters or target ID and
+composes the HTTP response. The service applies the
+[owner policy](app/services/account_kit_authorization.ts) from the admission configuration.
+
+The [account inspection helper](app/services/account_access_inspection.ts) receives
+`AccountAdmission` and `AccountKit` through its constructor. It checks the caller's
+admission and owner role before inspecting an account or comparing a captured revision.
+
 ## Combined interactions
 
 See the sandbox's [API team request instructions](https://github.com/Kevinjohn/oss-adonisjs-starter-examples#api-team-requests)

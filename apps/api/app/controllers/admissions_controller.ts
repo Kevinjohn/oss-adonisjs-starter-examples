@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import app from '@adonisjs/core/services/app'
+import { inject } from '@adonisjs/core'
 import { InvalidInputError } from '@kevinjohn/adonisjs-account-kit'
 import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 import { accountInput } from '#services/account_input'
@@ -14,31 +14,29 @@ function userIdParam(value: string): number {
   return id
 }
 
-const admission = () => app.container.make(AccountAdmission)
-
 /**
  * The account's own admission status and request, reachable while not admitted, and the owner's
  * list and decisions. The package sends no notification: this status is how a person learns the
  * decision.
  */
+@inject()
 export default class AdmissionsController {
+  constructor(private readonly admission: AccountAdmission) {}
+
   async show(ctx: HttpContext) {
-    const service = await admission()
-    const { decision } = await service.current(accountInput(ctx))
+    const { decision } = await this.admission.current(accountInput(ctx))
     return ctx.response.ok(decision)
   }
 
   async request(ctx: HttpContext) {
-    const service = await admission()
-    const record = await service.request(accountInput(ctx))
+    const record = await this.admission.request(accountInput(ctx))
     return ctx.response.ok({ requestedAt: record.requestedAt })
   }
 
   async index(ctx: HttpContext) {
     const actor = await ctx.auth.getUserOrFail()
     const { status, cursor, limit } = await ctx.request.validateUsing(admissionListValidator)
-    const service = await admission()
-    return ctx.response.ok(await service.list({ actorId: actor.id, status, cursor, limit }))
+    return ctx.response.ok(await this.admission.list({ actorId: actor.id, status, cursor, limit }))
   }
 
   async approve(ctx: HttpContext) {
@@ -55,11 +53,8 @@ export default class AdmissionsController {
 
   private async decide(ctx: HttpContext, decision: 'approve' | 'reject' | 'revoke') {
     const actor = await ctx.auth.getUserOrFail()
-    const service = await admission()
-    const record = await service[decision]({
-      actorId: actor.id,
-      userId: userIdParam(ctx.params.id),
-    })
+    const userId = userIdParam(ctx.params.id)
+    const record = await this.admission[decision]({ actorId: actor.id, userId })
     return ctx.response.ok({ userId: record.userId, approval: record.approval })
   }
 }

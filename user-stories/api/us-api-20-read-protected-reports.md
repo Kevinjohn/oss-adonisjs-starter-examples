@@ -26,12 +26,12 @@ flowchart TD
 
 ## Code flow
 
-Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result. No runtime journey was exercised.
+Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result.
 
 ```mermaid
 flowchart TD
     A["Route authentication with selectedGuardName"] --> B["AdmittedAccountMiddleware.handle"]
-    B --> C["admission.require(accountInput(ctx))"]
+    B --> C["Injected AccountAdmission.require(accountInput(ctx))"]
     C --> D["ReportsController.index"]
     D --> E["response.ok({ reports: [] })"]
 ```

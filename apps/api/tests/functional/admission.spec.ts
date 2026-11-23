@@ -169,7 +169,7 @@ test.group('Admission', (group) => {
     client,
     assert,
   }) => {
-    const { credential: owner, scope } = await createOwner(client)
+    const { owner: ownerAccount, credential: owner, scope } = await createOwner(client)
     const email = `invited-${randomUUID()}@example.test`
     assert.equal(
       (await acceptInvitation(client, await invite(client, owner, scope, email))).status(),
@@ -210,6 +210,7 @@ test.group('Admission', (group) => {
 
     const requested = await as(client.post('/api/v1/account/admission/request'), session)
     assert.equal(requested.status(), 200, JSON.stringify(requested.body()))
+    assert.isString((requested.body() as { requestedAt?: string }).requestedAt)
     const pending = await as(client.get('/api/v1/account/admissions'), owner).qs({
       status: 'pending',
     })
@@ -219,17 +220,28 @@ test.group('Admission', (group) => {
       [email]
     )
 
-    const malformed = await as(
-      client.post(`/api/v1/account/admissions/${'1'.repeat(65)}/approve`),
-      owner
-    )
-    assert.equal(malformed.status(), 422, JSON.stringify(malformed.body()))
+    for (const id of ['0', '1.5', '9007199254740992', '1'.repeat(65)]) {
+      const malformed = await as(client.post(`/api/v1/account/admissions/${id}/approve`), owner)
+      assert.equal(malformed.status(), 422, JSON.stringify(malformed.body()))
+      const body = malformed.body() as { errors: Array<{ code: string }> }
+      assert.equal(body.errors[0].code, 'E_ACCOUNT_KIT_INVALID_INPUT')
+    }
     const approved = await as(client.post(`/api/v1/account/admissions/${person.id}/approve`), owner)
     assert.equal(approved.status(), 200, JSON.stringify(approved.body()))
+    assert.containsSubset(approved.body(), {
+      userId: person.id,
+      approval: { status: 'approved', actorId: ownerAccount.id },
+    })
+    assert.isString((approved.body() as { approval: { decidedAt: string } }).approval.decidedAt)
     assert.equal((await as(client.get('/api/v1/reports'), session)).status(), 200)
 
     const revoked = await as(client.post(`/api/v1/account/admissions/${person.id}/revoke`), owner)
     assert.equal(revoked.status(), 200, JSON.stringify(revoked.body()))
+    assert.containsSubset(revoked.body(), {
+      userId: person.id,
+      approval: { status: 'revoked', actorId: ownerAccount.id },
+    })
+    assert.isString((revoked.body() as { approval: { decidedAt: string } }).approval.decidedAt)
     const afterRevoke = await as(client.get('/api/v1/reports'), session)
     assert.equal(afterRevoke.status(), 403)
     assert.equal(refusal(afterRevoke).decision.requirements.approval?.status, 'revoked')

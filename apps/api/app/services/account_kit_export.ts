@@ -1,6 +1,7 @@
 import type { AccountUser, Trx } from '@kevinjohn/adonisjs-account-kit'
 import { accessControlKitCallbacks } from '@kevinjohn/adonisjs-access-control/account-kit'
-import { isAdmitted } from './account_admission_access.js'
+import app from '@adonisjs/core/services/app'
+import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 
 const teamExport = accessControlKitCallbacks().exportAccountData
 
@@ -22,7 +23,8 @@ export async function exportAccountData(user: AccountUser, trx: Trx) {
     )
     .where('user_id', user.id)
     .first()
-  if (!(await isAdmitted(user.id, trx)))
+  const accountAdmission = await app.container.make(AccountAdmission)
+  if (!(await accountAdmission.isAdmitted(user.id, trx)))
     return { admission: admission ?? null, roles: [], memberships: [] }
   const rows: Array<{ role: string }> = await trx
     .from('role_assignments')

@@ -5,14 +5,14 @@ As an admitted API instance owner, I want to approve a selected account's admiss
 **Status:** Current under the stated kit and configuration conditions; source-reviewed availability.
 **Access:** Raw authenticated admitted actor whose instance owner role passes admission authorize.decide; team ownership alone is insufficient.
 **Entry:** `POST /api/v1/account/admissions/:id/approve`.
-**Documentation:** [API app instructions](../../apps/api/README.md#api).
+**Documentation:** [API app instructions](../../apps/api/README.md#account-admission).
 **Source:** [API routes](../../apps/api/start/routes.ts), [AdmissionsController](../../apps/api/app/controllers/admissions_controller.ts).
 **Coverage:** [Existing scenario source](../../apps/api/tests/functional/admission.spec.ts).
 
 ## Acceptance criteria
 
 - `id` must be a canonical positive decimal safe-integer user ID, with source spelling no longer than 64 characters. No client actor ID or approval status body is trusted by this handler.
-- `AdmissionsController.approve` delegates to `decide(ctx, 'approve')`, which calls `service.approve({ actorId, userId })` and returns `{ userId, approval }`.
+- `AdmissionsController.approve` delegates to `decide(ctx, 'approve')`, which calls `this.admission.approve({ actorId, userId })` and returns `{ userId, approval }`.
 - This changes the approval component only. Approval alone does not satisfy invitation/domain requirements.
 - Invalid ID, owner-policy refusal, self-approval or package state failure is surfaced; the handler does not send a decision notification.
 
@@ -28,13 +28,14 @@ flowchart TD
 
 ## Code flow
 
-Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result. No runtime journey was exercised.
+Scope: API route and controller through the named Account Kit service boundary; the package owns its records and the handler maps the result.
 
 ```mermaid
 flowchart TD
-    A["admittedAccount middleware"] --> B["AdmissionsController.approve"]
-    B --> C["decide parses target userId and raw actor.id"]
-    C --> D["service.approve({ actorId, userId })"]
+    A["AdmittedAccountMiddleware calls injected AccountAdmission.require"] --> B["AdmissionsController.approve"]
+    B --> C{"decide reads raw actor.id. Does userIdParam accept target?"}
+    C -->|No| I["Return 422"]
+    C -->|Yes| D["Injected AccountAdmission.approve({ actorId, userId })"]
     D --> E{"Owner policy allows decision and actor differs from target?"}
     E -->|No| F["Return refusal; no approval response"]
     E -->|Yes| G["Apply approval transition"]
