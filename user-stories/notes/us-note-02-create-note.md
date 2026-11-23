@@ -13,6 +13,7 @@ As a signed-in account holder, I want to submit a note and retry that submission
 
 - Browser **Note** is a required, initially empty textarea. It needs JavaScript. The page creates a command ID and a request key, then sends the same body and identifiers twice with the CSRF token. The app requires a string containing at least one non-whitespace character and stores the original body.
 - API requests supply `body`, `commandId` and `requestKey` as strings. Both identifiers are required and nonempty. Reuse the original body and both identifiers for a retry. The handler responds with HTTP 201 and the guard result, including `replayed` and `result.noteId`.
+- The guard invokes the app's `authorizeAccess` callback before resolving the receipt on every attempt, including retries.
 - The browser verifies the second response is a replay of the first note ID and appends one item to **Your notes**. When the initial request is explicitly rejected with HTTP 400 or 413, the browser makes the note editable for correction. When the outcome is uncertain, **Retry submission** reuses the same identifiers and body while the page remains open.
 
 ## User flow
@@ -34,11 +35,14 @@ flowchart TD
     A["NotesController.store gets raw web or API user"] --> B{"Body and identifiers valid?"}
     B -->|No| C["Return 400"]
     B -->|Yes| D["Pass actor, scope, payload and command to Request Guard execute"]
-    D --> E["Host authorizeAccess checks user; host work inserts note on first application"]
-    D --> F["Guard resolves replay or failure"]
-    E --> G["Controller returns 201 with guard result"]
+    D --> E["Guard calls host authorizeAccess before receipt resolution"]
+    E -->|Refused| H["Framework handles error"]
+    E -->|Allowed| F{"Guard resolves receipt"}
+    F -->|Fresh| J["Host work inserts note"]
+    J --> G["Controller returns 201 with guard result"]
     F -->|Replay| G
-    F -->|Failure| H["Framework handles error"]
+    F -->|Failure| H
+    J -->|Failure| H
     G --> I["Browser checks replay and updates list; API returns result to client"]
 ```
 

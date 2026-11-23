@@ -11,7 +11,7 @@ As a signed-in browser account holder, I want to review my ordinary notes so tha
 
 ## Acceptance criteria
 
-- **Your notes** lists the saved note body for the raw signed-in account. The page can be empty and does not require JavaScript for the initial list.
+- **Your notes** lists the saved note body for the raw signed-in account. The page can be empty. Hypermedia renders the initial list without JavaScript. React and Vue require JavaScript to render it.
 - The API starter exposes note creation only. Secure notes are shown separately in account settings.
 
 ## User flow
@@ -33,4 +33,4 @@ flowchart TD
     C -->|React or Vue| E["Render Inertia notes with list and CSRF token"]
 ```
 
-**Code references:** [api](../../apps/api/start/notes_routes.ts), [hypermedia](../../apps/hypermedia/start/notes_routes.ts), [inertia-react](../../apps/inertia-react/start/notes_routes.ts), [inertia-vue](../../apps/inertia-vue/start/notes_routes.ts); [api](../../apps/api/app/controllers/notes_controller.ts), [hypermedia](../../apps/hypermedia/app/controllers/notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/notes_controller.ts). [Package handoffs](../REFERENCE.md#package-handoffs).
+**Code references:** [api](../../apps/api/start/notes_routes.ts), [hypermedia](../../apps/hypermedia/start/notes_routes.ts), [inertia-react](../../apps/inertia-react/start/notes_routes.ts), [inertia-vue](../../apps/inertia-vue/start/notes_routes.ts); [api](../../apps/api/app/controllers/notes_controller.ts), [hypermedia](../../apps/hypermedia/app/controllers/notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/notes_controller.ts). [React SSR configuration](../../apps/inertia-react/config/inertia.ts), [Vue SSR configuration](../../apps/inertia-vue/config/inertia.ts). [Package handoffs](../REFERENCE.md#package-handoffs).

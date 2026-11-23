@@ -27,7 +27,10 @@ As a signed-in account, I want to read the current support mode status so that I
 flowchart TD
     A["Signed-in account opens GET /masquerade"] --> B{"Raw session or bearer credential accepted?"}
     B -->|No| C["Request is refused by the auth middleware"]
-    B -->|Yes| D["Receive the current support mode status"]
+    B -->|Browser session accepted| D["Receive the current support mode status"]
+    B -->|API bearer accepted| F{"Token has the masquerade ability?"}
+    F -->|Yes| D
+    F -->|No| G["Request is refused; use a token with the required ability"]
     D --> E["Support operator decides whether to start or stop a mode"]
 ```
 
