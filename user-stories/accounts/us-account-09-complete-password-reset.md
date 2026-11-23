@@ -51,11 +51,12 @@ Scope: the implemented app routes and controllers delegate account persistence t
 ```mermaid
 flowchart TD
     A["Request reset route"] --> Z["Account Kit blocker"]
-    Z -->|Allowed| B["Controller inspects with passwordReset.inspect"]
+    Z -->|Allowed GET| B["Controller inspects with passwordReset.inspect"]
     Z -->|Blocked during support mode| Z1["Refuse before token inspection or reset"]
     B --> C{"Valid token?"}
     C -->|No| D["GET renders unusable state or API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
-    C -->|Yes| E["POST handler validates password and confirmation"]
+    C -->|Yes| V["Show proof form or return valid inspection result"]
+    Z -->|Allowed POST| E["POST handler validates password and confirmation"]
     E --> F["passwordReset.reset"]
     F --> G{"Completion result?"}
     G -->|Invalid POST token| J["Hypermedia redirects to forgot-password; Inertia flashes and redirects to proof.fallback; API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]

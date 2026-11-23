@@ -13,7 +13,7 @@ As a signed-in account owner, I want to soft-delete my account so that it no lon
 
 - The browser confirmation page has a button labeled “Delete my account”; there is no typed confirmation field. API has no body fields.
 - The handler calls `User.delete()`, storing deletion state while retaining the row. Normal user lookup excludes the soft-deleted account, so the account cannot sign in until an administrator restores it.
-- Browser then logs out raw `web` and redirects to login. API returns `204 No Content`; it does not claim that a separate token revocation was performed.
+- Browser captures the raw registered session before deletion, passes it to Account Kit logout after deletion, and redirects to login. API returns `204 No Content`; it does not claim that a separate token revocation was performed.
 - The account-kit blocker refuses deletion during support mode. Database failure is surfaced rather than reported as successful deletion.
 
 ## User flow
@@ -39,11 +39,11 @@ flowchart TD
 flowchart TD
     A["Browser POST /account/delete or API DELETE /api/v1/account"] --> B["Raw authentication and accountKitBlocker"]
     B --> C["AccountDeletionController.destroy"]
-    C --> D["auth.getUserOrFail"]
-    D --> E["User.delete"]
-    E --> F{"Browser or API controller?"}
-    F -->|Browser| G["auth.use web logout and redirect to session.create"]
-    F -->|API| H["Return response.noContent"]
+    C --> F{"Browser or API controller?"}
+    F -->|Browser| D["Capture currentBrowserSession, then User.delete"]
+    D --> G["Account Kit authentication.logout with captured session and adapter, then redirect"]
+    F -->|API| E["Get raw user and call User.delete"]
+    E --> H["Return response.noContent"]
 ```
 
 **Code references:** [Hypermedia routes and blocker](../../apps/hypermedia/start/routes.ts), [Hypermedia confirmation view](../../apps/hypermedia/resources/views/pages/account/delete.edge), [Hypermedia controller](../../apps/hypermedia/app/controllers/account_deletion_controller.ts), [API routes and guard](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/account_deletion_controller.ts), [User soft-delete model](../../apps/api/app/models/user.ts), [API HTTP routes](../../apps/api/tests/functional/soft_delete.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/account_deletion_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/account_deletion_controller.ts).

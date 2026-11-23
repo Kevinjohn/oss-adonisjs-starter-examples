@@ -4,7 +4,7 @@ As an app operator, I want to install and start one committed app so that I can 
 
 **Status:** Operator; source-reviewed availability, not runtime-tested.
 **Access:** App operator with the selected app, supported Node 24/pnpm toolchain and filesystem access.
-**Entry:** From `apps/<kit>`: `pnpm install --frozen-lockfile`, copy `.env.example` to `.env`, `node ace generate:key`, `node ace migration:run`, then `pnpm dev`.
+**Entry:** From `apps/<kit>`: `pnpm install --frozen-lockfile`, copy `.env.example` to `.env`, `node ace generate:key`, `node ace codegen`, `node ace migration:run`, then `pnpm dev`.
 **Documentation:** [Run an app](../../README.md#run-an-app).
 **Source:** [Hypermedia app manifest](../../apps/hypermedia/package.json), [Hypermedia Ace entry](../../apps/hypermedia/ace.js).
 
@@ -20,7 +20,7 @@ As an app operator, I want to install and start one committed app so that I can 
 ```mermaid
 flowchart TD
     A["Choose a committed kit under apps/"] --> B["Install dependencies and prepare local environment"]
-    B --> C["Generate key and run migrations"]
+    B --> C["Generate key and code, then run migrations"]
     C --> D{"Setup succeeds?"}
     D -->|No| E["Correct reported prerequisite or migration failure"]
     D -->|Yes| F["Run pnpm dev; open pages or use an API client"]
@@ -33,7 +33,7 @@ Scope: Documented host setup sequence and app-owned entry points; this story doe
 ```mermaid
 flowchart TD
     A["Root README setup instructions"] --> B["Selected app package.json scripts"]
-    B --> C["App ace.js invokes generate:key and migration:run"]
+    B --> C["App ace.js invokes generate:key, codegen and migration:run"]
     C --> D["App dev script starts the framework server"]
 ```
 

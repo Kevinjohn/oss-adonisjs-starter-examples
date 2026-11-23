@@ -3,7 +3,7 @@
 As a signed-in account owner, I want to open the protected account page so that I can access the application area reserved for confirmed accounts.
 
 **Status:** Current in Hypermedia, Inertia React and Inertia Vue; source-reviewed, not runtime-tested here.
-**Access:** Default effective session authentication, followed by the kit's verified-account middleware. During support mode the route resolves the effective account, subject to Masquerade admission and policy.
+**Access:** Default effective session authentication, followed by the verified-account middleware’s check of the raw registered web session. During support mode Masquerade evaluates target eligibility separately.
 **Entry:** `GET /account` in all three browser kits; Hypermedia offers **Open the protected account page** on its confirmed-account dashboard. React and Vue expose the route without that dashboard link.
 **Documentation:** [Hypermedia protected page](../../apps/hypermedia/resources/views/pages/account.edge), [dashboard journey](us-account-12-open-account-dashboard.md).
 **Source:** [Hypermedia route](../../apps/hypermedia/start/routes.ts), [React route](../../apps/inertia-react/start/routes.ts), [Vue route](../../apps/inertia-vue/start/routes.ts).
@@ -13,7 +13,7 @@ As a signed-in account owner, I want to open the protected account page so that 
 
 - No editable fields are required. Open `/account`; dashboard access alone does not establish permission for this page.
 - Authentication resolves the default effective session account. A valid confirmed account sees **Protected account page** in Hypermedia or **Your account is confirmed** in React/Vue.
-- The verified-account middleware calls `authentication.requireActive` for the resolved account and session revision. An unconfirmed account is redirected to the dashboard with email-confirmation feedback; unauthenticated requests follow the authentication response. Other authentication failures are not converted into a successful page render.
+- The verified-account middleware calls `authentication.requireActive` with the raw web user ID, session handle and revision from `currentBrowserSession`. An unconfirmed account is redirected to the dashboard with email-confirmation feedback; unauthenticated requests follow the authentication response. Other authentication failures are not converted into a successful page render.
 - Hypermedia offers **Back to dashboard** on the protected page. The Inertia pages display the protected content within their application layout.
 
 ## User flow
@@ -22,7 +22,7 @@ As a signed-in account owner, I want to open the protected account page so that 
 flowchart TD
     A["Open /account; Hypermedia also links from the confirmed dashboard"] --> B{"Authenticated account accepted?"}
     B -->|No| C["Follow sign-in or authentication refusal"]
-    B -->|Yes| D{"Email confirmed?"}
+    B -->|Yes| D{"Signed-in account email confirmed?"}
     D -->|No| E["Return to dashboard with confirmation feedback"]
     D -->|Yes| F["See the protected account page for the effective account"]
     F --> G["Hypermedia offers Back to dashboard"]
@@ -33,7 +33,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["GET /account"] --> B["auth middleware uses default effective session guard"]
-    B --> C["VerifiedAccountMiddleware.handle calls kit.authentication.requireActive"]
+    B --> C["VerifiedAccountMiddleware.handle calls kit.authentication.requireActive with currentBrowserSession"]
     C --> D{"requireActive outcome?"}
     D -->|UnverifiedEmailError| E["Flash confirmation feedback; redirect dashboard"]
     D -->|Other failure| F["Propagate authentication failure"]

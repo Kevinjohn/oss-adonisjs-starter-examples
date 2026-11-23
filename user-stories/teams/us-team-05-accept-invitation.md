@@ -48,11 +48,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Request invitation route"] --> Z["Account Kit blocker"]
-    Z -->|Allowed| B["Controller inspects with invitations.inspect"]
+    Z -->|Allowed GET| B["Controller inspects with invitations.inspect"]
     Z -->|Blocked during support mode| Z1["Refuse before invitation inspection or acceptance"]
     B --> C{"Valid invitation?"}
     C -->|No| D["Render unavailable form / proofFailure E_ACCOUNT_KIT_INVALID_TOKEN"]
-    C -->|Yes| E["POST handler validates optional name, password, and confirmation"]
+    C -->|Yes| V["Show proof form or return valid inspection result"]
+    Z -->|Allowed POST| E["POST handler validates optional name, password, and confirmation"]
     E --> F["kit.invitations.accept / accountKit.invitations.accept"]
     F --> G{"Result?"}
     G -->|User created| H["Browser redirects to sign-in / API returns 201 account fields"]

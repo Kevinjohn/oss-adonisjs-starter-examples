@@ -11,7 +11,7 @@ As an authenticated account holder, I want to end my current session or token so
 ## Acceptance criteria
 
 - There is no operation-specific editable input. Cookie-authenticated clients retain normal host CSRF requirements.
-- Browser controllers call `authentication.logout` with their session guard and redirect to sign-in. API session logout ends raw `web`, clears and regenerates session, then returns “Logged out successfully”.
+- Browser controllers call `authentication.logout` with their session guard and current managed sign-in, then redirect to sign-in. The adapter signs out raw `web`, clears the session and regenerates its ID. API session logout ends raw `web`, clears and regenerates session, then returns “Logged out successfully”.
 - API token logout deletes only the authenticated raw user's current access-token identifier when present; it does not mint or delete the target's credential. It returns the same message.
 - Logout is outside the Account Kit blocker group. Authentication still applies; a database/guard failure propagates rather than promising that the credential ended.
 
@@ -32,12 +32,13 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SessionController.destroy or AccessTokensController.destroy"] --> B["authentication.logout guard adapter"]
-    B --> C{"Session or token?"}
-    C -->|Session| D["raw web.logout; session.clear and regenerate"]
-    C -->|Token| E["User.accessTokens.delete current raw token"]
-    D --> F["Return logout response"]
-    E --> F
+    A["Authenticated logout route selects controller"] --> C{"Transport"}
+    C -->|Browser| R["SessionController.destroy passes managedGuard.current and session adapter to Account Kit logout"]
+    R --> F["Terminate raw web, flash history clear and redirect"]
+    C -->|API session| D["SessionController.destroy calls Kit logout with raw web terminate adapter"]
+    C -->|API token| E["AccessTokensController.destroy calls Kit logout with current raw token delete adapter"]
+    D --> G["Return logged-out JSON message"]
+    E --> G
 ```
 
 **Code references:** [API routes](../../apps/api/start/routes.ts), [API SessionController](../../apps/api/app/controllers/session_controller.ts), [AccessTokensController](../../apps/api/app/controllers/access_tokens_controller.ts), [Browser SessionController](../../apps/hypermedia/app/controllers/session_controller.ts), [API strategy](../../apps/api/app/services/auth_strategy.ts).

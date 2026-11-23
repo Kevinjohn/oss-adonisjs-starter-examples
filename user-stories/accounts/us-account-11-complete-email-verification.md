@@ -52,11 +52,12 @@ Scope: the implemented app routes and controllers delegate account persistence t
 ```mermaid
 flowchart TD
     A["Request verification route"] --> Z["Account Kit blocker"]
-    Z -->|Allowed| B["Controller inspects with emailVerification.inspect"]
+    Z -->|Allowed GET| B["Controller inspects with emailVerification.inspect"]
     Z -->|Blocked during support mode| Z1["Refuse before token inspection or completion"]
     B --> C{"Valid token?"}
     C -->|No| D["Render invalid state or proofFailure with E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
-    C -->|Yes| E["POST handler validates password and confirmation"]
+    C -->|Yes| V["Show proof form or return valid inspection result"]
+    Z -->|Allowed POST| E["POST handler validates password and confirmation"]
     E --> F["emailVerification.complete"]
     F --> G{"Completion result?"}
     G -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia flashes and redirects to proof.fallback; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]

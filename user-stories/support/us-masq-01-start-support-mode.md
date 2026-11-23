@@ -46,7 +46,7 @@ Scope: browser form and API route-factory paths converge on the shared start ser
 flowchart TD
     A["GET /masquerade/accounts"] --> B["MasqueradeAccountsController.index uses raw web guard and filters configured operators"]
     C["Browser POST /masquerade/start"] --> D["MasqueradeFormController.start and parseStartForm"]
-    E["API route factory mounts POST /masquerade/start on raw api guard"] --> F["Package start handler validates request fields"]
+    E["API route factory mounts POST /masquerade/start on raw api guard"] --> F["Package start handler passes parsed input or invalid marker to service"]
     D --> G["runtime.service.start"]
     F --> G
     G --> H{"Actor, target, context, and requested access pass policy?"}
