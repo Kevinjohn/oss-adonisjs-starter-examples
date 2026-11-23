@@ -45,11 +45,12 @@ Scope: the implemented app routes and controllers delegate account persistence t
 ```mermaid
 flowchart TD
     A["Request confirmation route"] --> Z["Account Kit blocker"]
-    Z -->|Allowed| B["Controller inspects with inspectEmailChange"]
+    Z -->|Allowed GET| B["Controller inspects with inspectEmailChange"]
     Z -->|Blocked during support mode| Z1["Refuse before token inspection or completion"]
     B --> C{"Token inspection passes?"}
     C -->|No| D["Browser renders invalid state; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
-    C -->|Yes| E["POST handler calls completeEmailChange"]
+    C -->|Yes| V["Show proof form or return valid inspection result"]
+    Z -->|Allowed POST| E["POST handler calls completeEmailChange"]
     E --> F{"Completion outcome?"}
     F -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia `complete` catches InvalidTokenError, flashes and redirects to session.create; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
     F -->|Changed| G["Browser flashes success and redirects to sign-in; API returns email and verified"]

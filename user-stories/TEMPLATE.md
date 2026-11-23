@@ -21,7 +21,7 @@ than retaining the sample save flow.
 As a team editor, I want to rename a team so that its members see the current name.
 
 **Status:** Current; source-reviewed route, not runtime-tested.
-**Access:** Authenticated, verified effective team member with `team:write` (editors and above). During Masquerade, the edit policy and route's `allowMutation()` marker must permit the write, and the effective target must have `team:write`.
+**Access:** Authenticated account with a verified raw web sign-in and an effective team member with `team:write` (editors and above). During Masquerade, the edit policy and route's `allowMutation()` marker must permit the write, and the effective target must have `team:write`.
 **Entry:** On the Hypermedia team page, use the **Rename team** form (`POST /teams/:scopeId`).
 **Documentation:** [Masquerade with Access Control](../../docs/cookbook/masquerade-with-access-control.md).
 **Source:** [Hypermedia team page](../../apps/hypermedia/resources/views/pages/teams/show.edge), [teams route](../../apps/hypermedia/start/routes.ts), [TeamsController.update](../../apps/hypermedia/app/controllers/teams_controller.ts).

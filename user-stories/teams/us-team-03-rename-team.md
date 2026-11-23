@@ -3,7 +3,7 @@
 As a team editor, I want to change a team name so that members see the updated name.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Browser requires a verified effective member with `team:write`. The API combined example requires admitted membership and `team:write`; it uses `api_effective` with a current context header on unsafe requests. The API test harness can exercise a raw-`web` session branch, which is not a supported mixed-transport host configuration. During support mode, target permission and edit-mode mutation policy apply.
+**Access:** Browser requires a verified raw sign-in and an effective member with `team:write`. The API combined example requires admitted membership and `team:write`; it uses `api_effective` with a current context header on unsafe requests. The API test harness can exercise a raw-`web` session branch, which is not a supported mixed-transport host configuration. During support mode, target permission and edit-mode mutation policy apply.
 **Entry:** Browser kits: `POST /teams/:scopeId`; API: `PATCH /api/v1/teams/:scopeId`.
 **Documentation:** [Masquerade and team scope guide](../../docs/cookbook/masquerade-with-access-control.md#keep-team-permissions-in-force).
 **Source:** [Hypermedia team routes](../../apps/hypermedia/start/routes.ts), [API team routes](../../apps/api/start/routes.ts).

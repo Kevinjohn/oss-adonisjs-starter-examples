@@ -14,7 +14,7 @@ As a signed-in account owner, I want to open my dashboard so that I can see my a
 - There are no editable fields; an authenticated account opens `/dashboard`.
 - Hypermedia shows the effective account email and whether its address is confirmed. An unconfirmed owner can select **Send a fresh verification link**; a confirmed owner can open the protected `/account` page.
 - Inertia React and Vue render the starter dashboard. Their verification notice appears for an unconfirmed account with **Resend link**, disabled while the form is processing; the Vue page receives email-verification state through shared props.
-- Unauthenticated requests are sent through the configured authentication response. The protected `/account` route in all three kits additionally requires a verified effective account; see [US-ACCOUNT-14](us-account-14-open-protected-account.md).
+- Unauthenticated requests are sent through the configured authentication response. The protected `/account` route in all three kits additionally checks the registered raw web session for an active account; see [US-ACCOUNT-14](us-account-14-open-protected-account.md).
 - The API has no dashboard route; its account profile read is documented separately.
 
 ## User flow

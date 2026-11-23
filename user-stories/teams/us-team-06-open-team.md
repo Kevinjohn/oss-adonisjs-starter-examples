@@ -3,7 +3,7 @@
 As a team member, I want to open a team I belong to so that I can see its name, my role, and the member information available in my kit.
 
 **Status:** Current; source-reviewed, not runtime-tested here.
-**Access:** Browser kits require a verified effective account. The API combined example uses access tokens and requires an admitted account; its test harness can exercise a raw-`web` session branch that is not a supported mixed-transport host configuration. All routes scope membership before the controller.
+**Access:** Browser kits check the verified raw sign-in and resolve membership for the effective account. The API combined example uses access tokens and requires an admitted account; its test harness can exercise a raw-`web` session branch that is not a supported mixed-transport host configuration. All routes scope membership before the controller.
 **Entry:** Browser kits: `GET /teams/:scopeId`; API: `GET /api/v1/teams/:scopeId`.
 **Documentation:** [Masquerade and team scope guide](../../docs/cookbook/masquerade-with-access-control.md#resolve-team-membership-for-the-effective-account).
 **Source:** [Hypermedia team routes](../../apps/hypermedia/start/routes.ts), [API team routes](../../apps/api/start/routes.ts).
