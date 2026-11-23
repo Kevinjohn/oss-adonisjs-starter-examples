@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { execute, type Operation } from '@kevinjohn/adonisjs-duplicate-request-guard'
+import { createNoteValidator } from '#validators/note'
 
 const createNote: Operation<{ body: string }, undefined, { noteId: number }> = {
   name: 'notes.create',
@@ -27,19 +28,17 @@ export default class NotesController {
 
   async store({ auth, request, response }: HttpContext) {
     const user = auth.use('web').getUserOrFail()
-    const body = request.input('body')
-    const commandId = request.input('commandId')
-    const requestKey = request.input('requestKey')
-    if (
-      typeof body !== 'string' ||
-      !body.trim() ||
-      typeof commandId !== 'string' ||
-      !commandId ||
-      typeof requestKey !== 'string' ||
-      !requestKey
-    ) {
+    const [validationError, note] = await request.tryValidateUsing(createNoteValidator, {
+      data: {
+        body: request.input('body'),
+        commandId: request.input('commandId'),
+        requestKey: request.input('requestKey'),
+      },
+    })
+    if (validationError) {
       return response.badRequest({ error: 'body, commandId, and requestKey are required strings' })
     }
+    const { body, commandId, requestKey } = note
     const result = await execute(db.connection(), createNote, {
       actorId: String(user.id),
       scopeId: String(user.id),

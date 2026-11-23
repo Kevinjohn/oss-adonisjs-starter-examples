@@ -45,7 +45,13 @@ const createNote: Operation<{ body: string }, undefined, { noteId: number }> = {
 
 <!-- prettier-ignore-end -->
 
-The controller gets the owner from the raw guard, validates the body and both request identifiers, then calls `execute` with the payload and authenticated owner. Never accept `actorId`, `scopeId`, or receipt identity from request data. See [the complete controller](../../apps/hypermedia/app/controllers/notes_controller.ts) and the API variant in [apps/api](../../apps/api/app/controllers/notes_controller.ts).
+The controller gets the owner from the raw guard and uses
+[`createNoteValidator`](../../apps/hypermedia/app/validators/note.ts) to check that the body contains a
+non-whitespace character and both identifiers are nonempty strings. Invalid input returns HTTP 400
+before the receipt operation. Valid input goes to `execute` with the parsed strings unchanged.
+The controller derives both `actorId` and `scopeId` from the authenticated owner.
+See the complete controllers in [Hypermedia](../../apps/hypermedia/app/controllers/notes_controller.ts)
+and [API](../../apps/api/app/controllers/notes_controller.ts).
 
 ## Keep retry identifiers stable
 

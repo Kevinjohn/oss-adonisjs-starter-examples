@@ -15,9 +15,33 @@ test.group('guarded notes', (group) => {
     await grantAdmittedOwner(user)
     const token = await User.accessTokens.create(user)
     const bearer = token.value!.release()
-    const input = { body: 'Remember the meeting', commandId: 'notes-1', requestKey: 'attempt-1' }
-    const first = await client.post('/api/v1/notes').bearerToken(bearer).json(input)
-    const replay = await client.post('/api/v1/notes').bearerToken(bearer).json(input)
+    const input = {
+      body: '  Remember the meeting  ',
+      commandId: ' notes-1 ',
+      requestKey: ' attempt-1 ',
+    }
+    for (const invalid of [
+      { body: ' \t\n' },
+      { body: 42 },
+      { commandId: '' },
+      { commandId: 42 },
+      { requestKey: '' },
+      { requestKey: 42 },
+    ]) {
+      const rejected = await client
+        .post('/api/v1/notes')
+        .bearerToken(bearer)
+        .unsafeJson({ ...input, ...invalid })
+      assert.equal(rejected.status(), 400)
+      assert.deepEqual(rejected.body(), {
+        error: 'body, commandId, and requestKey are required strings',
+      })
+    }
+    assert.lengthOf(await db.from('notes'), 0)
+    assert.lengthOf(await db.from('request_receipts'), 0)
+    // Query parameters reach the controller without the body parser's whitespace trimming.
+    const first = await client.post('/api/v1/notes').bearerToken(bearer).qs(input)
+    const replay = await client.post('/api/v1/notes').bearerToken(bearer).qs(input)
 
     assert.equal(first.status(), 201)
     assert.equal(replay.status(), 201)
@@ -33,7 +57,7 @@ test.group('guarded notes', (group) => {
     const other = await client
       .post('/api/v1/notes')
       .bearerToken(otherToken.value!.release())
-      .json(input)
+      .qs(input)
     assert.equal(other.status(), 201)
     assert.isFalse(other.body().replayed)
     assert.notEqual(other.body().result.noteId, first.body().result.noteId)
@@ -41,7 +65,10 @@ test.group('guarded notes', (group) => {
       { id: first.body().result.noteId, user_id: user.id, body: input.body },
       { id: other.body().result.noteId, user_id: otherUser.id, body: input.body },
     ])
-    const receiptCount = await db.from('request_receipts').count('* as total')
-    assert.equal(Number(receiptCount[0].total), 2)
+    const receipts = await db.from('request_receipts').select('command_id', 'request_key')
+    assert.deepEqual(receipts, [
+      { command_id: input.commandId, request_key: input.requestKey },
+      { command_id: input.commandId, request_key: input.requestKey },
+    ])
   })
 })

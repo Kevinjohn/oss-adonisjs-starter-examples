@@ -27,7 +27,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByRole('button', { name: 'Create account' }).click()
     await page.waitForURL('**/dashboard')
     await page.goto('/settings/secure-note')
-    await page.getByLabel('New note').fill('Remember this')
+    await page.getByLabel('New note').fill('Remember  this')
     await page.getByLabel('Current password').fill('WrongPassword!')
     const rejected = page.waitForResponse(
       (response) =>
@@ -40,14 +40,14 @@ test.group('secure note confirmation', (group) => {
     const beforeSave = await db.from('secure_notes')
     assert.equal(beforeSave.length, 0)
     await page.goto('/settings/secure-note')
-    await page.getByLabel('New note').fill('Remember this')
+    await page.getByLabel('New note').fill('Remember  this')
     await page.getByLabel('Current password').fill('SignupPass123!')
     await page.getByRole('button', { name: 'Confirm password' }).click()
     await page.getByRole('button', { name: 'Save confirmed note' }).click()
     await page.getByText('Saved note: Remember this').waitFor()
     const notes = await db.from('secure_notes').select('body')
     assert.equal(notes.length, 1)
-    assert.equal(notes[0].body, 'Remember this')
+    assert.equal(notes[0].body, 'Remember  this')
     const [confirmation] = await db
       .from('password_confirmations')
       .select('sign_in_id', 'consumed_at')
@@ -65,7 +65,62 @@ test.group('secure note confirmation', (group) => {
     await page.getByText('The password is incorrect.').waitFor()
     assert.equal(await page.getByRole('button', { name: 'Save confirmed note' }).count(), 0)
     const unchanged = await db.from('secure_notes').first()
-    assert.equal(unchanged.body, 'Remember this')
+    assert.equal(unchanged.body, 'Remember  this')
+  })
+
+  test('invalid inputs preserve the draft and an expired proof clears it without saving', async ({
+    visit,
+    assert,
+  }) => {
+    const password = 'SignupPass123!'
+    const user = await User.create({ email: 'expired-note@example.test', password })
+    const page = await visit('/login')
+    await page.getByLabel('Email').fill(user.email)
+    await page.getByLabel('Password').fill(password)
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.waitForURL('**/dashboard')
+    await page.goto('/settings/secure-note')
+
+    await page.getByLabel('New note').fill('Pending note')
+    await page.getByLabel('Current password').fill(password)
+    await page.getByRole('button', { name: 'Confirm password' }).click()
+    const save = page.getByRole('button', { name: 'Save confirmed note' })
+    await save.waitFor()
+    const [draft] = await db.from('pending_secure_notes')
+    assert.equal(draft.body, 'Pending note')
+
+    const body = page.getByLabel('New note')
+    await body.evaluate((input) => {
+      const field = input as { removeAttribute(name: string): void }
+      field.removeAttribute('maxlength')
+    })
+    await body.fill('x'.repeat(501))
+    await page.getByLabel('Current password').fill(password)
+    await page.getByRole('button', { name: 'Confirm password' }).click()
+    await page.getByText('Enter a note of 1 to 500 characters and your password.').waitFor()
+    assert.deepEqual(await db.from('pending_secure_notes'), [draft])
+    assert.lengthOf(await db.from('password_confirmations'), 1)
+
+    await page.locator('input[name="confirmationId"]').evaluate((input) => {
+      const field = input as { setAttribute(name: string, value: string): void }
+      field.setAttribute('value', '')
+    })
+    await save.click()
+    await page.getByText('Confirm your password again before saving.', { exact: true }).waitFor()
+    assert.deepEqual(await db.from('pending_secure_notes'), [draft])
+
+    await db
+      .from('password_confirmations')
+      .where('id', draft.confirmation_id)
+      .update({ expires_at: 1 })
+    await save.click()
+    await page
+      .getByText('Confirmation expired or was already used. Confirm your password again.')
+      .waitFor()
+    assert.lengthOf(await db.from('pending_secure_notes'), 0)
+    assert.lengthOf(await db.from('secure_notes'), 0)
+    const proof = await db.from('password_confirmations').where('id', draft.confirmation_id).first()
+    assert.isNull(proof.consumed_at)
   })
 
   test('a stale tab cannot save or discard a newer confirmation', async ({ visit, assert }) => {

@@ -33,19 +33,20 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["SecureNotesController.confirm validates inputs"] -->|Invalid| X["Flash feedback and redirect"]
-    A -->|Valid| B["Resolve registered sign-in, then clear its prior draft"]
+    A["SecureNotesController.confirm uses confirmSecureNoteValidator"] -->|Invalid| X["Flash feedback and redirect"]
+    A -->|Valid| B["withCurrent calls clearSecureNoteDraft for this sign-in"]
     B --> C["confirmations.confirmPassword binds note intent"]
     C -->|Denied, throttled or stale| X
-    C -->|Issued| D["withCurrent upserts draft by signInId and redirects"]
-    D --> E["SecureNotesController.update reads submitted confirmationId"]
-    E -->|Missing| X
-    E --> F["withCurrent looks up draft by signInId and confirmationId"]
+    C -->|Issued| D["withCurrent calls storeSecureNoteDraft by signInId, then redirect"]
+    D -->|Submit Save confirmed note| E["SecureNotesController.update uses saveSecureNoteValidator"]
+    E -->|Invalid| X
+    E -->|Valid| F["withCurrent calls saveSecureNote to find draft by signInId and confirmationId"]
     F -->|Missing| X
     F -->|Found| G["confirmations.consume inside current transaction"]
-    G -->|Required or stale| H["Delete matched pending draft and ask to confirm again"]
+    G -->|Required or stale| H["Delete matched pending draft"]
     G -->|Accepted| I["Delete draft and upsert secure note"]
+    H --> K["Flash expired confirmation and redirect after transaction"]
     I --> J["Flash saved and redirect after transaction"]
 ```
 
-**Code references:** [hypermedia](../../apps/hypermedia/start/secure_note_routes.ts), [inertia-react](../../apps/inertia-react/start/secure_note_routes.ts), [inertia-vue](../../apps/inertia-vue/start/secure_note_routes.ts); [hypermedia](../../apps/hypermedia/app/controllers/secure_notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/secure_notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/secure_notes_controller.ts). The cookbook links the Account Kit and password confirmation handoffs. [Package handoffs](../REFERENCE.md#package-handoffs).
+**Code references:** [hypermedia](../../apps/hypermedia/start/secure_note_routes.ts), [inertia-react](../../apps/inertia-react/start/secure_note_routes.ts), [inertia-vue](../../apps/inertia-vue/start/secure_note_routes.ts); [hypermedia](../../apps/hypermedia/app/controllers/secure_notes_controller.ts), [inertia-react](../../apps/inertia-react/app/controllers/secure_notes_controller.ts), [inertia-vue](../../apps/inertia-vue/app/controllers/secure_notes_controller.ts). [Secure-note validators](../../apps/hypermedia/app/validators/secure_note.ts) and [service](../../apps/hypermedia/app/services/secure_notes.ts). The cookbook links the Account Kit and password confirmation handoffs. [Package handoffs](../REFERENCE.md#package-handoffs).
