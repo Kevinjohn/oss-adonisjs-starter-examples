@@ -80,6 +80,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       return sendAccountError(ctx, mapped.status, entry.code, entry.message)
     }
     if (social && (provider || unexpected)) {
+      // Keep provider configuration and internal diagnostics private.
       return sendAccountError(
         ctx,
         provider ? 503 : 500,

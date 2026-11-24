@@ -26,5 +26,6 @@ export function setProofResponseHeaders(ctx: HttpContext) {
 }
 
 export function sendProofFailure(ctx: HttpContext, code: string) {
+  // Hide whether the proof was absent, expired, already used, or mismatched.
   return sendAccountError(ctx, 400, code, 'This link is invalid or expired.')
 }
