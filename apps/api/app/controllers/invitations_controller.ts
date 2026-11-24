@@ -47,7 +47,7 @@ export default class InvitationsController {
     const invitation = await accountKit.invitations.inspect({ token: ctx.params.token })
     return invitation
       ? ctx.response.ok(invitation)
-      : sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
+      : sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_INVITATION_TOKEN')
   }
 
   async accept(ctx: HttpContext) {
@@ -69,7 +69,7 @@ export default class InvitationsController {
       })
     } catch (error) {
       if (error instanceof InvalidTokenError) {
-        return sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
+        return sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_INVITATION_TOKEN')
       }
       throw error
     }
