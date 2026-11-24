@@ -4,11 +4,11 @@ import { type HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 import { accountErrorResponse, errors } from '@kevinjohn/adonisjs-account-kit'
 import { AdmissionRequiredError } from '@kevinjohn/adonisjs-account-kit/admission'
 import { errors as shieldErrors } from '@adonisjs/shield'
-import { accountError } from '#services/http_responses'
+import { sendAccountError } from '#services/http_responses'
 import { SocialProviderExchangeError } from '#services/social_provider'
 import { isSocialPath } from '#services/social_path'
 
-function providerFailure(error: unknown) {
+function extractProviderFailure(error: unknown) {
   if (error instanceof SocialProviderExchangeError) return error
   if (
     error instanceof errors.AccountKitError &&
@@ -47,7 +47,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    */
   async handle(error: unknown, ctx: HttpContext) {
     const social = isSocialPath(ctx.request.url())
-    const provider = social ? providerFailure(error) : undefined
+    const provider = social ? extractProviderFailure(error) : undefined
     const status =
       error && typeof error === 'object' && 'status' in error && typeof error.status === 'number'
         ? error.status
@@ -58,11 +58,11 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       logSocialFailure(ctx, provider, unexpected)
     }
     if (error instanceof shieldErrors.E_BAD_CSRF_TOKEN) {
-      return accountError(ctx, 403, 'E_BAD_CSRF_TOKEN', error.message)
+      return sendAccountError(ctx, 403, 'E_BAD_CSRF_TOKEN', error.message)
     }
     // The structured decision says which requirement is unmet, so the client can explain it.
     if (error instanceof AdmissionRequiredError) {
-      return accountError(
+      return sendAccountError(
         ctx,
         403,
         AdmissionRequiredError.code,
@@ -77,10 +77,10 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     if (mapped) {
       for (const [name, value] of Object.entries(mapped.headers)) ctx.response.header(name, value)
       const [entry] = mapped.body.errors
-      return accountError(ctx, mapped.status, entry.code, entry.message)
+      return sendAccountError(ctx, mapped.status, entry.code, entry.message)
     }
     if (social && (provider || unexpected)) {
-      return accountError(
+      return sendAccountError(
         ctx,
         provider ? 503 : 500,
         'E_ACCOUNT_KIT_SOCIAL_UNAVAILABLE',

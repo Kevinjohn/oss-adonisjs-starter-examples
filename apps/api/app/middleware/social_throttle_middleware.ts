@@ -5,7 +5,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import { ThrottledError } from '@kevinjohn/adonisjs-account-kit'
 import env from '#start/env'
-import { accountInput } from '#middleware/account_access_middleware'
+import { readAccountInput } from '#middleware/account_access_middleware'
 
 type Operation = 'begin' | 'confirm' | 'callback' | 'registration' | 'redeem' | 'proof' | 'unlink'
 
@@ -22,7 +22,7 @@ const budgets: Record<Operation, number> = {
 /** Uses the configured shared limiter store; no raw IP or account ID becomes a store key. */
 export default class SocialThrottleMiddleware {
   async handle(ctx: HttpContext, next: NextFn, options: { operation: Operation; actor?: boolean }) {
-    const value = options.actor ? String(accountInput(ctx).userId) : ctx.request.ip()
+    const value = options.actor ? String(readAccountInput(ctx).userId) : ctx.request.ip()
     const key = createHmac('sha256', env.get('APP_KEY').release())
       .update(JSON.stringify(['social-reference', options.operation, value]))
       .digest('hex')

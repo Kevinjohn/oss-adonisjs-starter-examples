@@ -1,11 +1,11 @@
 import { DeliveryError, PostCommitError, type AccountUser } from '@kevinjohn/adonisjs-account-kit'
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
-import { accountInput } from '#middleware/account_access_middleware'
+import { readAccountInput } from '#middleware/account_access_middleware'
 import { profileUpdateValidator } from '#validators/account_kit'
 import { reportCommittedFailure } from '#services/committed_failure_diagnostic'
 
-function safeAccount(user: AccountUser) {
+function projectAccount(user: AccountUser) {
   return {
     id: user.id,
     email: user.email,
@@ -17,7 +17,7 @@ function safeAccount(user: AccountUser) {
 
 export default class ProfileController {
   async show(ctx: HttpContext) {
-    const input = accountInput(ctx)
+    const input = readAccountInput(ctx)
     return ctx.serialize(await accountKit.authentication.current(input))
   }
 
@@ -32,7 +32,7 @@ export default class ProfileController {
         ...(email === undefined ? {} : { email }),
         ...(fullName === undefined ? {} : { registrationData: { fullName } }),
       })
-      return ctx.serialize(safeAccount(updated))
+      return ctx.serialize(projectAccount(updated))
     } catch (error) {
       if (!(error instanceof DeliveryError || error instanceof PostCommitError)) throw error
       reportCommittedFailure(ctx.logger, error, 'profile.update')

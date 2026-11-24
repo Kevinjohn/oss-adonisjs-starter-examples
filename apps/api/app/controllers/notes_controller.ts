@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { execute, type Operation } from '@kevinjohn/adonisjs-duplicate-request-guard'
-import { authStrategy } from '#services/auth_strategy'
+import { readAuthStrategy } from '#services/auth_strategy'
 import { createNoteValidator } from '#validators/note'
 
 const createNote: Operation<{ body: string }, undefined, { noteId: number }> = {
@@ -18,7 +18,7 @@ const createNote: Operation<{ body: string }, undefined, { noteId: number }> = {
 
 export default class NotesController {
   async store({ auth, request, response }: HttpContext) {
-    const rawGuard = authStrategy() === 'session' ? 'web' : 'api'
+    const rawGuard = readAuthStrategy() === 'session' ? 'web' : 'api'
     const user = auth.use(rawGuard).getUserOrFail()
     const [validationError, note] = await request.tryValidateUsing(createNoteValidator, {
       data: {

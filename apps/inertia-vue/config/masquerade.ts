@@ -25,7 +25,13 @@ const nativeAdapter = accountKitAuthority<User>({
 export { nativeAdapter }
 
 /** Operators may act for any other account, never for another operator. */
-function operatorPair({ actor, target }: { actor: { user: User }; target: { user: User } }) {
+function canUseMasqueradePair({
+  actor,
+  target,
+}: {
+  actor: { user: User }
+  target: { user: User }
+}) {
   return isMasqueradeOperator(actor.user) && !isMasqueradeOperator(target.user)
 }
 
@@ -33,11 +39,11 @@ export default defineConfig<User, HttpContext>({
   authority: nativeAdapter.authority,
   policy: {
     async canMasquerade(pair) {
-      return operatorPair(pair)
+      return canUseMasqueradePair(pair)
     },
     // An operator may choose "Can edit" when starting. Routes still need allowMutation().
     async canEdit(pair) {
-      return operatorPair(pair)
+      return canUseMasqueradePair(pair)
     },
   },
   store: async () => masqueradeStore,

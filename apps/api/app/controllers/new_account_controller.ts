@@ -9,7 +9,7 @@ import {
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
 import UserTransformer from '#transformers/user_transformer'
 import { accessTokenGuard, accountKitSessionGuard } from '#services/account_kit_guards'
-import { authStrategy } from '#services/auth_strategy'
+import { readAuthStrategy } from '#services/auth_strategy'
 import {
   reportCommittedFailure,
   reportCredentialEstablishmentFailure,
@@ -38,7 +38,7 @@ export default class NewAccountController {
       }
       throw error
     }
-    const strategy = authStrategy()
+    const strategy = readAuthStrategy()
     const input = { email, password, clientKey: request.ip() }
     let result
     try {

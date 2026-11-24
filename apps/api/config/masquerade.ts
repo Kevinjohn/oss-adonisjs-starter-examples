@@ -20,7 +20,13 @@ export const nativeAdapter = accountKitAuthority<User>({
   ability: 'masquerade',
 })
 
-function operatorPair({ actor, target }: { actor: { user: User }; target: { user: User } }) {
+function canUseMasqueradePair({
+  actor,
+  target,
+}: {
+  actor: { user: User }
+  target: { user: User }
+}) {
   return isMasqueradeOperator(actor.user) && !isMasqueradeOperator(target.user)
 }
 
@@ -29,11 +35,11 @@ export default defineConfig<User, HttpContext>({
   policy: {
     async canMasquerade(pair) {
       const admission = await app.container.make(AccountAdmission)
-      return operatorPair(pair) && (await admission.isAdmitted(pair.target.id))
+      return canUseMasqueradePair(pair) && (await admission.isAdmitted(pair.target.id))
     },
     // Edit permission never overrides sensitive() or the need for allowMutation().
     async canEdit(pair) {
-      return operatorPair(pair)
+      return canUseMasqueradePair(pair)
     },
   },
   store: async () => masqueradeStore,

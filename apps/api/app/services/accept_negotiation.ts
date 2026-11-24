@@ -9,15 +9,15 @@ export function wantsJsonApi(accept: string | undefined): boolean {
     if (!Number.isFinite(quality) || quality < 0 || quality > 1) continue
     ranges.push({ mediaType, quality })
   }
-  const qualityFor = (mediaType: string) => {
+  const resolveMediaTypeQuality = (mediaType: string) => {
     for (const candidate of [mediaType, 'application/*', '*/*']) {
       const matches = ranges.filter((range) => range.mediaType === candidate)
       if (matches.length > 0) return Math.max(...matches.map((match) => match.quality))
     }
     return 0
   }
-  const jsonApi = qualityFor('application/vnd.api+json')
-  const json = qualityFor('application/json')
+  const jsonApi = resolveMediaTypeQuality('application/vnd.api+json')
+  const json = resolveMediaTypeQuality('application/json')
   return (
     ranges.some((range) => range.mediaType === 'application/vnd.api+json' && range.quality > 0) &&
     jsonApi > 0 &&

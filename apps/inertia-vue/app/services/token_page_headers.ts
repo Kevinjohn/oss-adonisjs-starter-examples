@@ -8,7 +8,7 @@ export function sendTokenPageHeaders(response: HttpContext['response']) {
 }
 
 /** Match only the application-owned proof routes, before routing or body parsing. */
-export function proofRequest(request: HttpContext['request']) {
+export function parseProofRequest(request: HttpContext['request']) {
   if (!['GET', 'POST'].includes(request.method())) return null
   const match = /^\/(reset-password|verify-email|confirm-email|invitation)\/([^/]+)\/?$/.exec(
     request.url()
@@ -34,8 +34,8 @@ export function proofRequest(request: HttpContext['request']) {
 }
 
 /** Only an existing proof may retain its bearer URL during correctable form recovery. */
-export async function proofRecovery(request: HttpContext['request']) {
-  const proof = proofRequest(request)
+export async function resolveProofRecoveryPath(request: HttpContext['request']) {
+  const proof = parseProofRequest(request)
   if (!proof) return null
   if (!proof.token || !proof.path) return proof.fallback
   const input = { token: proof.token }

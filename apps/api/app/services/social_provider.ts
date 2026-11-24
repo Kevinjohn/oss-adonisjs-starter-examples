@@ -11,18 +11,18 @@ export class SocialProviderExchangeError extends Error {
   }
 }
 
-function requestContext(value: unknown): HttpContext {
+function requireRequestContext(value: unknown): HttpContext {
   if (!value || typeof value !== 'object' || !('ally' in value)) {
     throw new Error('A request-scoped Ally context is required')
   }
   return value as HttpContext
 }
 
-export function allySocialProvider(name: SocialProviderName): SocialProvider {
+export function createAllyProviderAdapter(name: SocialProviderName): SocialProvider {
   return createAllySocialProvider({
     async authorizationUrl(state, context) {
       try {
-        return await requestContext(context)
+        return await requireRequestContext(context)
           .ally.use(name)
           .stateless()
           .redirectUrl((request) => request.param('state', state))
@@ -31,7 +31,7 @@ export function allySocialProvider(name: SocialProviderName): SocialProvider {
       }
     },
     async user(callback) {
-      const ctx = requestContext(callback)
+      const ctx = requireRequestContext(callback)
       if (ctx.params.provider !== name) throw new SocialProviderExchangeError('provider_mismatch')
       if (ctx.request.input('error')) throw new SocialProviderExchangeError('denied')
       if (!ctx.request.input('code')) throw new SocialProviderExchangeError('missing_code')

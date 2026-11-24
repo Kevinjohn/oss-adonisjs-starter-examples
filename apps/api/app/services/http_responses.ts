@@ -4,7 +4,7 @@ import { wantsJsonApi } from '#services/accept_negotiation'
 export { wantsJsonApi }
 
 /** Public example responses for proof links and account errors. */
-export function accountError(
+export function sendAccountError(
   ctx: HttpContext,
   status: number,
   code: string,
@@ -20,11 +20,11 @@ export function accountError(
   return ctx.response.status(status).send({ errors: [error], ...members })
 }
 
-export function proofHeaders(ctx: HttpContext) {
+export function setProofResponseHeaders(ctx: HttpContext) {
   ctx.response.header('Cache-Control', 'no-store')
   ctx.response.header('Referrer-Policy', 'no-referrer')
 }
 
-export function proofFailure(ctx: HttpContext, code: string) {
-  return accountError(ctx, 400, code, 'This link is invalid or expired.')
+export function sendProofFailure(ctx: HttpContext, code: string) {
+  return sendAccountError(ctx, 400, code, 'This link is invalid or expired.')
 }

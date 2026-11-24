@@ -16,7 +16,7 @@ The intent binds the confirmation to the exact note content and owner:
 
 <!-- source: apps/hypermedia/app/services/secure_notes.ts -->
 ```ts
-export function noteRequest(userId: number | string, body: string) {
+export function buildNoteRequest(userId: number | string, body: string) {
   return { action: 'save-secure-note', scope: String(userId), intent: { body } }
 }
 ```
@@ -56,7 +56,7 @@ response cannot overwrite a newer pending row through session storage.
 <!-- source: apps/hypermedia/app/services/secure_notes.ts -->
 ```ts
     await confirmations.consume(context, {
-      ...noteRequest(account.id, pending.body),
+      ...buildNoteRequest(account.id, pending.body),
       confirmationId,
     })
 ```

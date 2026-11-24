@@ -2,7 +2,7 @@ import type { CurrentAccountContext } from '@kevinjohn/adonisjs-account-kit/type
 import confirmations from '@kevinjohn/adonisjs-confirm-action-with-password/services/main'
 import { errors } from '@kevinjohn/adonisjs-confirm-action-with-password'
 
-export function noteRequest(userId: number | string, body: string) {
+export function buildNoteRequest(userId: number | string, body: string) {
   return { action: 'save-secure-note', scope: String(userId), intent: { body } }
 }
 
@@ -48,7 +48,7 @@ export async function saveSecureNote(context: CurrentAccountContext, confirmatio
 
   try {
     await confirmations.consume(context, {
-      ...noteRequest(account.id, pending.body),
+      ...buildNoteRequest(account.id, pending.body),
       confirmationId,
     })
   } catch (error) {

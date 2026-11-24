@@ -1,6 +1,6 @@
 import vine from '@vinejs/vine'
 import type { SensitivePurpose, SocialIntent } from '@kevinjohn/adonisjs-account-kit'
-import { authStrategy } from '#services/auth_strategy'
+import { readAuthStrategy } from '#services/auth_strategy'
 
 const beginIntents = ['login', 'link', 'reauth'] as const satisfies readonly SocialIntent[]
 const intents = [...beginIntents, 'confirm'] as const satisfies readonly SocialIntent[]
@@ -19,7 +19,7 @@ const clientChallenge = () =>
     .string()
     .minLength(1)
     .optional()
-    .requiredWhen(() => authStrategy() !== 'session')
+    .requiredWhen(() => readAuthStrategy() !== 'session')
 
 export const socialRedirectValidator = vine.create({
   intent: vine.enum(beginIntents).optional(),

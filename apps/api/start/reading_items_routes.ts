@@ -1,6 +1,6 @@
 import { middleware } from '#start/kernel'
 import { controllers } from '#generated/controllers'
-import { selectedGuardName } from '#services/auth_strategy'
+import { resolveGuardName } from '#services/auth_strategy'
 import router from '@adonisjs/core/services/router'
 
 router
@@ -10,7 +10,7 @@ router
   })
   .prefix('/api/v1/account')
   .use([
-    middleware.auth({ guards: [selectedGuardName()] }),
+    middleware.auth({ guards: [resolveGuardName()] }),
     middleware.accountAccess(),
     middleware.accountKitAccountBlocker(),
   ])

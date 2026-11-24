@@ -38,7 +38,7 @@ const PASSED_THROUGH = [
 ]
 
 /** Keep package-manager paths and runtime settings without inheriting unrelated shell variables. */
-export function constructedEnvironment(
+export function createCommandEnvironment(
   extra: Record<string, string | undefined> = {}
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {

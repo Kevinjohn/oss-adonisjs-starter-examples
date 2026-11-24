@@ -36,7 +36,7 @@ export function accountKitSessionGuard(ctx: HttpContext) {
 // #endregion session_guard
 
 /** Read the registered sign-in without changing the guard selected by the route. */
-export function currentBrowserSession(ctx: HttpContext) {
+export function readCurrentBrowserSession(ctx: HttpContext) {
   const handle = ctx.session.get('accountKitSession')
   const revision = ctx.session.get('accountKitRevision')
   return {

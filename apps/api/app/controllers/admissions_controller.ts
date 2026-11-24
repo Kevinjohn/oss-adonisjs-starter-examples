@@ -2,11 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { InvalidInputError } from '@kevinjohn/adonisjs-account-kit'
 import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
-import { accountInput } from '#services/account_input'
+import { readAccountInput } from '#services/account_input'
 import { admissionListValidator } from '#validators/admission'
 
 /** Integer ids must be positive integers, so a database never receives a malformed id. */
-function userIdParam(value: string): number {
+function requireUserIdParam(value: string): number {
   if (typeof value !== 'string' || value.length === 0 || value.length > 64)
     throw new InvalidInputError('Invalid user ID')
   const id = /^[1-9]\d*$/.test(value) ? Number(value) : Number.NaN
@@ -24,12 +24,12 @@ export default class AdmissionsController {
   constructor(private readonly admission: AccountAdmission) {}
 
   async show(ctx: HttpContext) {
-    const { decision } = await this.admission.current(accountInput(ctx))
+    const { decision } = await this.admission.current(readAccountInput(ctx))
     return ctx.response.ok(decision)
   }
 
   async request(ctx: HttpContext) {
-    const record = await this.admission.request(accountInput(ctx))
+    const record = await this.admission.request(readAccountInput(ctx))
     return ctx.response.ok({ requestedAt: record.requestedAt })
   }
 
@@ -53,7 +53,7 @@ export default class AdmissionsController {
 
   private async decide(ctx: HttpContext, decision: 'approve' | 'reject' | 'revoke') {
     const actor = await ctx.auth.getUserOrFail()
-    const userId = userIdParam(ctx.params.id)
+    const userId = requireUserIdParam(ctx.params.id)
     const record = await this.admission[decision]({ actorId: actor.id, userId })
     return ctx.response.ok({ userId: record.userId, approval: record.approval })
   }

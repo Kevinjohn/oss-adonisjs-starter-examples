@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { countTests, planChecks, stepProblem } from '../../src/check_changed_plan.ts'
+import { countTests, planChecks, describeStepFailure } from '../../src/check_changed_plan.ts'
 
 const changed = (...paths: string[]) => paths.map((path) => ({ path, deleted: false }))
 const summary = (steps: ReturnType<typeof planChecks>) =>
@@ -65,20 +65,23 @@ test.group('check:changed results', () => {
   })
 
   test('a test step that ran no tests fails', ({ assert }) => {
-    assert.equal(stepProblem(step, { code: 0, timedOut: false, output: '' }), 'ran no tests')
     assert.equal(
-      stepProblem(step, { code: 0, timedOut: false, output: 'Tests  2 skipped (2)' }),
+      describeStepFailure(step, { code: 0, timedOut: false, output: '' }),
+      'ran no tests'
+    )
+    assert.equal(
+      describeStepFailure(step, { code: 0, timedOut: false, output: 'Tests  2 skipped (2)' }),
       'ran no tests'
     )
     assert.isUndefined(
-      stepProblem(step, { code: 0, timedOut: false, output: 'Tests  1 passed (1)' })
+      describeStepFailure(step, { code: 0, timedOut: false, output: 'Tests  1 passed (1)' })
     )
   })
 
   test('a failing or stopped step fails', ({ assert }) => {
-    assert.equal(stepProblem(step, { code: 1, timedOut: false, output: '' }), 'exit 1')
+    assert.equal(describeStepFailure(step, { code: 1, timedOut: false, output: '' }), 'exit 1')
     assert.equal(
-      stepProblem(step, { code: null, timedOut: true, output: '' }),
+      describeStepFailure(step, { code: null, timedOut: true, output: '' }),
       'stopped after 1 minutes'
     )
   })

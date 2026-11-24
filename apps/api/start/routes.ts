@@ -16,10 +16,10 @@ import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { allowMutation } from '@kevinjohn/adonisjs-masquerade/http'
 import { controllers } from '#generated/controllers'
-import { authStrategy, selectedGuardName } from '#services/auth_strategy'
+import { readAuthStrategy, resolveGuardName } from '#services/auth_strategy'
 import { accountPublicLimit } from '#start/limiter'
 
-const strategy = authStrategy()
+const strategy = readAuthStrategy()
 const teamGuard = strategy === 'session' ? 'web' : 'api_effective'
 
 router.get('/', () => {
@@ -149,12 +149,12 @@ router
       })
       .prefix('account')
       .as('account')
-      .use(middleware.auth({ guards: [selectedGuardName()] }))
+      .use(middleware.auth({ guards: [resolveGuardName()] }))
 
     // Application data: admitted accounts only.
     router
       .get('reports', [controllers.Reports, 'index'])
-      .use(middleware.auth({ guards: [selectedGuardName()] }))
+      .use(middleware.auth({ guards: [resolveGuardName()] }))
       .use(middleware.admittedAccount())
     // Teams: admitted accounts create them; `scope` loads the caller's membership of `:scopeId`
     // and refuses everyone else with E_ACCESS_CONTROL_FORBIDDEN (403).
@@ -162,7 +162,7 @@ router
       .post('teams', [controllers.Teams, 'store'])
       .as(strategy === 'session' ? 'teams.store' : 'business.teams.store')
       .use(middleware.accountKitAccountBlocker())
-      .use(middleware.auth({ guards: [selectedGuardName()] }))
+      .use(middleware.auth({ guards: [resolveGuardName()] }))
       .use(middleware.admittedAccount())
     router
       .group(() => {
@@ -185,6 +185,6 @@ router
       })
       .prefix('admin/deleted-users')
       .as('deleted_users')
-      .use(middleware.auth({ guards: [selectedGuardName()] }))
+      .use(middleware.auth({ guards: [resolveGuardName()] }))
   })
   .prefix('/api/v1')

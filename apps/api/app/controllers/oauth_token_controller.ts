@@ -5,13 +5,13 @@ import User from '#models/user'
 import UserTransformer from '#transformers/user_transformer'
 import { accessTokenGuard } from '#services/account_kit_guards'
 import { rememberLastUsedMethod } from '#services/last_used_method'
-import { authStrategy } from '#services/auth_strategy'
+import { readAuthStrategy } from '#services/auth_strategy'
 import { tokenRedeemValidator } from '#validators/social'
 
 export default class OauthTokenController {
   async redeem(ctx: HttpContext) {
     ctx.response.header('Cache-Control', 'no-store')
-    if (authStrategy() !== 'access_tokens')
+    if (readAuthStrategy() !== 'access_tokens')
       throw new InvalidInputError('Token exchange is unavailable')
     const { code, verifier } = await ctx.request.validateUsing(tokenRedeemValidator)
     const result = await accountKit.socialAuthentication.redeemHandoff({

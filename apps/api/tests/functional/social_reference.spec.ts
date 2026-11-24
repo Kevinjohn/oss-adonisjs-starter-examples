@@ -5,8 +5,8 @@ import User from '#models/user'
 import { setSocialFixture } from '#tests/helpers/social_provider_fixture'
 import { notifications } from '#services/account_kit_notifications'
 import {
-  pkceChallenge as challenge,
-  pkceVerifier as verifier,
+  derivePkceChallenge as challenge,
+  generatePkceVerifier as verifier,
 } from '#services/social_browser_transaction'
 import { ACCESS_TOKENS_ONLY, isSessionStrategy } from '#tests/helpers/strategy'
 import { truncateDatabase } from '#tests/helpers/database'

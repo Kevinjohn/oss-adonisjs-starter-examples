@@ -20,7 +20,7 @@ export function rememberLastUsedMethod(ctx: HttpContext, method: Method) {
   }
 }
 
-export function lastUsedMethod(
+export function readLastUsedMethod(
   ctx: HttpContext,
   options: { password: boolean; providers: readonly string[] }
 ): Method | null {

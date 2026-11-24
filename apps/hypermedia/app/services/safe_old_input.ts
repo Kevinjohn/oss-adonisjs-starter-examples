@@ -1,6 +1,6 @@
 const SAFE_OLD_INPUT_FIELDS = ['fullName', 'email'] as const
 
-export function safeOldInput(body: Record<string, unknown>) {
+export function filterOldInput(body: Record<string, unknown>) {
   const oldInput: Record<string, string> = {}
 
   for (const field of SAFE_OLD_INPUT_FIELDS) {
