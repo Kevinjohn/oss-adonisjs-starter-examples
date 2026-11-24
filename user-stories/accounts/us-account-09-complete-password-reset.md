@@ -54,12 +54,12 @@ flowchart TD
     Z -->|Allowed GET| B["Controller inspects with passwordReset.inspect"]
     Z -->|Blocked during support mode| Z1["Refuse before token inspection or reset"]
     B --> C{"Valid token?"}
-    C -->|No| D["GET renders unusable state or API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
+    C -->|No| D["GET renders unusable state or API sendProofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
     C -->|Yes| V["Show proof form or return valid inspection result"]
     Z -->|Allowed POST| E["POST handler validates password and confirmation"]
     E --> F["passwordReset.reset"]
     F --> G{"Completion result?"}
-    G -->|Invalid POST token| J["Hypermedia redirects to forgot-password; Inertia flashes and redirects to proof.fallback; API proofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
+    G -->|Invalid POST token| J["Hypermedia redirects to forgot-password; Inertia flashes and redirects to proof.fallback; API sendProofFailure returns E_ACCOUNT_KIT_INVALID_PASSWORD_TOKEN"]
     G -->|Password changed| H["Invalidate prior credentials; redirect browser to sign-in or return API 202"]
     G -->|Recognized committed follow-up failure| I["Log failure; password remains changed; return the same success-shaped completion outcome"]
 ```

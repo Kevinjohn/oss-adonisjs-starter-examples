@@ -48,11 +48,11 @@ flowchart TD
     Z -->|Allowed GET| B["Controller inspects with inspectEmailChange"]
     Z -->|Blocked during support mode| Z1["Refuse before token inspection or completion"]
     B --> C{"Token inspection passes?"}
-    C -->|No| D["Browser renders invalid state; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
+    C -->|No| D["Browser renders invalid state; API sendProofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
     C -->|Yes| V["Show proof form or return valid inspection result"]
     Z -->|Allowed POST| E["POST handler calls completeEmailChange"]
     E --> F{"Completion outcome?"}
-    F -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia `complete` catches InvalidTokenError, flashes and redirects to session.create; API proofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
+    F -->|Invalid POST token| J["Hypermedia redirects to sign-in; Inertia `complete` catches InvalidTokenError, flashes and redirects to session.create; API sendProofFailure returns E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN"]
     F -->|Changed| G["Browser flashes success and redirects to sign-in; API returns email and verified"]
     F -->|Committed follow-up error| H["Browser logs and reports change; API reports failure and returns changed true"]
 ```

@@ -1,11 +1,11 @@
-import { safeOldInput } from '#services/safe_old_input'
+import { filterOldInput } from '#services/safe_old_input'
 import app from '@adonisjs/core/services/app'
 import { type HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 import type { StatusPageRange, StatusPageRenderer } from '@adonisjs/core/types/http'
 import { errors as shieldErrors } from '@adonisjs/shield'
 import { errors as limiterErrors } from '@adonisjs/limiter'
 import { errors as accountErrors } from '@kevinjohn/adonisjs-account-kit'
-import { proofRequest, proofRecovery } from '#services/token_page_headers'
+import { parseProofRequest, resolveProofRecoveryPath } from '#services/token_page_headers'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -43,12 +43,12 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     // store this app's camelCase password fields in the session.
     if (error instanceof shieldErrors.E_BAD_CSRF_TOKEN && ctx.session) {
       const message = error.getResponseMessage(error, ctx)
-      if (proofRequest(ctx.request)) {
+      if (parseProofRequest(ctx.request)) {
         ctx.session.flash('error', message)
         ctx.session.flashErrors({ [error.code]: message })
-        return ctx.response.redirect((await proofRecovery(ctx.request))!, false)
+        return ctx.response.redirect((await resolveProofRecoveryPath(ctx.request))!, false)
       }
-      ctx.session.flash('input', safeOldInput(ctx.request.all()))
+      ctx.session.flash('input', filterOldInput(ctx.request.all()))
       ctx.session.flash('error', message)
       ctx.session.flashErrors({ [error.code]: message })
       return ctx.response.redirect().back()
@@ -64,9 +64,9 @@ export default class HttpExceptionHandler extends ExceptionHandler {
           ? 'Too many attempts. Wait a few minutes and try again.'
           : 'That email address is already in use.'
       )
-      const destination = await proofRecovery(ctx.request)
+      const destination = await resolveProofRecoveryPath(ctx.request)
       if (destination) return ctx.response.redirect(destination, false)
-      ctx.session.flash('input', safeOldInput(ctx.request.all()))
+      ctx.session.flash('input', filterOldInput(ctx.request.all()))
       return ctx.response.redirect().back()
     }
     return super.handle(error, ctx)
@@ -79,13 +79,13 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     if (!ctx.session) return super.renderValidationErrorAsHTML(error, ctx)
 
     ctx.session.flashValidationErrors(error, false)
-    const destination = await proofRecovery(ctx.request)
+    const destination = await resolveProofRecoveryPath(ctx.request)
     if (destination) {
-      if (destination === proofRequest(ctx.request)?.fallback)
+      if (destination === parseProofRequest(ctx.request)?.fallback)
         ctx.session.flash('error', 'This link is invalid or has expired.')
       return ctx.response.redirect(destination, false)
     }
-    ctx.session.flash('input', safeOldInput(ctx.request.all()))
+    ctx.session.flash('input', filterOldInput(ctx.request.all()))
     ctx.response.redirect('back', true)
   }
 

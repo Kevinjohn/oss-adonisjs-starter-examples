@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { allySocialProvider } from '#services/social_provider'
+import { createAllyProviderAdapter } from '#services/social_provider'
 
 test('Ally adapter uses request-scoped state and rejects a crossed callback path', async ({
   assert,
@@ -38,7 +38,7 @@ test('Ally adapter uses request-scoped state and rejects a crossed callback path
       }
     },
   }
-  const provider = allySocialProvider('google')
+  const provider = createAllyProviderAdapter('google')
   const context = {
     params: { provider: 'google' },
     request: { input: (name: string) => (name === 'code' ? 'provider-code' : undefined) },

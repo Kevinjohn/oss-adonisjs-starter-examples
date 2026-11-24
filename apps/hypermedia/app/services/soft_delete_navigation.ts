@@ -2,7 +2,7 @@ import type User from '#models/user'
 import { isSoftDeleteAdmin } from '#services/soft_delete_admins'
 
 /** Links available in the authenticated starter navigation. */
-export function softDeleteNavigation(user: User) {
+export function buildSoftDeleteNavigation(user: User) {
   const items = [
     { label: 'Dashboard', route: 'dashboard', icon: 'lucide:house' },
     { label: 'Delete account', route: 'account_deletion.show', icon: 'lucide:trash-2' },

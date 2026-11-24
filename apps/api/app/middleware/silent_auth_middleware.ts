@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
-import { selectedGuardName } from '#services/auth_strategy'
+import { resolveGuardName } from '#services/auth_strategy'
 
 /**
  * Silent auth middleware can be used as a global middleware to silent check
@@ -14,7 +14,7 @@ import { selectedGuardName } from '#services/auth_strategy'
  */
 export default class SilentAuthMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
-    await ctx.auth.use(selectedGuardName()).check()
+    await ctx.auth.use(resolveGuardName()).check()
 
     return next()
   }

@@ -11,7 +11,7 @@ As an API account holder, I want to read my current admission requirements so th
 
 ## Acceptance criteria
 
-- No editable input exists. `this.admission.current(accountInput(ctx))` returns a decision; the controller returns only `decision` to the client.
+- No editable input exists. `this.admission.current(readAccountInput(ctx))` returns a decision; the controller returns only `decision` to the client.
 - The example requires invitation evidence and owner approval, plus allowed email domain when `ACCOUNT_KIT_ADMISSION_DOMAINS` is configured. A positive individual requirement is not equivalent to an admitted overall decision.
 - A stale/restricted credential can be refused by the package; being allowed to read the decision does not bypass the admitted-account gate. Decisions are learned through this status route; the admission service does not send a notification.
 
@@ -30,7 +30,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["AdmissionsController.show"] --> B["Injected AccountAdmission.current(accountInput(ctx))"]
+    A["AdmissionsController.show"] --> B["Injected AccountAdmission.current(readAccountInput(ctx))"]
     B --> C["Return response.ok(decision)"]
 ```
 

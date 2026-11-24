@@ -1,4 +1,4 @@
-import { safeOldInput } from '#services/safe_old_input'
+import { filterOldInput } from '#services/safe_old_input'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -25,7 +25,7 @@ export default class ProfileController {
       )
         throw error
       ctx.session.flash('error', 'Your current password is incorrect. Check it and try again.')
-      ctx.session.flash('input', safeOldInput({ fullName }))
+      ctx.session.flash('input', filterOldInput({ fullName }))
       return ctx.response.redirect().back()
     }
     ctx.session.flash('success', 'Your profile has been updated.')

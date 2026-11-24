@@ -35,7 +35,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["GET /admin/deleted-users or GET /api/v1/admin/deleted-users"] --> B["Browser default auth / API selectedGuardName auth"]
+    A["GET /admin/deleted-users or GET /api/v1/admin/deleted-users"] --> B["Browser default auth / API resolveGuardName auth"]
     B --> C["DeletedUsersController.index"]
     C --> D["isSoftDeleteAdmin(auth.getUserOrFail())"]
     D --> E{"Administrator flag set?"}

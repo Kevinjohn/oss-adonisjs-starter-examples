@@ -5,7 +5,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { countTests, planChecks, stepProblem } from '../src/check_changed_plan.ts'
+import { countTests, planChecks, describeStepFailure } from '../src/check_changed_plan.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 function usage(message: string): never {
@@ -89,7 +89,7 @@ for (const step of planChecks(list, { static: isStatic })) {
   }
   const result = await run(step.command, step.timeoutMs)
   const count = step.tests ? countTests(result.output) : undefined
-  const problem = stepProblem(step, result)
+  const problem = describeStepFailure(step, result)
   if (problem) {
     failed = true
     console.log(`${step.id}: fail (${problem})`)

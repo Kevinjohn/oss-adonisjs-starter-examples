@@ -23,7 +23,7 @@ export function reportCommittedFailure(logger: SafeLogger, error: unknown, opera
  * failure is reported and resolves to `undefined`, because the change itself succeeded; every other
  * error is rethrown.
  */
-export async function committedFollowUp<T>(
+export async function runCommittedFollowUp<T>(
   logger: SafeLogger,
   operation: string,
   run: () => Promise<T>

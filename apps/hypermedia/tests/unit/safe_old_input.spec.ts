@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { safeOldInput } from '#services/safe_old_input'
+import { filterOldInput } from '#services/safe_old_input'
 
 test('validation old input retains fullName and email independently up to 320 characters', ({
   assert,
@@ -16,7 +16,7 @@ test('validation old input retains fullName and email independently up to 320 ch
     unknown: 'unknown value',
   }
 
-  const oldInput = safeOldInput({
+  const oldInput = filterOldInput({
     ...input,
     nonString: { value: 'nested' },
   })
@@ -24,7 +24,7 @@ test('validation old input retains fullName and email independently up to 320 ch
   assert.deepEqual(oldInput, { fullName: input.fullName, email: input.email })
 
   for (const field of ['fullName', 'email'] as const) {
-    const tooLong = safeOldInput({
+    const tooLong = filterOldInput({
       [field]: 'x'.repeat(321),
     })
     assert.notProperty(tooLong, field)
@@ -41,7 +41,7 @@ test('validation old input retains fullName and email independently up to 320 ch
 
 test('validation old input omits unsupported object values', ({ assert }) => {
   for (const field of ['fullName', 'email'] as const) {
-    const oldInput = safeOldInput({
+    const oldInput = filterOldInput({
       [field]: { value: 'nested' },
     })
     assert.notProperty(oldInput, field)
@@ -49,8 +49,8 @@ test('validation old input omits unsupported object values', ({ assert }) => {
 })
 
 test('safe old input distinguishes absent fields from cleared fields', ({ assert }) => {
-  assert.deepEqual(safeOldInput({}), {})
-  assert.deepEqual(safeOldInput({ fullName: null, email: '' }), { fullName: '', email: '' })
-  assert.deepEqual(safeOldInput({ fullName: '', email: null }), { fullName: '', email: '' })
-  assert.deepEqual(safeOldInput({ fullName: undefined, email: 42, password: null }), {})
+  assert.deepEqual(filterOldInput({}), {})
+  assert.deepEqual(filterOldInput({ fullName: null, email: '' }), { fullName: '', email: '' })
+  assert.deepEqual(filterOldInput({ fullName: '', email: null }), { fullName: '', email: '' })
+  assert.deepEqual(filterOldInput({ fullName: undefined, email: 42, password: null }), {})
 })

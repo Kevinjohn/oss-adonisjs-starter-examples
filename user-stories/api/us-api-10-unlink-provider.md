@@ -12,7 +12,7 @@ As an API account holder, I want to remove a selected confirmed provider identit
 ## Acceptance criteria
 
 - `id` is a positive safe integer identity ID, not a provider name. Supply nonempty JSON `proof`; read the confirmed ID via US-API-03.
-- The controller passes `{ current: accountInput(ctx), identityId, proof }` to `socialAuthentication.unlink` and returns 204 only on success.
+- The controller passes `{ current: readAccountInput(ctx), identityId, proof }` to `socialAuthentication.unlink` and returns 204 only on success.
 - The package enforces identity ownership, proof purpose and last-usable-method protection. Refusal is not a successful unlink; this endpoint does not remove another account's method.
 
 ## User flow
@@ -31,7 +31,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SocialIdentitiesController.unlink"] --> B["socialUnlinkValidator and identityId parser"]
+    A["SocialIdentitiesController.unlink"] --> B["socialUnlinkValidator and requireIdentityIdParam"]
     B --> C["socialAuthentication.unlink({ current, identityId, proof })"]
     C --> D["Return response.noContent on success"]
 ```

@@ -5,7 +5,7 @@ import { errors } from '@kevinjohn/adonisjs-confirm-action-with-password'
 import { managedGuard } from '#services/account_kit_guard'
 import {
   clearSecureNoteDraft,
-  noteRequest,
+  buildNoteRequest,
   readSecureNote,
   saveSecureNote,
   storeSecureNoteDraft,
@@ -38,7 +38,7 @@ export default class SecureNotesController {
     let confirmationId: string
     try {
       const issued = await confirmations.confirmPassword(input, {
-        ...noteRequest(input.userId, body),
+        ...buildNoteRequest(input.userId, body),
         password,
       })
       confirmationId = issued.confirmationId

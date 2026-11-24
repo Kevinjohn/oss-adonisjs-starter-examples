@@ -31,17 +31,17 @@ export function planChecks(
   options: { static?: boolean } = {}
 ): CheckStep[] {
   const present = files.filter((file) => !file.deleted).map((file) => file.path)
-  const any = (pattern: RegExp) => files.some((file) => pattern.test(file.path))
+  const hasChangedPathMatching = (pattern: RegExp) => files.some((file) => pattern.test(file.path))
   const steps: CheckStep[] = []
-  const step = (
+  const addStep = (
     id: string,
     run: boolean,
     command: string[],
     { skip, ...stepOptions }: { skip: string; tests?: 'japa'; timeoutMs?: number }
   ) => steps.push(run ? { id, command, timeoutMs: 5 * minute, ...stepOptions } : { id, skip })
 
-  const wholeFormat = any(formatConfig) || any(dependencies)
-  step(
+  const wholeFormat = hasChangedPathMatching(formatConfig) || hasChangedPathMatching(dependencies)
+  addStep(
     'format',
     present.length > 0 || wholeFormat,
     wholeFormat
@@ -58,9 +58,9 @@ export function planChecks(
         ],
     { skip: 'no existing changed files' }
   )
-  const wholeLint = any(lintConfig) || any(dependencies)
+  const wholeLint = hasChangedPathMatching(lintConfig) || hasChangedPathMatching(dependencies)
   const lintFiles = present.filter((path) => lintable.test(path))
-  step(
+  addStep(
     'lint',
     lintFiles.length > 0 || wholeLint,
     wholeLint
@@ -81,17 +81,20 @@ export function planChecks(
         ],
     { skip: 'no changed source files' }
   )
-  step('typecheck', any(typed), ['pnpm', 'typecheck'], {
+  addStep('typecheck', hasChangedPathMatching(typed), ['pnpm', 'typecheck'], {
     skip: 'no TypeScript or type configuration changed',
   })
 
-  const full = any(suiteInput)
+  const full = hasChangedPathMatching(suiteInput)
   const specs = present.filter((path) => spec.test(path))
-  const targetedSpecs = [...specs, ...(any(sourcedDocs) ? ['tests/docs_sources.spec.ts'] : [])]
+  const targetedSpecs = [
+    ...specs,
+    ...(hasChangedPathMatching(sourcedDocs) ? ['tests/docs_sources.spec.ts'] : []),
+  ]
   if (full && !options.static) {
-    step('tests', true, ['pnpm', 'test'], { tests: 'japa', timeoutMs: 15 * minute, skip: '' })
+    addStep('tests', true, ['pnpm', 'test'], { tests: 'japa', timeoutMs: 15 * minute, skip: '' })
   } else {
-    step(
+    addStep(
       'tests',
       targetedSpecs.length > 0,
       ['pnpm', 'test', ...targetedSpecs.map((path) => `--files=${path}`)],
@@ -107,7 +110,10 @@ export function planChecks(
     const kit = file.path.match(appFile)?.[1]
     return kit && allKits.includes(kit) ? [kit] : []
   })
-  const appKits = any(appRunner) || any(dependencies) ? allKits : [...new Set(changedApps)]
+  const appKits =
+    hasChangedPathMatching(appRunner) || hasChangedPathMatching(dependencies)
+      ? allKits
+      : [...new Set(changedApps)]
   if (appKits.length > 0 && options.static) {
     steps.push({ id: 'app-checks', skip: '--static leaves them out' })
   } else {
@@ -129,20 +135,20 @@ export function planChecks(
 }
 
 /** Strip terminal colours before reading a runner summary. */
-function plain(output: string) {
+function stripAnsiColors(output: string) {
   // eslint-disable-next-line no-control-regex
   return output.replace(/\u001b\[[0-9;]*m/g, '')
 }
 
 /** Count the tests Japa reported, or undefined when its summary is missing. */
 export function countTests(output: string) {
-  const match = /^\s*Tests\s+.*\((\d+)\)\s*$/m.exec(plain(output))
+  const match = /^\s*Tests\s+.*\((\d+)\)\s*$/m.exec(stripAnsiColors(output))
   return match ? Number(match[1]) : undefined
 }
 
 /** Count executed tests, leaving out Japa's skipped and todo tests. */
 function countExecutedTests(output: string) {
-  const summary = /^\s*Tests\s+(.+)\(\d+\)\s*$/m.exec(plain(output))?.[1] ?? ''
+  const summary = /^\s*Tests\s+(.+)\(\d+\)\s*$/m.exec(stripAnsiColors(output))?.[1] ?? ''
   return [...summary.matchAll(/(?:^|,\s*)(\d+)\s+(passed|failed|regression)\b/g)].reduce(
     (total, match) => total + Number(match[1]),
     0
@@ -150,7 +156,7 @@ function countExecutedTests(output: string) {
 }
 
 /** Why a step that ran failed, or undefined when it passed. */
-export function stepProblem(
+export function describeStepFailure(
   step: { timeoutMs: number; tests?: 'japa' },
   result: { code: number | null; timedOut: boolean; output: string }
 ) {

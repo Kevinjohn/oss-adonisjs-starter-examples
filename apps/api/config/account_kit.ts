@@ -14,14 +14,14 @@ import { createNotify } from './account_kit_notifications.js'
 import { onCredentialsChangedTransaction } from './account_kit_credential_notice.js'
 import { accessControlKitCallbacks } from '@kevinjohn/adonisjs-access-control/account-kit'
 import { canAccess, exportAccountData } from '#services/account_kit_authorization'
-import { registrationFullName } from '#services/registration_fields'
+import { readRegistrationFullName } from '#services/registration_fields'
 import { referencePasswordLimits } from '#validators/password'
-import { allySocialProvider } from '#services/social_provider'
+import { createAllyProviderAdapter } from '#services/social_provider'
 
 // Tests swap Ally for a deterministic fixture; production never loads test code.
 const socialProvider = app.inTest
   ? (await import('#tests/helpers/social_provider_fixture')).fixtureProvider
-  : allySocialProvider
+  : createAllyProviderAdapter
 
 const authStrategy = env.get('ACCOUNT_KIT_AUTH_STRATEGY') ?? 'access_tokens'
 const accountUrl = (path: string, token: string) =>
@@ -56,7 +56,7 @@ const teamCallbacks = accessControlKitCallbacks()
 const loadUser = async () => (await import('#models/user')).default
 const users = createLucidAdapter(loadUser, {
   mapRegistrationData(data, user) {
-    const fullName = registrationFullName(data)
+    const fullName = readRegistrationFullName(data)
     user.fullName = fullName
   },
 })
@@ -75,7 +75,7 @@ export default defineConfig({
   registration: {
     availability: 'open',
     mapFields(data) {
-      const fullName = registrationFullName(data)
+      const fullName = readRegistrationFullName(data)
       if (fullName && fullName.length > 255)
         throw new Error('A full name of at most 255 characters is allowed')
       return { fullName }

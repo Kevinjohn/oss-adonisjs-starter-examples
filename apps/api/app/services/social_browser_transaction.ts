@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import type { HttpContext } from '@adonisjs/core/http'
 import { InvalidInputError } from '@kevinjohn/adonisjs-account-kit'
-import { authStrategy } from '#services/auth_strategy'
+import { readAuthStrategy } from '#services/auth_strategy'
 
 /** The browser's PKCE verifier, kept in the session between redirect and callback. */
 export type BrowserTransaction = { state: string; verifier: string }
@@ -10,12 +10,12 @@ type BrowserContinuation = { continuation: string; verifier: string }
 const transactionKey = 'socialTransaction'
 const continuationKey = 'socialContinuation'
 
-const isBrowser = () => authStrategy() === 'session'
+const isBrowser = () => readAuthStrategy() === 'session'
 
 /** A fresh PKCE verifier. */
-export const pkceVerifier = () => randomBytes(32).toString('base64url')
+export const generatePkceVerifier = () => randomBytes(32).toString('base64url')
 /** The PKCE S256 challenge for `verifier`. */
-export const pkceChallenge = (verifier: string) =>
+export const derivePkceChallenge = (verifier: string) =>
   createHash('sha256').update(verifier).digest('base64url')
 
 /**
@@ -24,9 +24,9 @@ export const pkceChallenge = (verifier: string) =>
  * Call `remember` with the begin result's state to keep the verifier for the callback.
  */
 export function beginBrowserTransaction(ctx: HttpContext, clientChallenge?: string) {
-  const verifier = isBrowser() ? pkceVerifier() : undefined
+  const verifier = isBrowser() ? generatePkceVerifier() : undefined
   return {
-    clientChallenge: verifier ? pkceChallenge(verifier) : (clientChallenge ?? ''),
+    clientChallenge: verifier ? derivePkceChallenge(verifier) : (clientChallenge ?? ''),
     remember(state: string) {
       if (verifier) ctx.session.put(transactionKey, { state, verifier })
     },
@@ -34,7 +34,7 @@ export function beginBrowserTransaction(ctx: HttpContext, clientChallenge?: stri
 }
 
 /** The pending session transaction for this callback state; undefined for token clients. */
-export function pendingBrowserTransaction(
+export function readPendingBrowserTransaction(
   ctx: HttpContext,
   state: string
 ): BrowserTransaction | undefined {
@@ -58,7 +58,7 @@ export function rememberBrowserContinuation(
 }
 
 /** The pending session continuation for this request; undefined for token clients. */
-export function pendingBrowserContinuation(
+export function readPendingBrowserContinuation(
   ctx: HttpContext,
   continuation: string
 ): BrowserContinuation | undefined {

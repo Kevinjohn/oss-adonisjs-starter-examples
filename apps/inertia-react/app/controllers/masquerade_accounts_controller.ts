@@ -12,7 +12,7 @@ export default class MasqueradeAccountsController {
     const runtime = (await ctx.containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
     const mode = await runtime.service.status(ctx)
     const canMasquerade = isMasqueradeOperator(operator)
-    const accounts = canMasquerade && !mode.isMasquerading ? await candidateAccounts() : []
+    const accounts = canMasquerade && !mode.isMasquerading ? await listCandidateAccounts() : []
     const target = mode.isMasquerading ? await User.find(mode.targetId) : null
     return ctx.inertia.render('masquerade/accounts', {
       operatorEmail: operator.email,
@@ -29,7 +29,7 @@ export default class MasqueradeAccountsController {
         : { isMasquerading: false as const, contextToken: mode.contextToken },
       accounts: accounts.map((user) => ({ id: user.id, email: user.email })),
       targetEmail: target?.email ?? null,
-      outcome: outcomeFrom(ctx.session.flashMessages.get('masquerade')) ?? null,
+      outcome: buildFormOutcome(ctx.session.flashMessages.get('masquerade')) ?? null,
     })
   }
 }
@@ -41,7 +41,7 @@ const errorMessages: Record<string, string> = {
 }
 
 /** English copy for the form controller's flash message. */
-function outcomeFrom(flash: unknown) {
+function buildFormOutcome(flash: unknown) {
   const message = flash as MasqueradeFormFlash | undefined
   if (!message) return undefined
   if (message.type === 'success')
@@ -56,7 +56,7 @@ function outcomeFrom(flash: unknown) {
 }
 
 /** Keep the demo chooser bounded; a production host should add search or pagination. */
-async function candidateAccounts() {
+async function listCandidateAccounts() {
   const query = User.query().select('id', 'email').orderBy('email').limit(50)
   if (masqueradeOperatorEmails.size) {
     const operators = [...masqueradeOperatorEmails]

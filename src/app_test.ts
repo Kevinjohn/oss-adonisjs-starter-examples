@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import {
   type BackgroundProcess,
   type CommandRunner,
-  constructedEnvironment,
+  createCommandEnvironment,
 } from './command_runner.ts'
 import { SandboxError } from './errors.ts'
 import { requireOwnWorkspace } from './own_workspace.ts'
@@ -36,7 +36,7 @@ export interface AppTestOptions {
 
 const VITE_SCRIPT = fileURLToPath(new URL('./vite_server.mjs', import.meta.url))
 
-function playwrightCliFor(appDirectory: string): string {
+function resolvePlaywrightCliPath(appDirectory: string): string {
   const browserClient = createRequire(join(appDirectory, 'package.json')).resolve(
     '@japa/browser-client'
   )
@@ -87,7 +87,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
   mkdirSync(copies, { recursive: true })
   const app = mkdtempSync(join(copies, `${options.kit}-`))
 
-  const env = constructedEnvironment({
+  const env = createCommandEnvironment({
     // Lets an old locked Playwright run on a host it does not recognise; CI never sets it.
     PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: process.env.PLAYWRIGHT_HOST_PLATFORM_OVERRIDE,
   })
@@ -117,7 +117,7 @@ export async function testApp(options: AppTestOptions): Promise<void> {
 
     if (manifest.devDependencies?.['@japa/browser-client']) {
       if (options.installBrowsers) {
-        const cli = (options.playwrightCli ?? playwrightCliFor)(app)
+        const cli = (options.playwrightCli ?? resolvePlaywrightCliPath)(app)
         await run('node', [cli, 'install', '--with-deps', 'chromium'])
       }
       const port = options.vitePort ?? 5173

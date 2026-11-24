@@ -13,11 +13,11 @@ import {
   beginBrowserTransaction,
   forgetBrowserContinuation,
   forgetBrowserTransaction,
-  pendingBrowserContinuation,
-  pendingBrowserTransaction,
+  readPendingBrowserContinuation,
+  readPendingBrowserTransaction,
   rememberBrowserContinuation,
 } from '#services/social_browser_transaction'
-import { currentIfAuthenticated } from '#services/social_request'
+import { readCurrentAccountIfAuthenticated } from '#services/social_request'
 import {
   socialCallbackValidator,
   socialConfirmValidator,
@@ -25,17 +25,17 @@ import {
 } from '#validators/social'
 import { socialRegistrationValidator } from '#validators/user'
 
-function providerParam(value: string): SocialProviderName {
+function requireProviderParam(value: string): SocialProviderName {
   if (value !== 'google' && value !== 'github') throw new InvalidInputError('Unknown provider')
   return value
 }
 
 export default class SocialAuthController {
   async redirect(ctx: HttpContext) {
-    const provider = providerParam(ctx.params.provider)
+    const provider = requireProviderParam(ctx.params.provider)
     const input = await ctx.request.validateUsing(socialRedirectValidator)
     const intent = input.intent ?? 'login'
-    const current = intent === 'login' ? undefined : await currentIfAuthenticated(ctx)
+    const current = intent === 'login' ? undefined : await readCurrentAccountIfAuthenticated(ctx)
     const transaction = beginBrowserTransaction(ctx, input.clientChallenge)
     const result = await accountKit.socialAuthentication.begin({
       provider,
@@ -51,7 +51,7 @@ export default class SocialAuthController {
   }
 
   async confirm(ctx: HttpContext) {
-    const provider = providerParam(ctx.params.provider)
+    const provider = requireProviderParam(ctx.params.provider)
     const { verificationToken, clientChallenge } =
       await ctx.request.validateUsing(socialConfirmValidator)
     const transaction = beginBrowserTransaction(ctx, clientChallenge)
@@ -74,10 +74,10 @@ export default class SocialAuthController {
   async callback(ctx: HttpContext) {
     ctx.response.header('Cache-Control', 'no-store')
     ctx.response.header('Referrer-Policy', 'no-referrer')
-    const provider = providerParam(ctx.params.provider)
+    const provider = requireProviderParam(ctx.params.provider)
     const { state, intent } = await ctx.request.validateUsing(socialCallbackValidator)
-    const pending = pendingBrowserTransaction(ctx, state)
-    const current = await currentIfAuthenticated(ctx)
+    const pending = readPendingBrowserTransaction(ctx, state)
+    const current = await readCurrentAccountIfAuthenticated(ctx)
     const result = await accountKit.socialAuthentication.callback({
       state,
       provider,
@@ -116,7 +116,7 @@ export default class SocialAuthController {
     const { continuation, fullName, email } = await ctx.request.validateUsing(
       socialRegistrationValidator
     )
-    const pending = pendingBrowserContinuation(ctx, continuation)
+    const pending = readPendingBrowserContinuation(ctx, continuation)
     const result = await accountKit.socialAuthentication.completeRegistration({
       continuation,
       email,

@@ -16,7 +16,7 @@ As an API account holder, I want to obtain a password proof for a sensitive purp
 | `password` | JSON string | Required/nonempty; verified by Account Kit                                                          |
 | `purpose`  | JSON choice | Required: social_link, social_unlink, password_change, email_change, account_export, account_delete |
 
-- `provePassword` receives `current: accountInput(ctx)`, not a caller-supplied account. Success returns `{ proof }` with no-store headers.
+- `provePassword` receives `current: readAccountInput(ctx)`, not a caller-supplied account. Success returns `{ proof }` with no-store headers.
 - Incorrect password, stale credential, invalid purpose or throttle refusal does not grant a proof. Issuing proof alone does not perform the later sensitive action.
 
 ## User flow
@@ -35,7 +35,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 ```mermaid
 flowchart TD
     A["SocialIdentitiesController.provePassword"] --> B["passwordProofValidator"]
-    B --> C["socialAuthentication.provePassword({ current: accountInput(ctx), password, purpose })"]
+    B --> C["socialAuthentication.provePassword({ current: readAccountInput(ctx), password, purpose })"]
     C --> D["Return proof and no-store response"]
 ```
 

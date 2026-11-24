@@ -49,7 +49,7 @@ flowchart TD
     C --> D{"Update or committed follow-up outcome?"}
     D -->|Validation or password refusal| E["Keep the name unchanged and show or return refusal"]
     D -->|Browser success| F["Redirect; profile view displays updated name"]
-    D -->|API success| G["Serialize safeAccount without fullName"]
+    D -->|API success| G["Serialize projectAccount without fullName"]
     D -->|API committed follow-up error| H["Report committed failure and return updated true"]
 ```
 

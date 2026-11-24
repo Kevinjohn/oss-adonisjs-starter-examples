@@ -12,7 +12,7 @@ As an API scope manager, I want to revoke an outstanding invitation so that its 
 ## Acceptance criteria
 
 - Route ID must be a positive safe integer. The controller derives `actorId` from the authenticated raw account.
-- `committedFollowUp` wraps `invitations.revoke({ actorId, invitationId })`; success or a recognized post-commit failure returns 204. Recognized follow-up failures are logged rather than claiming a rollback.
+- `runCommittedFollowUp` wraps `invitations.revoke({ actorId, invitationId })`; success or a recognized post-commit failure returns 204. Recognized follow-up failures are logged rather than claiming a rollback.
 - An invalid ID, authorization refusal or unexpected failure propagates. No account or existing team membership is deleted by revoking the invitation.
 
 ## User flow
@@ -31,8 +31,8 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["InvitationsController.revoke"] --> B["invitationIdParam and raw actor.id"]
-    B --> C["committedFollowUp wraps invitations.revoke({ actorId, invitationId })"]
+    A["InvitationsController.revoke"] --> B["requireInvitationIdParam and raw actor.id"]
+    B --> C["runCommittedFollowUp wraps invitations.revoke({ actorId, invitationId })"]
     C --> D["Return response.noContent or propagate unrecognized error"]
 ```
 

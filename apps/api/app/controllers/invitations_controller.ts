@@ -6,10 +6,14 @@ import {
   invitationListValidator,
   invitationValidator,
 } from '#validators/account_kit'
-import { accountError, proofFailure, proofHeaders } from '#services/http_responses'
-import { committedFollowUp } from '#services/committed_failure_diagnostic'
+import {
+  sendAccountError,
+  sendProofFailure,
+  setProofResponseHeaders,
+} from '#services/http_responses'
+import { runCommittedFollowUp } from '#services/committed_failure_diagnostic'
 
-function invitationIdParam(value: string): number {
+function requireInvitationIdParam(value: string): number {
   const id = Number(value)
   if (!Number.isSafeInteger(id) || id <= 0) throw new InvalidInputError('Invalid invitation ID')
   return id
@@ -19,10 +23,10 @@ export default class InvitationsController {
   async send(ctx: HttpContext) {
     const actor = await ctx.auth.getUserOrFail()
     if (actor.currentAccessToken && !actor.currentAccessToken.allows('invitations:create')) {
-      return accountError(ctx, 403, 'missing_ability', 'This token cannot create invitations.')
+      return sendAccountError(ctx, 403, 'missing_ability', 'This token cannot create invitations.')
     }
     const { email, role, scope } = await ctx.request.validateUsing(invitationValidator)
-    const invitation = await committedFollowUp(ctx.logger, 'invitation.send', () =>
+    const invitation = await runCommittedFollowUp(ctx.logger, 'invitation.send', () =>
       accountKit.invitations.send({ actorId: actor.id, email, role, scope })
     )
     return invitation
@@ -39,18 +43,18 @@ export default class InvitationsController {
   }
 
   async inspect(ctx: HttpContext) {
-    proofHeaders(ctx)
+    setProofResponseHeaders(ctx)
     const invitation = await accountKit.invitations.inspect({ token: ctx.params.token })
     return invitation
       ? ctx.response.ok(invitation)
-      : proofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
+      : sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
   }
 
   async accept(ctx: HttpContext) {
-    proofHeaders(ctx)
+    setProofResponseHeaders(ctx)
     const { password, fullName } = await ctx.request.validateUsing(invitationAcceptValidator)
     try {
-      const user = await committedFollowUp(ctx.logger, 'invitation.accept', () =>
+      const user = await runCommittedFollowUp(ctx.logger, 'invitation.accept', () =>
         accountKit.invitations.accept({
           token: ctx.params.token,
           password,
@@ -65,7 +69,7 @@ export default class InvitationsController {
       })
     } catch (error) {
       if (error instanceof InvalidTokenError) {
-        return proofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
+        return sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_TOKEN')
       }
       throw error
     }
@@ -73,10 +77,10 @@ export default class InvitationsController {
 
   async resend({ auth, params, response, logger }: HttpContext) {
     const actor = await auth.getUserOrFail()
-    const invitation = await committedFollowUp(logger, 'invitation.resend', () =>
+    const invitation = await runCommittedFollowUp(logger, 'invitation.resend', () =>
       accountKit.invitations.resend({
         actorId: actor.id,
-        invitationId: invitationIdParam(params.id),
+        invitationId: requireInvitationIdParam(params.id),
       })
     )
     return invitation ? response.ok({ id: invitation.id }) : response.accepted({ requested: true })
@@ -84,10 +88,10 @@ export default class InvitationsController {
 
   async revoke({ auth, params, response, logger }: HttpContext) {
     const actor = await auth.getUserOrFail()
-    await committedFollowUp(logger, 'invitation.revoke', () =>
+    await runCommittedFollowUp(logger, 'invitation.revoke', () =>
       accountKit.invitations.revoke({
         actorId: actor.id,
-        invitationId: invitationIdParam(params.id),
+        invitationId: requireInvitationIdParam(params.id),
       })
     )
     return response.noContent()

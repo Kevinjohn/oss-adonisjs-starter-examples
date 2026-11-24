@@ -2,11 +2,11 @@ import app from '@adonisjs/core/services/app'
 import { type HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 import type { StatusPageRange, StatusPageRenderer } from '@adonisjs/core/types/http'
 import { errors as shieldErrors } from '@adonisjs/shield'
-import { proofRequest, proofRecovery } from '#services/token_page_headers'
+import { parseProofRequest, resolveProofRecoveryPath } from '#services/token_page_headers'
 import { errors } from '@kevinjohn/adonisjs-account-kit'
 
 /** Maps Account Kit errors to safe flash messages without exposing private causes. */
-function accountMessage(error: errors.AccountKitError) {
+function formatAccountErrorMessage(error: errors.AccountKitError) {
   if (error instanceof errors.InvalidCredentialsError) return 'Invalid email or password.'
   if (error instanceof errors.ThrottledError)
     return `Too many attempts. Try again in ${error.retryAfterSeconds} seconds.`
@@ -53,9 +53,9 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     if (!ctx.session) return super.renderValidationErrorAsHTML(error, ctx)
 
     ctx.session.flashValidationErrors(error, false)
-    const destination = await proofRecovery(ctx.request)
+    const destination = await resolveProofRecoveryPath(ctx.request)
     if (destination) {
-      if (destination === proofRequest(ctx.request)?.fallback)
+      if (destination === parseProofRequest(ctx.request)?.fallback)
         ctx.session.flash('error', 'This link is invalid or has expired.')
       return ctx.response.redirect(destination, false)
     }
@@ -68,9 +68,9 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
-    if (error instanceof shieldErrors.E_BAD_CSRF_TOKEN && proofRequest(ctx.request)) {
+    if (error instanceof shieldErrors.E_BAD_CSRF_TOKEN && parseProofRequest(ctx.request)) {
       ctx.session.flash('error', 'The form expired. Please try again.')
-      return ctx.response.redirect((await proofRecovery(ctx.request))!, false)
+      return ctx.response.redirect((await resolveProofRecoveryPath(ctx.request))!, false)
     }
     // Shield re-flashes every field except snake_case password names, which would store this
     // app's camelCase password fields in the session.
@@ -86,8 +86,8 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       return ctx.response.redirect().toRoute('session.create')
     }
     if (error instanceof errors.AccountKitError) {
-      ctx.session.flash('error', accountMessage(error))
-      const proof = proofRequest(ctx.request)
+      ctx.session.flash('error', formatAccountErrorMessage(error))
+      const proof = parseProofRequest(ctx.request)
       if (proof) return ctx.response.redirect(proof.fallback, false)
       return ctx.response.redirect().back()
     }

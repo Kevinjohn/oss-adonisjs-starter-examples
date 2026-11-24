@@ -33,7 +33,7 @@ export default class MasqueradeFormController extends MasqueradeController {
   }
 
   private async transition(ctx: HttpContext, action: FormAction): Promise<void> {
-    noStore(ctx)
+    setControlResponseHeaders(ctx)
     try {
       const runtime = (await ctx.containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
       // Like the package controller, control only from a route on the operator's raw guard.
@@ -44,19 +44,19 @@ export default class MasqueradeFormController extends MasqueradeController {
 
       flash(ctx, { type: 'success', action: action === 'start' ? 'started' : 'stopped' })
       ctx.session.flash('masqueradeClearHistory', true)
-      ctx.response.redirect().toPath(this.successPath(ctx, action))
+      ctx.response.redirect().toPath(this.resolveSuccessPath(ctx, action))
     } catch (error) {
       if (!(error instanceof MasqueradeError)) throw error
       flash(ctx, { type: 'error', code: error.code })
-      ctx.response.redirect().toPath(this.errorPath(ctx, action))
+      ctx.response.redirect().toPath(this.resolveErrorPath(ctx, action))
     }
   }
 
-  protected successPath(ctx: HttpContext, action: FormAction): string {
+  protected resolveSuccessPath(ctx: HttpContext, action: FormAction): string {
     return action === 'start' ? this.redirectAfterStart(ctx) : this.redirectAfterStop(ctx)
   }
 
-  protected errorPath(_ctx: HttpContext, _action: FormAction): string {
+  protected resolveErrorPath(_ctx: HttpContext, _action: FormAction): string {
     return '/masquerade/accounts'
   }
 }
@@ -73,26 +73,28 @@ const startKeys = new Set([
 const stopKeys = new Set(['_masqueradeContext', '_csrf'])
 
 function parseStartForm(ctx: HttpContext): StartInput {
-  const body = formBody(ctx, startKeys)
+  const body = readFormBody(ctx, startKeys)
   if (!body) return { __invalidHttpInput: true } as unknown as StartInput
   return {
     targetId: body.targetId as StartInput['targetId'],
     reason: body.reason as StartInput['reason'],
     // The body parser turns blank fields into null; a blank optional field takes its default.
-    ...(blank(body.access) ? {} : { access: body.access as StartInput['access'] }),
-    ...(blank(body.durationSeconds) ? {} : { durationSeconds: formDuration(body.durationSeconds) }),
-    expectedContext: controlToken(ctx, body) ?? '',
+    ...(isBlank(body.access) ? {} : { access: body.access as StartInput['access'] }),
+    ...(isBlank(body.durationSeconds)
+      ? {}
+      : { durationSeconds: coerceFormDuration(body.durationSeconds) }),
+    expectedContext: resolveControlToken(ctx, body) ?? '',
   }
 }
 
-function blank(value: unknown): boolean {
+function isBlank(value: unknown): boolean {
   return value === undefined || value === null
 }
 
 function parseStopForm(ctx: HttpContext): StopInput {
-  const body = formBody(ctx, stopKeys)
+  const body = readFormBody(ctx, stopKeys)
   if (!body) return { __invalidHttpInput: true } as unknown as StopInput
-  return { expectedContext: controlToken(ctx, body) ?? '' }
+  return { expectedContext: resolveControlToken(ctx, body) ?? '' }
 }
 
 function acceptsHtmlForm(ctx: HttpContext): boolean {
@@ -104,7 +106,7 @@ function acceptsHtmlForm(ctx: HttpContext): boolean {
   return Boolean(explicitlyAcceptsHtml && ctx.request.accepts(['html', 'json']) === 'html')
 }
 
-function formBody(ctx: HttpContext, allowedKeys: Set<string>): Record<string, unknown> | null {
+function readFormBody(ctx: HttpContext, allowedKeys: Set<string>): Record<string, unknown> | null {
   const contentType = ctx.request.header('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
   const contentLength = ctx.request.header('content-length')
   const raw = ctx.request.raw()
@@ -123,14 +125,14 @@ function formBody(ctx: HttpContext, allowedKeys: Set<string>): Record<string, un
   return body
 }
 
-function formDuration(value: unknown): StartInput['durationSeconds'] {
+function coerceFormDuration(value: unknown): StartInput['durationSeconds'] {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value))
     return value as unknown as StartInput['durationSeconds']
   const number = Number(value)
   return Number.isSafeInteger(number) ? number : (value as unknown as StartInput['durationSeconds'])
 }
 
-function controlToken(ctx: HttpContext, body: Record<string, unknown>): string | undefined {
+function resolveControlToken(ctx: HttpContext, body: Record<string, unknown>): string | undefined {
   const header = ctx.request.header('X-Masquerade-Context')
   const hidden = body._masqueradeContext
   if (header !== undefined && hidden !== undefined && header !== hidden)
@@ -139,7 +141,7 @@ function controlToken(ctx: HttpContext, body: Record<string, unknown>): string |
   return typeof token === 'string' ? token : undefined
 }
 
-function noStore(ctx: HttpContext): void {
+function setControlResponseHeaders(ctx: HttpContext): void {
   ctx.response.header('Cache-Control', 'private, no-store')
   ctx.response.vary(['Accept', 'X-Masquerade-Context'])
 }

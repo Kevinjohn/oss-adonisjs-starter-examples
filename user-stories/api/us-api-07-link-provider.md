@@ -18,7 +18,7 @@ As an API account holder, I want to link a provider after proving current-accoun
 | `proof`           | String       | Proof expected by the linking policy; obtain a current-account sensitive proof first                                    |
 | `clientChallenge` | String       | Required for token clients: a 43-character base64url S256 challenge; session flow generates and stores its own verifier |
 
-- `currentIfAuthenticated` derives current credentials for link/reauth intents; linking is not authorized by a caller-supplied user ID.
+- `readCurrentAccountIfAuthenticated` derives current credentials for link/reauth intents; linking is not authorized by a caller-supplied user ID.
 - The package callback handles the confirmed link. A link response is not a new target credential, and an invalid proof/provider or conflicting identity is refused.
 - The caller can read confirmed identity IDs through US-API-03 after completion. This route does not provide a browser-kit linking form.
 
@@ -39,7 +39,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SocialAuthController.redirect intent link"] --> B["currentIfAuthenticated(ctx)"]
+    A["SocialAuthController.redirect intent link"] --> B["readCurrentAccountIfAuthenticated(ctx)"]
     B --> C["socialAuthentication.begin with current, proof and clientChallenge"]
     C --> D["SocialAuthController.callback passes current and intent"]
     D --> E["Package evaluates link and returns callback result"]
