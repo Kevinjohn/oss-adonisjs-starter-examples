@@ -40,7 +40,7 @@ flowchart TD
     A["Browser POST /account/delete or API DELETE /api/v1/account"] --> B["Raw authentication and accountKitBlocker"]
     B --> C["AccountDeletionController.destroy"]
     C --> F{"Browser or API controller?"}
-    F -->|Browser| D["Capture readCurrentBrowserSession, then User.delete"]
+    F -->|Browser| D["Capture raw web guard current(), then User.delete"]
     D --> G["Account Kit authentication.logout with captured session and adapter, then redirect"]
     F -->|API| E["Get raw user and call User.delete"]
     E --> H["Return response.noContent"]

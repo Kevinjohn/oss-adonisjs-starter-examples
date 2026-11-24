@@ -13,7 +13,7 @@ As a signed-in account owner, I want to open the protected account page so that 
 
 - No editable fields are required. Open `/account`; dashboard access alone does not establish permission for this page.
 - Authentication resolves the default effective session account. A valid confirmed account sees **Protected account page** in Hypermedia or **Your account is confirmed** in React/Vue.
-- The verified-account middleware calls `authentication.requireActive` with the raw web user ID, session handle and revision from `readCurrentBrowserSession`. An unconfirmed account is redirected to the dashboard with email-confirmation feedback; unauthenticated requests follow the authentication response. Other authentication failures are not converted into a successful page render.
+- The verified-account middleware calls `authentication.requireActive` with the raw web user ID, session handle and revision from `ctx.auth.use('web').current()`. It restores the effective guard before continuing. An unconfirmed account is redirected to the dashboard with email-confirmation feedback; unauthenticated requests follow the authentication response. Other authentication failures are not converted into a successful page render.
 - Hypermedia offers **Back to dashboard** on the protected page. The Inertia pages display the protected content within their application layout.
 
 ## User flow
@@ -33,11 +33,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["GET /account"] --> B["auth middleware uses default effective session guard"]
-    B --> C["VerifiedAccountMiddleware.handle calls kit.authentication.requireActive with readCurrentBrowserSession"]
+    B --> C["VerifiedAccountMiddleware.handle calls kit.authentication.requireActive with raw web guard current()"]
     C --> D{"requireActive outcome?"}
     D -->|UnverifiedEmailError| E["Flash confirmation feedback; redirect dashboard"]
     D -->|Other failure| F["Propagate authentication failure"]
-    D -->|Active account| G{"Kit?"}
+    D -->|Active account| R["Restore effective guard"]
+    R --> G{"Kit?"}
     G -->|Hypermedia| H["DashboardController.protected renders pages/account"]
     G -->|React| I["Route renderInertia renders account"]
     G -->|Vue| J["AccountController.show renders account"]
