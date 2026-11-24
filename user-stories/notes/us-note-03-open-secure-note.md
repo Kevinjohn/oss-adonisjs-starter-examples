@@ -31,7 +31,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["SecureNotesController.edit discards legacy session draft"] --> B["managedGuard.current and authentication.withCurrent"]
+    A["SecureNotesController.edit discards legacy session draft"] --> B["Raw web guard current() and authentication.withCurrent"]
     B --> C["readSecureNote reads saved note by account and pending draft by signInId"]
     C --> D["Map empty body and nullable pending draft"]
     D --> E{"Browser transport"}

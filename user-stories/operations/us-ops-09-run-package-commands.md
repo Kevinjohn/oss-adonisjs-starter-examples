@@ -2,7 +2,7 @@
 
 As a kit operator, I want to run the Ace commands that the installed Account Kit, Masquerade, Access Control and SQLite Backup packages register so that I can perform their operator tasks from the kit's own application directory.
 
-**Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.6.1, `@kevinjohn/adonisjs-masquerade` 0.6.1, `@kevinjohn/adonisjs-access-control` 0.3.4), not runtime-tested here. Flag spellings are the kebab-case form Ace derives from each declared flag.
+**Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.7.0, `@kevinjohn/adonisjs-masquerade` 0.7.0, `@kevinjohn/adonisjs-access-control` 0.4.0), not runtime-tested here. Flag spellings are the kebab-case form Ace derives from each declared flag.
 **Access:** Kit operator with the kit's dependencies installed, a configured `.env` and, for commands that read or write application data, a migrated database.
 **Entry:** From `apps/<kit>`: `node ace <command>`, for a command registered by that kit's `commands` list in `adonisrc.ts`.
 **Documentation:** [Run an app](../../README.md#run-an-app).
@@ -11,11 +11,11 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 ## Acceptance criteria
 
 - Every kit registers three package command modules: Account Kit (`@kevinjohn/adonisjs-account-kit/commands`), Masquerade (`@kevinjohn/adonisjs-masquerade/commands`) and Access Control (`@kevinjohn/adonisjs-access-control/commands`).
-- The API kit additionally registers the Account Kit admission module ([US-OPS-10](us-ops-10-run-admission-commands.md)) and the [SQLite Backup 0.4.3 command loader](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.4.3/commands/main.ts). That loader exposes [`db:backup`](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.4.3/commands/db_backup.ts) (`create`, `list`, `verify`, `restore-prepare`, `prune`) and [`db:upgrade`](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.4.3/commands/db_upgrade.ts). The app recipe uses the create, verify and restore stages in [US-OPS-11](us-ops-11-recover-a-sqlite-row.md).
+- The API kit additionally registers the Account Kit admission module ([US-OPS-10](us-ops-10-run-admission-commands.md)) and the [SQLite Backup 0.5.0 command loader](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.5.0/commands/main.ts). That loader exposes [`db:backup`](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.5.0/commands/db_backup.ts) (`create`, `list`, `verify`, `restore-prepare`, `prune`) and [`db:upgrade`](https://github.com/Kevinjohn/oss-adonisjs-sqlite-backup/blob/v0.5.0/commands/db_upgrade.ts). The app recipe uses the create, verify and restore stages in [US-OPS-11](us-ops-11-recover-a-sqlite-row.md).
 - A command that is not registered by the kit is not available in that kit. Application commands in a kit's `./commands` directory are scanned separately.
 - The sandbox does not wrap these commands. The command loaders define the available package commands.
 
-### Account Kit commands (0.6.1, `commands/main.ts`)
+### Account Kit commands (0.7.0, `commands/main.ts`)
 
 | Command                         | Arguments and flags                                                                                                                                                                                                                             | Purpose (package description)                                                                                     |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -28,7 +28,7 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 | `account-kit:openapi`           | `--output` (write to this file instead of stdout), `--title`, `--api-version`                                                                                                                                                                   | Print an OpenAPI 3.1 document for the registered managed routes                                                   |
 | `account-kit:admission:install` | `--users-table` (default `users`), `--user-id-type` (`integer`, `string` or `uuid`; default `integer`), `--migration-directory`                                                                                                                 | Add the admission module: migration, `config/admission.ts`, provider and commands                                 |
 
-### Masquerade commands (0.6.1, `commands/main.ts`)
+### Masquerade commands (0.7.0, `commands/main.ts`)
 
 | Command             | Arguments and flags                                                                                                                                                                                                                                    | Purpose (package description)                                                                                      |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -37,11 +37,11 @@ As a kit operator, I want to run the Ace commands that the installed Account Kit
 | `masquerade:status` | `--limit` (number, 1–1000, default 50)                                                                                                                                                                                                                 | List active masquerade modes (namespace, actor, incarnation, target, access, expiry)                               |
 | `masquerade:stop`   | `--actor` (operator account ID, at most 255 bytes), `--incarnation` (only with `--actor`, at most 128 bytes), `--all` (scan active modes in batches), `--force` (skip the `--all` confirmation); pass exactly one of `--actor` or `--all`, else exit 1 | End an operator's active masquerade mode, or scan every active mode until none remain or a batch makes no progress |
 
-### Access Control commands (0.3.4, `commands/main.ts`)
+### Access Control commands (0.4.0, `commands/main.ts`)
 
 | Command                 | Arguments and flags                                                        | Purpose (package description)                                                                                                                                                                                                                                                                                                                             |
 | ----------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `access-control:doctor` | `--scope` (restrict the row checks to one scope id), `--json` (print JSON) | Check the memberships table against `config/access_control.ts` and the installed Account Kit version (expected 0.6.1); exit code 0 when every check passes; 1 when a check fails, including a missing memberships table or column, missing or mismatched Account Kit; 2 when the doctor could not run, including an unreadable installed package manifest |
+| `access-control:doctor` | `--scope` (restrict the row checks to one scope id), `--json` (print JSON) | Check the memberships table against `config/access_control.ts` and the installed Account Kit version (expected 0.7.0); exit code 0 when every check passes; 1 when a check fails, including a missing memberships table or column, missing or mismatched Account Kit; 2 when the doctor could not run, including an unreadable installed package manifest |
 
 - `masquerade:prune` processes expiry and event retention in a bounded pass. If a phase fails, it exits unsuccessfully and reports the failed phase plus confirmed expiry/deletion counts; an uncertain commit is identified separately.
 - `masquerade:stop --all` reports how many modes it stopped if a batch makes no progress and asks the operator to run it again for remaining modes.

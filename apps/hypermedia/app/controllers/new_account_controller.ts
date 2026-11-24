@@ -3,7 +3,6 @@ import limiter from '@adonisjs/limiter/services/main'
 import { errors } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { signupValidator } from '#validators/user'
-import { accountKitSessionGuard } from '#services/session_guard'
 import { isDeliveryFailure } from '#services/delivery_failure'
 
 export default class NewAccountController {
@@ -21,7 +20,7 @@ export default class NewAccountController {
     try {
       await kit.registration.register({ email, password, registrationData: { fullName } })
     } catch (error) {
-      if (error instanceof errors.RegistrationEmailAlreadyRegisteredError) {
+      if (error instanceof errors.E_ACCOUNT_KIT_REGISTRATION_EMAIL_ALREADY_REGISTERED) {
         ctx.session.flash(
           'error',
           'We could not create an account with those details. Sign in or try another address.'
@@ -40,7 +39,7 @@ export default class NewAccountController {
     try {
       await kit.authentication.login(
         { email, password, clientKey: ctx.request.ip() },
-        accountKitSessionGuard(ctx)
+        ctx.auth.use('web').forRequest()
       )
     } catch (error) {
       ctx.logger.error(

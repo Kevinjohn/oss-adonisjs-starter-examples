@@ -10,6 +10,7 @@
 
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
+import { readAuthStrategy } from '#services/auth_strategy'
 
 /**
  * The error handler is used to convert an exception
@@ -62,3 +63,7 @@ export const middleware = router.named({
   admittedAccount: () => import('#middleware/admitted_account_middleware'),
   socialThrottle: () => import('#middleware/social_throttle_middleware'),
 })
+
+/** Account actions use the bearer Masquerade blocker only when its controls are mounted. */
+export const accountKitAccountBlocker =
+  readAuthStrategy() === 'access_tokens' ? [middleware.accountKitAccountBlocker()] : []

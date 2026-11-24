@@ -9,7 +9,7 @@ See the cookbook for [public origin validation](../../docs/cookbook/public-origi
 [replay-safe notes](../../docs/cookbook/duplicate-request-guard.md) and
 [checked reading-list labels](../../docs/cookbook/checked-columns.md). Use an Account Kit bearer token for the note and reading-list requests.
 
-The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.2.3 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
+The guarded-note example requires the default SQLite connection. Duplicate Request Guard 0.3.0 supports better-sqlite3 only; the API's PostgreSQL option does not support this example.
 
 See [Recover a row from an API starter backup](../../docs/cookbook/sqlite-backup.md) to verify a SQLite backup and read a seeded account from a staged restore.
 
@@ -72,6 +72,13 @@ Use the IDs returned by the app for Alice, Bob and **Demo team**; they depend on
 3. With Bob's own bearer token, send `DELETE /api/v1/account` to soft-delete his account.
 4. Grant a separate existing verified account deleted-account administration through a trusted database operation by setting its `is_soft_delete_admin` field to true. With that account's bearer token, read `GET /api/v1/admin/deleted-users`, then send
    `POST /api/v1/admin/deleted-users/<bob-id>/restore`. Bob can sign in again.
+
+### Session reference
+
+The reference test command uses a server-side session store and Shield CSRF protection. From the
+prepared API app, run `ACCOUNT_KIT_AUTH_STRATEGY=session SESSION_DRIVER=database pnpm test:session`.
+Account and team routes authenticate with the raw `web` guard in this mode. Masquerade controls
+and sample endpoints belong to the default bearer configuration.
 
 ### Account admission
 

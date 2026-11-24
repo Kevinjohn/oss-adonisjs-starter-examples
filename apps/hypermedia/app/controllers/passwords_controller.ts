@@ -1,9 +1,8 @@
+import assert from 'node:assert/strict'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors, passwordChangeRevision } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { changePasswordValidator } from '#validators/account'
-import { managedGuard } from '#services/account_kit_guard'
-import { accountKitSessionGuard } from '#services/session_guard'
 
 export default class PasswordsController {
   async edit({ view }: HttpContext) {
@@ -13,7 +12,7 @@ export default class PasswordsController {
   async update(ctx: HttpContext) {
     const { currentPassword, password } = await ctx.request.validateUsing(changePasswordValidator)
     const user = ctx.auth.getUserOrFail()
-    const current = await managedGuard.current(ctx)
+    const current = await ctx.auth.use('web').current()
     let notified = true
     let revision: string | null
     try {
@@ -30,8 +29,8 @@ export default class PasswordsController {
         notified = false
         revision = committed
       } else if (
-        error instanceof errors.InvalidCredentialsError ||
-        error instanceof errors.IdentityNotConfirmedError
+        error instanceof errors.E_INVALID_CREDENTIALS ||
+        error instanceof errors.E_ACCOUNT_KIT_IDENTITY_NOT_CONFIRMED
       ) {
         ctx.session.flash('error', 'Your current password is incorrect. Check it and try again.')
         return ctx.response.redirect().back()
@@ -40,7 +39,9 @@ export default class PasswordsController {
     const unsent = notified ? '' : ' We could not send the confirmation email.'
     // Account Kit keeps this registered sign-in and ends the others. Refreshing the session gives
     // this browser a new cookie id and stores the new credential revision.
-    await accountKitSessionGuard(ctx).refresh(revision)
+    const guard = ctx.auth.use('web').forRequest()
+    assert(guard.strategy === 'session' && guard.refresh)
+    await guard.refresh(revision)
     ctx.session.flash('success', `Password changed. Other sessions have been signed out.${unsent}`)
     return ctx.response.redirect().toPath('/settings/password')
   }

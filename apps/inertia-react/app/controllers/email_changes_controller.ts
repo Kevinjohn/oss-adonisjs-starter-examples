@@ -2,7 +2,6 @@ import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { isDeliveryFailure } from '#services/delivery_failure'
-import { accountKitSessionGuard } from '#services/session_guard'
 import { sendTokenPageHeaders } from '#services/token_page_headers'
 import { cancelEmailChangeValidator, requestEmailChangeValidator } from '#validators/email_change'
 
@@ -38,7 +37,7 @@ export default class EmailChangesController {
         newEmail: email,
       })
     } catch (error) {
-      if (error instanceof errors.EmailAlreadyRegisteredError) {
+      if (error instanceof errors.E_ACCOUNT_KIT_EMAIL_ALREADY_REGISTERED) {
         session.flash('error', 'This address cannot be used. Try another address.')
         return response.redirect().back()
       }
@@ -79,14 +78,14 @@ export default class EmailChangesController {
     try {
       await kit.emailPasswordManagement.completeEmailChange({ token: ctx.params.token })
     } catch (error) {
-      if (error instanceof errors.InvalidTokenError) {
+      if (error instanceof errors.E_ACCOUNT_KIT_INVALID_TOKEN) {
         ctx.session.flash('error', 'This link is invalid, already used, or expired.')
         return ctx.response.redirect().withQs(false).toRoute('session.create')
       }
       if (!isDeliveryFailure(error)) throw error
       ctx.logger.error({ event: 'email_change_follow_up_failed' }, 'email change follow-up failed')
     }
-    if (await ctx.auth.use('web').check()) await accountKitSessionGuard(ctx).terminate()
+    if (await ctx.auth.use('web').check()) await ctx.auth.use('web').forRequest().terminate()
     ctx.session.flash('success', 'Email changed. Sign in with your new address.')
     return ctx.response.redirect().withQs(false).toRoute('session.create')
   }

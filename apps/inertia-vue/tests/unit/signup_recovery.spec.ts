@@ -1,10 +1,10 @@
 import { test } from '@japa/runner'
 import type { HttpContext } from '@adonisjs/core/http'
 import {
-  DeliveryError,
+  E_ACCOUNT_KIT_DELIVERY,
   errors,
-  InvalidInputError,
-  PostCommitError,
+  E_ACCOUNT_KIT_INVALID_INPUT,
+  E_ACCOUNT_KIT_POST_COMMIT,
 } from '@kevinjohn/adonisjs-account-kit'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors as vineErrors } from '@vinejs/vine'
@@ -16,6 +16,7 @@ function makeContext() {
   const flashes: Array<[string, string]> = []
   const routes: Route[] = []
   const loggedErrors: unknown[] = []
+  const adapter = { strategy: 'session', name: 'web' }
   const ctx = {
     request: {
       async validateUsing() {
@@ -35,16 +36,19 @@ function makeContext() {
         },
       }),
     },
-    auth: { use: () => ({}) },
+    auth: {
+      use(name: string) {
+        if (name !== 'web') throw new Error('Signup must use the raw web guard')
+        return { forRequest: () => adapter }
+      },
+    },
     session: {
       flash: (key: string, value: string) => flashes.push([key, value]),
-      regenerate() {},
-      put() {},
     },
     logger: { error: (...args: unknown[]) => loggedErrors.push(args) },
   } as unknown as HttpContext
 
-  return { ctx, flashes, routes, loggedErrors }
+  return { ctx, adapter, flashes, routes, loggedErrors }
 }
 
 function replaceMethod(target: object, key: string, value: unknown) {
@@ -60,15 +64,16 @@ test.group('Signup recovery', () => {
   test('keeps a committed account and offers verification resend after delivery fails', async ({
     assert,
   }) => {
-    const { ctx, flashes, routes, loggedErrors } = makeContext()
+    const { ctx, adapter, flashes, routes, loggedErrors } = makeContext()
     let registered = false
     let loggedIn = false
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
       registered = true
-      throw new DeliveryError('private mail transport detail')
+      throw new E_ACCOUNT_KIT_DELIVERY('private mail transport detail')
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
-      login: async () => {
+      login: async (_input: unknown, selected: unknown) => {
+        assert.strictEqual(selected, adapter)
         loggedIn = true
       },
     })
@@ -97,7 +102,7 @@ test.group('Signup recovery', () => {
   test('a signup that loses an address race gets the email field error', async ({ assert }) => {
     const { ctx, flashes, routes } = makeContext()
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
-      throw new errors.RegistrationEmailAlreadyRegisteredError()
+      throw new errors.E_ACCOUNT_KIT_REGISTRATION_EMAIL_ALREADY_REGISTERED()
     })
     try {
       const error = await new NewAccountController().store(ctx).catch((caught: unknown) => caught)
@@ -118,7 +123,7 @@ test.group('Signup recovery', () => {
     const { ctx, flashes, routes } = makeContext()
     let loggedIn = false
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
-      throw new InvalidInputError('Registration was rejected')
+      throw new E_ACCOUNT_KIT_INVALID_INPUT('Registration was rejected')
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
       login: async () => {
@@ -143,7 +148,7 @@ test.group('Signup recovery', () => {
   }) => {
     const { ctx, flashes, routes } = makeContext()
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
-      throw new PostCommitError('private observer detail')
+      throw new E_ACCOUNT_KIT_POST_COMMIT('private observer detail')
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
       login: async () => {},
@@ -164,16 +169,18 @@ test.group('Signup recovery', () => {
     assert.notInclude(flashes[0]![1], 'private observer detail')
   })
 
-  for (const ErrorClass of [DeliveryError, PostCommitError]) {
+  for (const ErrorClass of [E_ACCOUNT_KIT_DELIVERY, E_ACCOUNT_KIT_POST_COMMIT]) {
     test(`keeps ${ErrorClass.name} copy accurate when initial sign in also fails`, async ({
       assert,
     }) => {
       const { ctx, flashes, routes } = makeContext()
+      let loginAttempted = false
       const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
         throw new ErrorClass('private committed failure detail')
       })
       const restoreAuthentication = replaceMethod(kit, 'authentication', {
         login: async () => {
+          loginAttempted = true
           throw new Error('private login detail')
         },
       })
@@ -183,13 +190,14 @@ test.group('Signup recovery', () => {
         restoreRegistration()
         restoreAuthentication()
       }
+      assert.isTrue(loginAttempted)
       assert.deepEqual(routes, ['session.create'])
       const message = flashes[0]![1]
       assert.include(message, 'Your account was created')
       assert.include(message, 'Please sign in')
       assert.include(message, 'after one minute')
       assert.notInclude(message, 'private')
-      if (ErrorClass === DeliveryError) assert.include(message, 'email could not be sent')
+      if (ErrorClass === E_ACCOUNT_KIT_DELIVERY) assert.include(message, 'email could not be sent')
       else {
         assert.include(message, 'a follow-up step failed')
         assert.notInclude(message, 'could not be sent')
@@ -202,12 +210,14 @@ test.group('Signup recovery', () => {
   }) => {
     const { ctx, flashes, routes, loggedErrors } = makeContext()
     let registered = false
+    let loginAttempted = false
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
       registered = true
       return {} as never
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
       login: async () => {
+        loginAttempted = true
         throw new Error('private session storage detail')
       },
     })
@@ -220,6 +230,7 @@ test.group('Signup recovery', () => {
     }
 
     assert.isTrue(registered)
+    assert.isTrue(loginAttempted)
     assert.deepEqual(routes, ['session.create'])
     assert.equal(flashes.length, 1)
     assert.include(flashes[0]![1], 'account was created')

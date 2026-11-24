@@ -1,9 +1,8 @@
+import assert from 'node:assert/strict'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors, passwordChangeRevision } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { changePasswordValidator } from '#validators/account'
-import { managedGuard } from '#services/account_kit_guard'
-import { accountKitSessionGuard } from '#services/session_guard'
 
 export default class PasswordsController {
   async edit({ inertia }: HttpContext) {
@@ -14,7 +13,7 @@ export default class PasswordsController {
   async update(ctx: HttpContext) {
     const { currentPassword, password } = await ctx.request.validateUsing(changePasswordValidator)
     const user = ctx.auth.getUserOrFail()
-    const current = await managedGuard.current(ctx)
+    const current = await ctx.auth.use('web').current()
     let revision: string | null
     let followUp = ''
     try {
@@ -34,11 +33,13 @@ export default class PasswordsController {
         'Password changed but a follow-up failed'
       )
       followUp =
-        error instanceof errors.DeliveryError
+        error instanceof errors.E_ACCOUNT_KIT_DELIVERY
           ? ' The notification email could not be sent.'
           : ' A follow-up step failed.'
     }
-    await accountKitSessionGuard(ctx).refresh(revision)
+    const guard = ctx.auth.use('web').forRequest()
+    assert(guard.strategy === 'session' && guard.refresh)
+    await guard.refresh(revision)
     ctx.session.flash('success', `Password changed. Other devices have been signed out.${followUp}`)
     return ctx.response.redirect().withQs(false).toPath('/settings/password')
   }

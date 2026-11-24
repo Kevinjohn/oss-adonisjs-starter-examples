@@ -12,7 +12,7 @@ As a signed-in account holder, I want to view my reading list so that I can see 
 ## Acceptance criteria
 
 - The list contains only this account's items, ordered by descending ID. Browser pages show each title and its labels; API returns `{ items: [{ id, title, labels }] }`.
-- If a stored labels value cannot be hydrated, the controller returns HTTP 500 **Reading list unavailable**. Browser kits return text and the API returns a JSON message.
+- If malformed or wrong-shape stored JSON raises `errors.E_INVALID_PERSISTED_JSON` for `reading_items.labels`, the controller returns HTTP 500 **Reading list unavailable**. Browser kits return text and the API returns a JSON message. Other failures reach the framework handler.
 
 ## User flow
 
@@ -27,7 +27,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["ReadingItemsController.index gets account"] --> B["Query ReadingItem by user_id in descending ID order"]
+    A["ReadingItemsController.index gets account"] --> B["Apply ReadingItem.forOwner and order by descending ID"]
     B --> C{"Checked labels hydrated?"}
     C -->|No| D["Return 500 text or API message"]
     C -->|Yes| E["Project id, title and labels"]

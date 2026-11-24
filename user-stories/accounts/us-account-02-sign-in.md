@@ -44,10 +44,10 @@ flowchart TD
     B --> C["Browser SessionController.store / API AccessTokensController.store or SessionController.store"]
     C --> D["kit.authentication.login / accountKit.authentication.login"]
     D --> E{"Credential lookup succeeds?"}
-    E -->|No| F["Browser catches InvalidCredentialsError; API exception handling returns refusal"]
+    E -->|No| F["Browser catches E_INVALID_CREDENTIALS; API exception handling returns refusal"]
     E -->|Browser| R["Session guard establishes web session with revision and registered handle"]
     R --> G["Redirect to dashboard"]
     E -->|API| T["Return user and token or user and session according to strategy"]
 ```
 
-**Code references:** [Browser session adapter](../../apps/hypermedia/app/services/session_guard.ts), [Browser Account Kit configuration](../../apps/hypermedia/config/account_kit.ts), [Hypermedia route](../../apps/hypermedia/start/routes.ts), [Hypermedia session controller](../../apps/hypermedia/app/controllers/session_controller.ts), [Hypermedia login validator](../../apps/hypermedia/app/validators/user.ts), [API route and strategy branch](../../apps/api/start/routes.ts), [API session controller](../../apps/api/app/controllers/session_controller.ts), [API token controller](../../apps/api/app/controllers/access_tokens_controller.ts), [API auth strategy](../../apps/api/app/services/auth_strategy.ts), [User model](../../apps/api/app/models/user.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/session_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/session_controller.ts).
+**Code references:** [Browser guard configuration](../../apps/hypermedia/config/auth.ts), [Browser Account Kit configuration](../../apps/hypermedia/config/account_kit.ts), [Hypermedia route](../../apps/hypermedia/start/routes.ts), [Hypermedia session controller](../../apps/hypermedia/app/controllers/session_controller.ts), [Hypermedia login validator](../../apps/hypermedia/app/validators/user.ts), [API route and strategy branch](../../apps/api/start/routes.ts), [API session controller](../../apps/api/app/controllers/session_controller.ts), [API token controller](../../apps/api/app/controllers/access_tokens_controller.ts), [API auth strategy](../../apps/api/app/services/auth_strategy.ts), [User model](../../apps/api/app/models/user.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/session_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/session_controller.ts).

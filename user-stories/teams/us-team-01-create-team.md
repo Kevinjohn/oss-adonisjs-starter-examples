@@ -18,7 +18,7 @@ As an eligible signed-in account holder, I want to create a team and become its 
 - Invalid names return validation feedback and do not create a team.
 - A valid name creates a team and the caller's owner membership in the same database transaction. A failure in either write leaves no team without its owner membership.
 - Browser redirects to the new team's page. API returns `201` with the team's `id` and `name`.
-- API caller must be admitted; in `session` strategy the selected guard is raw `web`, and in `access_tokens` strategy it is `api`. The API account-kit blocker prevents this native account action during masquerade.
+- API caller must be admitted; in `session` strategy the selected guard is raw `web`, and in `access_tokens` strategy it is `api`. In access-token mode, the Account Kit blocker prevents this account action during masquerade.
 
 ## User flow
 

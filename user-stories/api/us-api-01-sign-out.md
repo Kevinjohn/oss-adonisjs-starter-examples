@@ -33,7 +33,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 ```mermaid
 flowchart TD
     A["Authenticated logout route selects controller"] --> C{"Transport"}
-    C -->|Browser| R["SessionController.destroy passes managedGuard.current and session adapter to Account Kit logout"]
+    C -->|Browser| R["SessionController.destroy passes raw web guard current() and forRequest() to Account Kit logout"]
     R --> F["Terminate raw web, flash history clear and redirect"]
     C -->|API session| D["SessionController.destroy calls Kit logout with raw web terminate adapter"]
     C -->|API token| E["AccessTokensController.destroy calls Kit logout with current raw token delete adapter"]

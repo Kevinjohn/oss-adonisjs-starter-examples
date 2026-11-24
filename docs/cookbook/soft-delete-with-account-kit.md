@@ -43,9 +43,9 @@ router
 <!-- source: apps/hypermedia/app/controllers/account_deletion_controller.ts -->
 ```ts
   async destroy(ctx: HttpContext) {
-    const current = readCurrentBrowserSession(ctx)
+    const current = await ctx.auth.use('web').current()
     await ctx.auth.getUserOrFail().delete()
-    await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, current)
+    await kit.authentication.logout(ctx.auth.use('web').forRequest(), undefined, current)
     return ctx.response.redirect().toRoute('session.create')
   }
 ```

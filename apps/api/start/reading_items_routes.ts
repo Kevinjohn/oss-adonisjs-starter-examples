@@ -1,4 +1,4 @@
-import { middleware } from '#start/kernel'
+import { accountKitAccountBlocker, middleware } from '#start/kernel'
 import { controllers } from '#generated/controllers'
 import { resolveGuardName } from '#services/auth_strategy'
 import router from '@adonisjs/core/services/router'
@@ -12,5 +12,5 @@ router
   .use([
     middleware.auth({ guards: [resolveGuardName()] }),
     middleware.accountAccess(),
-    middleware.accountKitAccountBlocker(),
+    ...accountKitAccountBlocker,
   ])
