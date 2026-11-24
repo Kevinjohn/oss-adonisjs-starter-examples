@@ -1,6 +1,5 @@
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
-import { accountKitSessionGuard, readCurrentBrowserSession } from '#services/session_guard'
 
 export default class AccountDeletionController {
   /** Shows the confirmation page. */
@@ -13,9 +12,9 @@ export default class AccountDeletionController {
    * restore it, but normal queries no longer find it, so it cannot sign in again.
    */
   async destroy(ctx: HttpContext) {
-    const current = readCurrentBrowserSession(ctx)
+    const current = await ctx.auth.use('web').current()
     await ctx.auth.getUserOrFail().delete()
-    await kit.authentication.logout(accountKitSessionGuard(ctx), undefined, current)
+    await kit.authentication.logout(ctx.auth.use('web').forRequest(), undefined, current)
     return ctx.response.redirect().toRoute('session.create')
   }
 }

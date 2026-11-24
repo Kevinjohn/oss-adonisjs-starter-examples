@@ -7,7 +7,9 @@ export default class ReadingItemsController {
     const user = auth.getUserOrFail()
     let rows: ReadingItem[]
     try {
-      rows = await ReadingItem.query().where('user_id', user.id).orderBy('id', 'desc')
+      rows = await ReadingItem.query()
+        .withScopes((scopes) => scopes.forOwner(user.id))
+        .orderBy('id', 'desc')
     } catch (error) {
       if (
         error instanceof Error &&

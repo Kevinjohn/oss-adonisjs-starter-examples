@@ -1,7 +1,6 @@
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
 import { isDeliveryFailure } from '#services/delivery_failure'
-import { accountKitSessionGuard } from '#services/session_guard'
 import { sendTokenPageHeaders } from '#services/token_page_headers'
 import { forgotPasswordValidator, resetPasswordValidator } from '#validators/account'
 
@@ -45,7 +44,7 @@ export default class PasswordResetsController {
         'password reset follow-up failed'
       )
     }
-    if (await ctx.auth.use('web').check()) await accountKitSessionGuard(ctx).terminate()
+    if (await ctx.auth.use('web').check()) await ctx.auth.use('web').forRequest().terminate()
     session.flash('success', 'Your password has been reset. Sign in with the new password.')
     return response.redirect().withQs(false).toRoute('session.create')
   }

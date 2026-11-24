@@ -3,7 +3,6 @@ import { errors as vineErrors } from '@vinejs/vine'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { signupValidator } from '#validators/user'
 import type { HttpContext } from '@adonisjs/core/http'
-import { accountKitSessionGuard } from '#services/session_guard'
 import { isDeliveryFailure } from '#services/delivery_failure'
 
 export default class NewAccountController {
@@ -45,7 +44,7 @@ export default class NewAccountController {
     try {
       await kit.authentication.login(
         { email, password, clientKey: ctx.request.ip() },
-        accountKitSessionGuard(ctx)
+        ctx.auth.use('web').forRequest()
       )
     } catch (error) {
       ctx.logger.error(

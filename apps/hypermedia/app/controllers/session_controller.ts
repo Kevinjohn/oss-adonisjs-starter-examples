@@ -2,8 +2,6 @@ import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
 import { loginValidator } from '#validators/user'
-import { accountKitSessionGuard } from '#services/session_guard'
-import { managedGuard } from '#services/account_kit_guard'
 
 export default class SessionController {
   async create({ view }: HttpContext) {
@@ -16,7 +14,7 @@ export default class SessionController {
     try {
       const { account } = await kit.authentication.login(
         { email, password, clientKey: ctx.request.ip() },
-        accountKitSessionGuard(ctx)
+        ctx.auth.use('web').forRequest()
       )
       active = account.active
     } catch (error) {
@@ -40,9 +38,9 @@ export default class SessionController {
 
   async destroy(ctx: HttpContext) {
     await kit.authentication.logout(
-      accountKitSessionGuard(ctx),
+      ctx.auth.use('web').forRequest(),
       undefined,
-      await managedGuard.current(ctx)
+      await ctx.auth.use('web').current()
     )
     return ctx.response.redirect().toRoute('session.create')
   }

@@ -90,7 +90,7 @@ export default defineConfig({
     ? accountKitNotify
     : createLogNotifications({ brandName: 'Account Kit Example', environment }),
   /**
-   * Account Kit revokes registered sessions and advances the credential revision; the middleware
+   * Account Kit revokes registered sessions and advances the credential revision; the native guard
    * checks both on each request. The app has no separate credential store to update.
    */
   onCredentialsChangedTransaction: async () => {},

@@ -27,7 +27,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["ReadingItemsController.index gets account"] --> B["Query ReadingItem by user_id in descending ID order"]
+    A["ReadingItemsController.index gets account"] --> B["Apply ReadingItem.forOwner and order by descending ID"]
     B --> C{"Checked labels hydrated?"}
     C -->|No| D["Return 500 text or API message"]
     C -->|Yes| E["Project id, title and labels"]

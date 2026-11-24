@@ -1,22 +1,10 @@
 import { defineConfig } from '@adonisjs/auth'
-import { sessionGuard } from '@adonisjs/auth/session'
+import { accountKitSessionGuard } from '@kevinjohn/adonisjs-account-kit/auth'
 import type { InferAuthenticators, InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
 import { effectiveSessionGuard } from '@kevinjohn/adonisjs-masquerade/auth'
 import { userProvider } from '#services/masquerade_user_provider'
 
-const webGuard = sessionGuard({
-  /**
-   * Whether to use "remember me" tokens for persistent authentication.
-   * When enabled, users can stay logged in across browser sessions.
-   */
-  useRememberMeTokens: false,
-
-  /**
-   * User provider configuration.
-   * Defines how to fetch and verify user credentials.
-   */
-  provider: userProvider,
-})
+const webGuard = accountKitSessionGuard({ provider: userProvider })
 /**
  * Authentication configuration.
  * Defines guards and user providers for session-based authentication.

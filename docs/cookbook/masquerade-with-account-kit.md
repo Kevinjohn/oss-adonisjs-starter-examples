@@ -63,9 +63,9 @@ router
 ```ts
   async destroy(ctx: HttpContext) {
     await kit.authentication.logout(
-      accountKitSessionGuard(ctx),
+      ctx.auth.use('web').forRequest(),
       undefined,
-      await managedGuard.current(ctx)
+      await ctx.auth.use('web').current()
     )
     return ctx.response.redirect().toRoute('session.create')
   }
@@ -73,7 +73,7 @@ router
 
 <!-- prettier-ignore-end -->
 
-Keep logout outside the blocker group; Account Kit’s session guard wraps the raw `web` guard, so an operator can end their own session during masquerade.
+Keep logout outside the blocker group; The native Account Kit guard is the raw `web` guard, so an operator can end their own session during masquerade.
 
 ## Preserve middleware order
 
@@ -85,10 +85,10 @@ router.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
   () => import('@adonisjs/session/session_middleware'),
   () => import('@adonisjs/auth/initialize_auth_middleware'),
+  () => import('#middleware/stale_browser_session_middleware'),
   () => import('#middleware/masquerade_context_middleware'),
   () => import('#middleware/silent_auth_middleware'),
   () => import('#middleware/share_masquerade_status_middleware'),
-  () => import('#middleware/session_revision_middleware'),
   () => import('@adonisjs/shield/shield_middleware'),
   () => import('#middleware/initialize_bouncer_middleware'),
 ])
@@ -96,8 +96,19 @@ router.use([
 
 <!-- prettier-ignore-end -->
 
-`masquerade_context` runs after auth is initialised, so the request's Masquerade context is set before any route middleware or handler runs.
+The stale-session middleware clears browser state when the raw guard rejects an existing sign-in. It runs before Masquerade context so effective authentication starts with the cleaned session. Configure the raw and effective guards together in [browser auth configuration](../../apps/hypermedia/config/auth.ts).
 
 `apps/inertia-react` and `apps/inertia-vue` use the same session guards and blocker as Hypermedia; `apps/api` uses bearer tokens, names its blocker `accountKitAccountBlocker` and keeps account routes on the raw Account Kit guard.
 
 The integration tests exercise this recipe in [API](../../apps/api/tests/functional/masquerade_account_blocker.spec.ts), [Hypermedia](../../apps/hypermedia/tests/functional/masquerade_account_blocker.spec.ts), [React](../../apps/inertia-react/tests/functional/masquerade_account_blocker.spec.ts) and [Vue](../../apps/inertia-vue/tests/functional/masquerade_account_blocker.spec.ts).
+
+## Replay the schema
+
+The initial migrations use the fixed `createMasqueradeSchemaV1` and `dropMasqueradeSchemaV1`
+exports. Keep these versioned calls when updating the runtime package. Apply future schema changes
+through new migrations.
+
+See the committed migrations for [API](../../apps/api/database/migrations/1800000001003_create_masquerade_tables.ts),
+[Hypermedia](../../apps/hypermedia/database/migrations/1792342558358_create_masquerade_tables.ts),
+[React](../../apps/inertia-react/database/migrations/1792342558358_create_masquerade_tables.ts) and
+[Vue](../../apps/inertia-vue/database/migrations/1792342558358_create_masquerade_tables.ts).

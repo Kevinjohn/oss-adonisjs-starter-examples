@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import confirmations from '@kevinjohn/adonisjs-confirm-action-with-password/services/main'
 import { errors } from '@kevinjohn/adonisjs-confirm-action-with-password'
-import { managedGuard } from '#services/account_kit_guard'
 import {
   clearSecureNoteDraft,
   buildNoteRequest,
@@ -16,7 +15,7 @@ export default class SecureNotesController {
   async edit(ctx: HttpContext) {
     // Discard drafts written by the previous session-based implementation.
     if (ctx.session.has('pendingSecureNote')) ctx.session.forget('pendingSecureNote')
-    const input = await managedGuard.current(ctx)
+    const input = await ctx.auth.use('web').current()
     const props = await kit.authentication.withCurrent(input, readSecureNote)
     return ctx.view.render('pages/settings/secure_note', props)
   }
@@ -33,7 +32,7 @@ export default class SecureNotesController {
       return ctx.response.redirect().back()
     }
     const { body, password } = note
-    const input = await managedGuard.current(ctx)
+    const input = await ctx.auth.use('web').current()
     await kit.authentication.withCurrent(input, clearSecureNoteDraft)
     let confirmationId: string
     try {
@@ -71,7 +70,7 @@ export default class SecureNotesController {
       ctx.session.flash('error', 'Confirm your password again before saving.')
       return ctx.response.redirect().toPath('/settings/secure-note')
     }
-    const input = await managedGuard.current(ctx)
+    const input = await ctx.auth.use('web').current()
     const status = await kit.authentication.withCurrent(input, (context) =>
       saveSecureNote(context, proof.confirmationId)
     )

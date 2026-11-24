@@ -18,34 +18,49 @@ test.group('reading items', (group) => {
     })
     assert.equal(created.headers.get('location'), '/reading-items')
     const user = await User.findByOrFail('email', 'reader@example.test')
-    const item = await ReadingItem.query().where('user_id', user.id).firstOrFail()
+    const item = await ReadingItem.query()
+      .withScopes((scopes) => scopes.forOwner(user.id))
+      .firstOrFail()
     assert.equal(item.title, 'Lucid guide')
     assert.deepEqual(item.labels, ['reference'])
+    const other = await User.create({ email: 'other@example.test', password: 'password123' })
+    await ReadingItem.create({ userId: other.id, title: 'Another list', labels: ['personal'] })
     const page = await browser.props<{ items: { title: string; labels: string[] }[] }>(
       '/reading-items'
     )
+    assert.lengthOf(page.items, 1)
     assert.deepInclude(page.items[0], { title: 'Lucid guide', labels: ['reference'] })
   })
 
-  test('invalid persisted labels fail model hydration and render a safe server error', async ({
-    assert,
-  }) => {
-    const user = await User.create({ email: 'reader@example.test', password: 'password123' })
-    const [id] = await db.table('reading_items').insert({
-      user_id: user.id,
-      title: 'Bad row',
-      labels: '["unknown"]',
+  for (const [kind, labels] of [
+    ['Malformed JSON', '["work"'],
+    ['Disallowed', '["unknown"]'],
+    ['Object', '{"label":"work"}'],
+    ['JSON null', 'null'],
+  ]) {
+    test(`${kind} labels fail model hydration and render a safe server error`, async ({
+      assert,
+    }) => {
+      const user = await User.create({ email: 'reader@example.test', password: 'password123' })
+      const [{ id }] = await db
+        .table('reading_items')
+        .insert({
+          user_id: user.id,
+          title: 'Bad row',
+          labels,
+        })
+        .returning('id')
+      await assert.rejects(
+        () => ReadingItem.findOrFail(id),
+        /Invalid persisted JSON in reading_items.labels/
+      )
+      const browser = new InertiaSession()
+      await browser.login(user.email, 'password123')
+      const response = await browser.request('/reading-items')
+      assert.equal(response.status, 500)
+      const errorBody = await response.text()
+      assert.equal(errorBody, 'Reading list unavailable')
+      assert.notInclude(errorBody, 'Invalid persisted JSON in reading_items.labels')
     })
-    await assert.rejects(
-      () => ReadingItem.findOrFail(id),
-      /Invalid persisted JSON in reading_items.labels/
-    )
-    const browser = new InertiaSession()
-    await browser.login(user.email, 'password123')
-    const response = await browser.request('/reading-items')
-    assert.equal(response.status, 500)
-    const errorBody = await response.text()
-    assert.equal(errorBody, 'Reading list unavailable')
-    assert.notInclude(errorBody, 'Invalid persisted JSON in reading_items.labels')
-  })
+  }
 })

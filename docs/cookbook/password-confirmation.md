@@ -7,7 +7,7 @@ the pending note through the durable confirmation inside the same transaction as
 Each example enables Account Kit's `sessionManagement`, registers `PasswordConfirmationsProvider`,
 and imports `start/secure_note_routes.ts` from `start/routes.ts`. The route group uses the raw `web`
 guard and the same Account Kit blocker as the host's password settings. The blocker rejects active
-masquerade before the controller runs. The existing `managedGuard.current(ctx)` provides Account
+masquerade before the controller runs. The native `ctx.auth.use('web').current()` provides Account
 Kit's sign-in handle; the confirmation remains bound to that account and registered session.
 
 The intent binds the confirmation to the exact note content and owner:
@@ -26,8 +26,7 @@ export function buildNoteRequest(userId: number | string, body: string) {
 Enable the feature and configure the idle expiry in the [Account Kit configuration](../../apps/hypermedia/config/account_kit.ts).
 
 The existing `account_sessions` migration creates the registry referenced by
-`password_confirmations.sign_in_id`. The session guard stores Account Kit's handle at sign-in, and
-the revision middleware checks it on each request. Password changes preserve the current registry
+`password_confirmations.sign_in_id`. The native guard stores Account Kit's handle at sign-in and checks it on each request. Password changes preserve the current registry
 row while ending other sign-ins; logout removes the current row.
 
 Sessions created before this registry was enabled have no session handle. They are signed out on
@@ -67,7 +66,7 @@ See the implementation and browser journey for each UI:
 
 - [Hypermedia controller](../../apps/hypermedia/app/controllers/secure_notes_controller.ts),
   [routes](../../apps/hypermedia/start/secure_note_routes.ts),
-  [session guard](../../apps/hypermedia/app/services/session_guard.ts),
+  [session guard](../../apps/hypermedia/config/auth.ts),
   [page](../../apps/hypermedia/resources/views/pages/settings/secure_note.edge), and
   [journey test](../../apps/hypermedia/tests/browser/secure_note_journey.spec.ts)
 - [Inertia React page](../../apps/inertia-react/inertia/pages/settings/secure_note.tsx) and

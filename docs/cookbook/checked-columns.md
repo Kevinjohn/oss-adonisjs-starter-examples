@@ -6,7 +6,7 @@ The starter apps use `@kevinjohn/adonisjs-lucid-checked-columns` to validate val
 
 <!-- source: apps/api/app/models/reading_item.ts -->
 ```ts
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, scope } from '@adonisjs/lucid/orm'
 import { isArrayOf, isOneOf, jsonColumn } from '@kevinjohn/adonisjs-lucid-checked-columns'
 
 const isLabel = isOneOf(['work', 'personal', 'reference'] as const)
@@ -14,6 +14,8 @@ export type ReadingLabel = 'work' | 'personal' | 'reference'
 
 export default class ReadingItem extends BaseModel {
   static table = 'reading_items'
+
+  static forOwner = scope((query, userId: number) => query.where('user_id', userId))
 
   @column({ isPrimary: true })
   declare id: number
@@ -31,6 +33,8 @@ export default class ReadingItem extends BaseModel {
 
 <!-- prettier-ignore-end -->
 
-The migration uses a text column because the application serializes the value as JSON. The model decorator parses the stored text and checks it against the schema. Invalid JSON and values outside the schema raise a controlled hydration error; route handlers should catch that known error at the feature boundary and return a generic server error rather than exposing stored data or validation internals.
+The controller passes the authenticated account ID to `ReadingItem.forOwner` through `withScopes`. The model owns the owner predicate, so other accounts’ rows are excluded before Lucid hydrates labels.
+
+The migration uses a text column because the application serializes the value as JSON. The model decorator parses the stored text and checks it against the schema. Invalid JSON and values outside the schema raise a controlled hydration error. The controller returns a generic 500 for this reading-list failure and rethrows other errors to the framework handler.
 
 Request validation is separate from persisted-data validation. Validate incoming values before saving them, then let the checked column protect later reads from malformed or manually changed database rows. See the runnable implementations in `apps/api`, `apps/hypermedia`, `apps/inertia-react`, and `apps/inertia-vue`.

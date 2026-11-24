@@ -19,9 +19,13 @@ test.group('reading items', (group) => {
     assert.equal(created.status(), 201)
     assert.deepEqual(responseBody<{ labels: string[] }>(created).labels, ['reference'])
 
+    const other = await User.create({ email: 'other@example.test', password: 'password123' })
+    await ReadingItem.create({ userId: other.id, title: 'Another list', labels: ['personal'] })
+
     const listed = await client.get('/api/v1/account/reading-items').bearerToken(bearer)
     assert.equal(listed.status(), 200)
     const items = responseBody<{ items: { title: string; labels: string[] }[] }>(listed).items
+    assert.lengthOf(items, 1)
     assert.deepInclude(items[0], { title: 'Lucid guide', labels: ['reference'] })
   })
 
@@ -53,26 +57,36 @@ test.group('reading items', (group) => {
     assert.equal(rows[0].title, 'Before restriction')
   })
 
-  test('invalid persisted labels fail model hydration and return a safe server error', async ({
-    client,
-    assert,
-  }) => {
-    const user = await User.create({ email: 'reader@example.test', password: 'password123' })
-    const [id] = await db.table('reading_items').insert({
-      user_id: user.id,
-      title: 'Bad row',
-      labels: '["unknown"]',
+  for (const [kind, labels] of [
+    ['Malformed JSON', '["work"'],
+    ['Disallowed', '["unknown"]'],
+    ['Object', '{"label":"work"}'],
+    ['JSON null', 'null'],
+  ]) {
+    test(`${kind} labels fail model hydration and return a safe server error`, async ({
+      client,
+      assert,
+    }) => {
+      const user = await User.create({ email: 'reader@example.test', password: 'password123' })
+      const [{ id }] = await db
+        .table('reading_items')
+        .insert({
+          user_id: user.id,
+          title: 'Bad row',
+          labels,
+        })
+        .returning('id')
+      await assert.rejects(
+        () => ReadingItem.findOrFail(id),
+        /Invalid persisted JSON in reading_items.labels/
+      )
+      const token = await User.accessTokens.create(user)
+      const response = await client
+        .get('/api/v1/account/reading-items')
+        .bearerToken(token.value!.release())
+      assert.equal(response.status(), 500)
+      assert.deepEqual(response.body(), { message: 'Reading list unavailable' })
+      assert.notInclude(response.text(), 'Invalid persisted JSON in reading_items.labels')
     })
-    await assert.rejects(
-      () => ReadingItem.findOrFail(id),
-      /Invalid persisted JSON in reading_items.labels/
-    )
-    const token = await User.accessTokens.create(user)
-    const response = await client
-      .get('/api/v1/account/reading-items')
-      .bearerToken(token.value!.release())
-    assert.equal(response.status(), 500)
-    assert.deepEqual(response.body(), { message: 'Reading list unavailable' })
-    assert.notInclude(response.text(), 'Invalid persisted JSON in reading_items.labels')
-  })
+  }
 })

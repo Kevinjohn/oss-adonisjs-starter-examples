@@ -1,4 +1,4 @@
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, scope } from '@adonisjs/lucid/orm'
 import { isArrayOf, isOneOf, jsonColumn } from '@kevinjohn/adonisjs-lucid-checked-columns'
 
 const isLabel = isOneOf(['work', 'personal', 'reference'] as const)
@@ -6,6 +6,8 @@ export type ReadingLabel = 'work' | 'personal' | 'reference'
 
 export default class ReadingItem extends BaseModel {
   static table = 'reading_items'
+
+  static forOwner = scope((query, userId: number) => query.where('user_id', userId))
 
   @column({ isPrimary: true })
   declare id: number
