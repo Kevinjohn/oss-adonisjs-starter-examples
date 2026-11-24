@@ -60,7 +60,10 @@ test.group('reading items', (group) => {
     assert.equal(rows[0].title, 'Before restriction')
   })
 
-  test('forwards an unrelated failure with the same diagnostic text', async ({ client, assert }) => {
+  test('forwards an unrelated failure with the same diagnostic text', async ({
+    client,
+    assert,
+  }) => {
     const user = await User.create({ email: 'reader@example.test', password: 'password123' })
     const token = await User.accessTokens.create(user)
     const query = ReadingItem.query

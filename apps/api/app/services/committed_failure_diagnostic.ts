@@ -14,8 +14,13 @@ function reportFailure(logger: SafeLogger, operation: string, failure: Failure) 
 
 /** Report follow-up failures without recording an address, proof, credential, or raw exception. */
 export function reportCommittedFailure(logger: SafeLogger, error: unknown, operation: string) {
-  if (!(error instanceof E_ACCOUNT_KIT_DELIVERY || error instanceof E_ACCOUNT_KIT_POST_COMMIT)) throw error
-  reportFailure(logger, operation, error instanceof E_ACCOUNT_KIT_DELIVERY ? 'delivery' : 'post_commit')
+  if (!(error instanceof E_ACCOUNT_KIT_DELIVERY || error instanceof E_ACCOUNT_KIT_POST_COMMIT))
+    throw error
+  reportFailure(
+    logger,
+    operation,
+    error instanceof E_ACCOUNT_KIT_DELIVERY ? 'delivery' : 'post_commit'
+  )
 }
 
 /**
@@ -31,7 +36,8 @@ export async function runCommittedFollowUp<T>(
   try {
     return await run()
   } catch (error) {
-    if (!(error instanceof E_ACCOUNT_KIT_DELIVERY || error instanceof E_ACCOUNT_KIT_POST_COMMIT)) throw error
+    if (!(error instanceof E_ACCOUNT_KIT_DELIVERY || error instanceof E_ACCOUNT_KIT_POST_COMMIT))
+      throw error
     reportCommittedFailure(logger, error, operation)
     return undefined
   }

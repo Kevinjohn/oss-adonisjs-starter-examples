@@ -1,5 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { E_ACCOUNT_KIT_INVALID_INPUT, E_ACCOUNT_KIT_INVALID_TOKEN } from '@kevinjohn/adonisjs-account-kit'
+import {
+  E_ACCOUNT_KIT_INVALID_INPUT,
+  E_ACCOUNT_KIT_INVALID_TOKEN,
+} from '@kevinjohn/adonisjs-account-kit'
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
 import {
   invitationAcceptValidator,
@@ -15,7 +18,8 @@ import { runCommittedFollowUp } from '#services/committed_failure_diagnostic'
 
 function requireInvitationIdParam(value: string): number {
   const id = Number(value)
-  if (!Number.isSafeInteger(id) || id <= 0) throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid invitation ID')
+  if (!Number.isSafeInteger(id) || id <= 0)
+    throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid invitation ID')
   return id
 }
 

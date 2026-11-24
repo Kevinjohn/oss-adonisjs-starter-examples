@@ -10,8 +10,10 @@ function formatAccountErrorMessage(error: InstanceType<typeof errors.E_ACCOUNT_K
   if (error instanceof errors.E_INVALID_CREDENTIALS) return 'Invalid email or password.'
   if (error instanceof errors.E_ACCOUNT_KIT_THROTTLED)
     return `Too many attempts. Try again in ${error.retryAfterSeconds} seconds.`
-  if (error instanceof errors.E_ACCOUNT_KIT_INVALID_TOKEN) return 'This link is invalid or has expired.'
-  if (error instanceof errors.E_ACCOUNT_KIT_IDENTITY_NOT_CONFIRMED) return 'The password is incorrect.'
+  if (error instanceof errors.E_ACCOUNT_KIT_INVALID_TOKEN)
+    return 'This link is invalid or has expired.'
+  if (error instanceof errors.E_ACCOUNT_KIT_IDENTITY_NOT_CONFIRMED)
+    return 'The password is incorrect.'
   if (error instanceof errors.E_ACCOUNT_KIT_DELIVERY)
     return 'Your change was saved, but the email could not be sent. If you need a verification link, wait one minute before requesting another.'
   if (error instanceof errors.E_ACCOUNT_KIT_POST_COMMIT)

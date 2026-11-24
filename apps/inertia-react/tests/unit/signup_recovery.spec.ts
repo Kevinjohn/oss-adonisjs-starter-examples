@@ -193,7 +193,8 @@ test.group('Signup recovery', () => {
       assert.include(flashes[0]![1], 'Your account was created')
       assert.include(flashes[0]![1], 'Please sign in')
       assert.notInclude(flashes[0]![1], 'private')
-      if (Failure === E_ACCOUNT_KIT_POST_COMMIT) assert.notInclude(flashes[0]![1], 'could not be sent')
+      if (Failure === E_ACCOUNT_KIT_POST_COMMIT)
+        assert.notInclude(flashes[0]![1], 'could not be sent')
       else assert.include(flashes[0]![1], 'after one minute')
     })
   }

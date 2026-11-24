@@ -37,8 +37,7 @@ export default class MasqueradeFormController extends MasqueradeController {
     try {
       const runtime = (await ctx.containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
       // Like the package controller, control only from a route on the operator's raw guard.
-      if (runtime.selectGuard(ctx).kind !== 'raw')
-        throw new errors.E_MASQUERADE_UNAVAILABLE()
+      if (runtime.selectGuard(ctx).kind !== 'raw') throw new errors.E_MASQUERADE_UNAVAILABLE()
       if (action === 'start') await runtime.service.start(ctx, parseStartForm(ctx))
       else await runtime.service.stop(ctx, parseStopForm(ctx))
 

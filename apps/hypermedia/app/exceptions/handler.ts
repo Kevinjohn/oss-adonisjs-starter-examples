@@ -57,7 +57,10 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     const throttled =
       error instanceof accountErrors.E_ACCOUNT_KIT_THROTTLED ||
       error instanceof limiterErrors.E_TOO_MANY_REQUESTS
-    if ((throttled || error instanceof accountErrors.E_ACCOUNT_KIT_EMAIL_ALREADY_REGISTERED) && ctx.session) {
+    if (
+      (throttled || error instanceof accountErrors.E_ACCOUNT_KIT_EMAIL_ALREADY_REGISTERED) &&
+      ctx.session
+    ) {
       ctx.session.flash(
         'error',
         throttled

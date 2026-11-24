@@ -1,4 +1,8 @@
-import { E_ACCOUNT_KIT_DELIVERY, E_ACCOUNT_KIT_INVALID_TOKEN, E_ACCOUNT_KIT_POST_COMMIT } from '@kevinjohn/adonisjs-account-kit'
+import {
+  E_ACCOUNT_KIT_DELIVERY,
+  E_ACCOUNT_KIT_INVALID_TOKEN,
+  E_ACCOUNT_KIT_POST_COMMIT,
+} from '@kevinjohn/adonisjs-account-kit'
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
 import { sendProofFailure, setProofResponseHeaders } from '#services/http_responses'

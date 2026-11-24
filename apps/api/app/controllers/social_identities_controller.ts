@@ -6,7 +6,8 @@ import { passwordProofValidator, socialUnlinkValidator } from '#validators/socia
 
 function requireIdentityIdParam(value: string): number {
   const id = Number(value)
-  if (!Number.isSafeInteger(id) || id <= 0) throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid identity ID')
+  if (!Number.isSafeInteger(id) || id <= 0)
+    throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid identity ID')
   return id
 }
 

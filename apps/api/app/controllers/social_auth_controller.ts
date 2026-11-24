@@ -26,7 +26,8 @@ import {
 import { socialRegistrationValidator } from '#validators/user'
 
 function requireProviderParam(value: string): SocialProviderName {
-  if (value !== 'google' && value !== 'github') throw new E_ACCOUNT_KIT_INVALID_INPUT('Unknown provider')
+  if (value !== 'google' && value !== 'github')
+    throw new E_ACCOUNT_KIT_INVALID_INPUT('Unknown provider')
   return value
 }
 
