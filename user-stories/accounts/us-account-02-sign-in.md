@@ -44,7 +44,7 @@ flowchart TD
     B --> C["Browser SessionController.store / API AccessTokensController.store or SessionController.store"]
     C --> D["kit.authentication.login / accountKit.authentication.login"]
     D --> E{"Credential lookup succeeds?"}
-    E -->|No| F["Browser catches InvalidCredentialsError; API exception handling returns refusal"]
+    E -->|No| F["Browser catches E_INVALID_CREDENTIALS; API exception handling returns refusal"]
     E -->|Browser| R["Session guard establishes web session with revision and registered handle"]
     R --> G["Redirect to dashboard"]
     E -->|API| T["Return user and token or user and session according to strategy"]

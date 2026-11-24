@@ -26,7 +26,7 @@ export default class InvitationsController {
         registrationData: { fullName },
       })
     } catch (error) {
-      if (error instanceof errors.InvalidTokenError) {
+      if (error instanceof errors.E_ACCOUNT_KIT_INVALID_TOKEN) {
         ctx.session.flash('error', 'This invitation is invalid, already used, or expired.')
         return ctx.response.redirect().withQs(false).toRoute('session.create')
       }

@@ -35,6 +35,6 @@ export default class ReadingItem extends BaseModel {
 
 The controller passes the authenticated account ID to `ReadingItem.forOwner` through `withScopes`. The model owns the owner predicate, so other accounts’ rows are excluded before Lucid hydrates labels.
 
-The migration uses a text column because the application serializes the value as JSON. The model decorator parses the stored text and checks it against the schema. Invalid JSON and values outside the schema raise a controlled hydration error. The controller returns a generic 500 for this reading-list failure and rethrows other errors to the framework handler.
+The migration uses a text column because the application serializes the value as JSON. The model decorator parses the stored text and checks it against the schema. Invalid JSON and values outside the schema raise `errors.E_INVALID_PERSISTED_JSON`. The controller checks the exception identity and its `table` and `column` fields before returning a generic 500 for `reading_items.labels`. It rethrows other errors to the framework handler.
 
 Request validation is separate from persisted-data validation. Validate incoming values before saving them, then let the checked column protect later reads from malformed or manually changed database rows. See the runnable implementations in `apps/api`, `apps/hypermedia`, `apps/inertia-react`, and `apps/inertia-vue`.

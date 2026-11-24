@@ -1,3 +1,5 @@
+import { rejects } from 'node:assert/strict'
+import { errors } from '@kevinjohn/adonisjs-lucid-checked-columns'
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
 import User from '#models/user'
@@ -49,9 +51,12 @@ test.group('reading items', (group) => {
         title: 'Bad row',
         labels,
       })
-      await assert.rejects(
+      await rejects(
         () => ReadingItem.findOrFail(id),
-        /Invalid persisted JSON in reading_items.labels/
+        (error: unknown) =>
+          error instanceof errors.E_INVALID_PERSISTED_JSON &&
+          error.table === 'reading_items' &&
+          error.column === 'labels'
       )
       const browser = new FormSession()
       await browser.login(user.email, 'password123')

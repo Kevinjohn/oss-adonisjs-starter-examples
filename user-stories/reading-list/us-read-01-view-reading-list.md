@@ -12,7 +12,7 @@ As a signed-in account holder, I want to view my reading list so that I can see 
 ## Acceptance criteria
 
 - The list contains only this account's items, ordered by descending ID. Browser pages show each title and its labels; API returns `{ items: [{ id, title, labels }] }`.
-- If a stored labels value cannot be hydrated, the controller returns HTTP 500 **Reading list unavailable**. Browser kits return text and the API returns a JSON message.
+- If malformed or wrong-shape stored JSON raises `errors.E_INVALID_PERSISTED_JSON` for `reading_items.labels`, the controller returns HTTP 500 **Reading list unavailable**. Browser kits return text and the API returns a JSON message. Other failures reach the framework handler.
 
 ## User flow
 

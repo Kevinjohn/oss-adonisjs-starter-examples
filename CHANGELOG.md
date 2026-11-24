@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- All four starters adopt Account Kit 0.7.0, Access Control 0.4.0, Masquerade 0.7.0,
+  Duplicate Request Guard 0.3.0, Lucid Checked Columns 0.4.0, Lucid Soft Delete 0.4.0
+  and Origin Guard 0.4.0.
+- Hypermedia, React and Vue adopt Confirm Action with Password 0.5.0 and use the native
+  Account Kit session guard. The API adopts SQLite Backup 0.5.0 and keeps bearer tokens
+  as its default, with a separate session reference.
+- Use named package exception constructors while preserving the examples' response shapes.
+  Reading-list controllers use model-owned scopes and handle invalid stored labels by exception
+  identity, table and column.
+- The existing Masquerade migrations use the package's frozen V1 schema helpers.
+  No new app migrations are required.
+
 ## v0.16.1
 
 - All four starters adopt Account Kit 0.6.1, Access Control 0.3.4, Masquerade 0.6.1,

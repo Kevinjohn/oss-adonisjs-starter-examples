@@ -1,6 +1,7 @@
 import ReadingItem from '#models/reading_item'
 import { readingItemValidator } from '#validators/reading_item'
 import type { HttpContext } from '@adonisjs/core/http'
+import { errors } from '@kevinjohn/adonisjs-lucid-checked-columns'
 
 export default class ReadingItemsController {
   async index({ auth, inertia, response }: HttpContext) {
@@ -12,8 +13,9 @@ export default class ReadingItemsController {
         .orderBy('id', 'desc')
     } catch (error) {
       if (
-        error instanceof Error &&
-        error.message === 'Invalid persisted JSON in reading_items.labels'
+        error instanceof errors.E_INVALID_PERSISTED_JSON &&
+        error.table === ReadingItem.table &&
+        error.column === 'labels'
       ) {
         return response.internalServerError('Reading list unavailable')
       }

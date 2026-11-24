@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { MasqueradeError } from '@kevinjohn/adonisjs-masquerade'
+import { errors } from '@kevinjohn/adonisjs-masquerade'
 import type { StartInput, StopInput, MasqueradeErrorCode } from '@kevinjohn/adonisjs-masquerade'
-import { MasqueradeController } from '@kevinjohn/adonisjs-masquerade/http'
+import { isMasqueradeRequestError, MasqueradeController } from '@kevinjohn/adonisjs-masquerade/http'
 import type { MasqueradeRuntime } from '@kevinjohn/adonisjs-masquerade/masquerade_provider'
 
 type FormAction = 'start' | 'stop'
@@ -38,7 +38,7 @@ export default class MasqueradeFormController extends MasqueradeController {
       const runtime = (await ctx.containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
       // Like the package controller, control only from a route on the operator's raw guard.
       if (runtime.selectGuard(ctx).kind !== 'raw')
-        throw new MasqueradeError('E_MASQUERADE_UNAVAILABLE')
+        throw new errors.E_MASQUERADE_UNAVAILABLE()
       if (action === 'start') await runtime.service.start(ctx, parseStartForm(ctx))
       else await runtime.service.stop(ctx, parseStopForm(ctx))
 
@@ -46,7 +46,7 @@ export default class MasqueradeFormController extends MasqueradeController {
       ctx.session.flash('masqueradeClearHistory', true)
       ctx.response.redirect().toPath(this.resolveSuccessPath(ctx, action))
     } catch (error) {
-      if (!(error instanceof MasqueradeError)) throw error
+      if (!isMasqueradeRequestError(error)) throw error
       flash(ctx, { type: 'error', code: error.code })
       ctx.response.redirect().toPath(this.resolveErrorPath(ctx, action))
     }

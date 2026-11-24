@@ -35,7 +35,7 @@ flowchart TD
     A["GET /account"] --> B["auth middleware uses default effective session guard"]
     B --> C["VerifiedAccountMiddleware.handle calls kit.authentication.requireActive with raw web guard current()"]
     C --> D{"requireActive outcome?"}
-    D -->|UnverifiedEmailError| E["Flash confirmation feedback; redirect dashboard"]
+    D -->|E_ACCOUNT_KIT_UNVERIFIED_EMAIL| E["Flash confirmation feedback; redirect dashboard"]
     D -->|Other failure| F["Propagate authentication failure"]
     D -->|Active account| R["Restore effective guard"]
     R --> G{"Kit?"}

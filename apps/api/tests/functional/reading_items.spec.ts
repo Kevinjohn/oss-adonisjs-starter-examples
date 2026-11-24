@@ -1,3 +1,6 @@
+import { rejects } from 'node:assert/strict'
+import { Exception } from '@adonisjs/core/exceptions'
+import { errors } from '@kevinjohn/adonisjs-lucid-checked-columns'
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
 import User from '#models/user'
@@ -57,6 +60,23 @@ test.group('reading items', (group) => {
     assert.equal(rows[0].title, 'Before restriction')
   })
 
+  test('forwards an unrelated failure with the same diagnostic text', async ({ client, assert }) => {
+    const user = await User.create({ email: 'reader@example.test', password: 'password123' })
+    const token = await User.accessTokens.create(user)
+    const query = ReadingItem.query
+    ReadingItem.query = () => {
+      throw new Exception('Invalid persisted JSON in reading_items.labels', { status: 503 })
+    }
+    try {
+      const response = await client
+        .get('/api/v1/account/reading-items')
+        .bearerToken(token.value!.release())
+      assert.equal(response.status(), 503)
+    } finally {
+      ReadingItem.query = query
+    }
+  })
+
   for (const [kind, labels] of [
     ['Malformed JSON', '["work"'],
     ['Disallowed', '["unknown"]'],
@@ -75,9 +95,12 @@ test.group('reading items', (group) => {
         title: 'Bad row',
         labels,
       })
-      await assert.rejects(
+      await rejects(
         () => ReadingItem.findOrFail(id),
-        /Invalid persisted JSON in reading_items.labels/
+        (error: unknown) =>
+          error instanceof errors.E_INVALID_PERSISTED_JSON &&
+          error.table === 'reading_items' &&
+          error.column === 'labels'
       )
       const token = await User.accessTokens.create(user)
       const response = await client
