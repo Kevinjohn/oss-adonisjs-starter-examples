@@ -79,7 +79,7 @@ router
           })
           .use(accountKitAccountBlocker)
 
-        // CSRF bootstrap must remain available while the account is masquerading.
+        // Session clients need the CSRF token before sending their first write.
         if (strategy === 'session') router.get('csrf', [controllers.Session, 'csrf'])
       })
       .prefix('auth')

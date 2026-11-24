@@ -73,7 +73,7 @@ router
 
 <!-- prettier-ignore-end -->
 
-Keep logout outside the blocker group; The native Account Kit guard is the raw `web` guard, so an operator can end their own session during masquerade.
+Keep logout outside the blocker group. The native Account Kit guard is the raw `web` guard, so an operator can end their own session during masquerade.
 
 ## Preserve middleware order
 

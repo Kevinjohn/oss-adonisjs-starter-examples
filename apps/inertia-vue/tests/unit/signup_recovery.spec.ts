@@ -16,6 +16,7 @@ function makeContext() {
   const flashes: Array<[string, string]> = []
   const routes: Route[] = []
   const loggedErrors: unknown[] = []
+  const adapter = { strategy: 'session', name: 'web' }
   const ctx = {
     request: {
       async validateUsing() {
@@ -35,16 +36,19 @@ function makeContext() {
         },
       }),
     },
-    auth: { use: () => ({}) },
+    auth: {
+      use(name: string) {
+        if (name !== 'web') throw new Error('Signup must use the raw web guard')
+        return { forRequest: () => adapter }
+      },
+    },
     session: {
       flash: (key: string, value: string) => flashes.push([key, value]),
-      regenerate() {},
-      put() {},
     },
     logger: { error: (...args: unknown[]) => loggedErrors.push(args) },
   } as unknown as HttpContext
 
-  return { ctx, flashes, routes, loggedErrors }
+  return { ctx, adapter, flashes, routes, loggedErrors }
 }
 
 function replaceMethod(target: object, key: string, value: unknown) {
@@ -60,7 +64,7 @@ test.group('Signup recovery', () => {
   test('keeps a committed account and offers verification resend after delivery fails', async ({
     assert,
   }) => {
-    const { ctx, flashes, routes, loggedErrors } = makeContext()
+    const { ctx, adapter, flashes, routes, loggedErrors } = makeContext()
     let registered = false
     let loggedIn = false
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
@@ -68,7 +72,8 @@ test.group('Signup recovery', () => {
       throw new DeliveryError('private mail transport detail')
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
-      login: async () => {
+      login: async (_input: unknown, selected: unknown) => {
+        assert.strictEqual(selected, adapter)
         loggedIn = true
       },
     })
@@ -169,11 +174,13 @@ test.group('Signup recovery', () => {
       assert,
     }) => {
       const { ctx, flashes, routes } = makeContext()
+      let loginAttempted = false
       const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
         throw new ErrorClass('private committed failure detail')
       })
       const restoreAuthentication = replaceMethod(kit, 'authentication', {
         login: async () => {
+          loginAttempted = true
           throw new Error('private login detail')
         },
       })
@@ -183,6 +190,7 @@ test.group('Signup recovery', () => {
         restoreRegistration()
         restoreAuthentication()
       }
+      assert.isTrue(loginAttempted)
       assert.deepEqual(routes, ['session.create'])
       const message = flashes[0]![1]
       assert.include(message, 'Your account was created')
@@ -202,12 +210,14 @@ test.group('Signup recovery', () => {
   }) => {
     const { ctx, flashes, routes, loggedErrors } = makeContext()
     let registered = false
+    let loginAttempted = false
     const restoreRegistration = replaceMethod(kit.registration, 'register', async () => {
       registered = true
       return {} as never
     })
     const restoreAuthentication = replaceMethod(kit, 'authentication', {
       login: async () => {
+        loginAttempted = true
         throw new Error('private session storage detail')
       },
     })
@@ -220,6 +230,7 @@ test.group('Signup recovery', () => {
     }
 
     assert.isTrue(registered)
+    assert.isTrue(loginAttempted)
     assert.deepEqual(routes, ['session.create'])
     assert.equal(flashes.length, 1)
     assert.include(flashes[0]![1], 'account was created')

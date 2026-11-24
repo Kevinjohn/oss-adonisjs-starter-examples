@@ -3,17 +3,17 @@
 As an API session client, I want to obtain the session CSRF token so that I can submit cookie-authenticated writes.
 
 **Status:** Current under the stated kit and configuration conditions; source-reviewed availability.
-**Access:** API kit only when `ACCOUNT_KIT_AUTH_STRATEGY=session`; available before sign-in and during masquerade. Access-token mode does not mount this route.
+**Access:** Available before sign-in in the API session reference (`ACCOUNT_KIT_AUTH_STRATEGY=session`).
 **Entry:** `GET /api/v1/auth/csrf`.
-**Documentation:** [API app instructions](../../apps/api/README.md#api).
+**Documentation:** [API app instructions](../../apps/api/README.md#session-reference).
 **Source:** [API routes](../../apps/api/start/routes.ts), [SessionController.csrf](../../apps/api/app/controllers/session_controller.ts).
-**Coverage:** [Existing scenario source](../../apps/api/tests/functional/social_session.spec.ts).
+**Coverage:** [Session reference routes](../../apps/api/tests/functional/reference_session.spec.ts), [session social tests](../../apps/api/tests/functional/social_session.spec.ts).
 
 ## Acceptance criteria
 
 - The action has no editable fields. It returns `{ csrfToken: request.csrfToken }` with `Cache-Control: no-store`.
 - The client retains the same session cookie and supplies the host CSRF header on subsequent writes. A token from a different session does not establish authorization.
-- This route remains outside the Account Kit account blocker; obtaining a token does not bypass account or business-route checks.
+- The session reference mounts this route alongside its cookie-authenticated account routes. Each later request still passes the account and business-route checks for that action.
 
 ## User flow
 
