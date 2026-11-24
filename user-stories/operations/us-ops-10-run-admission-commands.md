@@ -2,7 +2,7 @@
 
 As an API kit operator, I want to run the Account Kit admission commands so that I can manage admission from the command line as well as through the admission routes.
 
-**Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.5.2 `src/admission/commands/main.ts`), not runtime-tested here.
+**Status:** Operator; commands read from the tagged package source (`@kevinjohn/adonisjs-account-kit` 0.6.1 `src/admission/commands/main.ts`), not runtime-tested here.
 **Access:** API kit operator with installed dependencies, a configured `.env` and a migrated database.
 **Entry:** From `apps/api`: `node ace <command>`, for a command exported by `@kevinjohn/adonisjs-account-kit/admission/commands`.
 **Documentation:** [Run an app](../../README.md#run-an-app).
@@ -12,7 +12,7 @@ As an API kit operator, I want to run the Account Kit admission commands so that
 
 - Only the API kit registers the admission command module; the browser kits do not.
 - The module is registered beside the admission routes covered by [US-API-17](../api/us-api-17-approve-admission.md) and [US-API-19](../api/us-api-19-revoke-admission.md); route access rules in those stories do not describe command access. The package source does not state a route-to-command mapping, so none is recorded.
-- The module registers exactly four commands (`@kevinjohn/adonisjs-account-kit` 0.5.2 `src/admission/commands/main.ts`); each takes the account email as its argument and acts on the configured admission data through the package's operator API, without actor authorization.
+- The module registers exactly four commands (`@kevinjohn/adonisjs-account-kit` 0.6.1 `src/admission/commands/main.ts`); each takes the account email as its argument and acts on the configured admission data through the package's operator API, without actor authorization.
 
 | Command                                  | Arguments and flags                                                                                                                                                                              | Purpose (package description)                                                                                   |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |

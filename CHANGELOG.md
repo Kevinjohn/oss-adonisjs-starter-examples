@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.16.1
+
+- All four starters adopt Account Kit 0.6.1, Access Control 0.3.4, Masquerade 0.6.1,
+  Duplicate Request Guard 0.2.3, Lucid Checked Columns 0.3.3,
+  Lucid Soft Delete 0.3.3 and Origin Guard 0.3.3.
+- Hypermedia, React and Vue adopt Confirm Action with Password 0.4.1. The API adopts
+  SQLite Backup 0.4.3 and continues to use bearer tokens.
+- The API uses the injected Account Kit admission service and covers approval and revocation
+  through the configured routes.
+- The starters use Vine to validate note requests. The API covers replaying the original
+  result, and the browser examples cover preserving a secure-note draft when validation fails.
+- The examples and user stories use consistent names for the code that handles these flows.
+
+This release adds no app migrations.
+
 ## v0.16.0
 
 - All four starters adopt Account Kit 0.5.0, Access Control 0.3.0 and Masquerade 0.5.0.
