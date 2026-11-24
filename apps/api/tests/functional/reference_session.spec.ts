@@ -15,6 +15,17 @@ import { grantAdmittedOwner } from '#tests/helpers/admission'
 test.group('Reference session', (group) => {
   group.each.setup(truncateDatabase)
 
+  test('the session reference mounts CSRF but no bearer Masquerade endpoints', async ({
+    client,
+  }) => {
+    const csrf = await client.get('/api/v1/auth/csrf')
+    csrf.assertStatus(200)
+    const controls = await client.get('/masquerade')
+    controls.assertStatus(404)
+    const effectiveAccount = await client.get('/api/v1/masquerade/account')
+    effectiveAccount.assertStatus(404)
+  }).skip(!isSessionStrategy, SESSION_ONLY)
+
   test('session reference gives the same public login failure for missing, wrong, and restricted accounts', async ({
     client,
     assert,

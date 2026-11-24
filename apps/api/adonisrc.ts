@@ -67,7 +67,6 @@ export default defineConfig({
     () => import('@kevinjohn/adonisjs-account-kit/admission/provider'),
     () => import('#providers/masquerade_native_provider'),
     () => import('@kevinjohn/adonisjs-masquerade/masquerade_provider'),
-    () => import('@kevinjohn/adonisjs-masquerade/account-kit/provider'),
     () => import('@kevinjohn/adonisjs-access-control/access_control_provider'),
     () => import('@adonisjs/bouncer/bouncer_provider'),
     () => import('@kevinjohn/adonisjs-lucid-soft-delete/lucid_soft_delete_provider'),

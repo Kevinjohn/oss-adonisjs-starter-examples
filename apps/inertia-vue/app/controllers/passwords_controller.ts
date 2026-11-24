@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors, passwordChangeRevision } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -36,7 +37,9 @@ export default class PasswordsController {
           ? ' The notification email could not be sent.'
           : ' A follow-up step failed.'
     }
-    await ctx.auth.use('web').forRequest().refresh!(revision)
+    const guard = ctx.auth.use('web').forRequest()
+    assert(guard.strategy === 'session' && guard.refresh)
+    await guard.refresh(revision)
     ctx.session.flash('success', `Password changed. Other devices have been signed out.${followUp}`)
     return ctx.response.redirect().withQs(false).toPath('/settings/password')
   }

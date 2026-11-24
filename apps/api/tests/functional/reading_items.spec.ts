@@ -68,14 +68,13 @@ test.group('reading items', (group) => {
       assert,
     }) => {
       const user = await User.create({ email: 'reader@example.test', password: 'password123' })
-      const [{ id }] = await db
-        .table('reading_items')
-        .insert({
-          user_id: user.id,
-          title: 'Bad row',
-          labels,
-        })
-        .returning('id')
+      const id = 101
+      await db.table('reading_items').insert({
+        id,
+        user_id: user.id,
+        title: 'Bad row',
+        labels,
+      })
       await assert.rejects(
         () => ReadingItem.findOrFail(id),
         /Invalid persisted JSON in reading_items.labels/

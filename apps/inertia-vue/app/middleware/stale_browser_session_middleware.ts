@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
@@ -9,6 +10,7 @@ export default class StaleBrowserSessionMiddleware {
     const userId = ctx.session.get(guard.sessionKeyName)
     if (userId !== undefined && !(await guard.check())) {
       const adapter = guard.forRequest()
+      assert(adapter.strategy === 'session')
       await kit.authentication.logout(
         adapter,
         undefined,

@@ -14,7 +14,8 @@ test.group('browser session', (group) => {
     const user = await User.create({ email: 'reader@example.test', password })
     const browser = new FormSession()
     await browser.login(user.email, password)
-    assert.equal((await browser.request('/dashboard')).status, 200)
+    const dashboard = await browser.request('/dashboard')
+    assert.equal(dashboard.status, 200)
 
     const sessions = await db.from('sessions').select('id')
     assert.isNotEmpty(sessions)
@@ -37,7 +38,8 @@ test.group('browser session', (group) => {
     assert.isEmpty(await db.from('account_sessions').where('user_id', user.id))
 
     await browser.login(user.email, password)
-    assert.equal((await browser.request('/dashboard')).status, 200)
+    const recovered = await browser.request('/dashboard')
+    assert.equal(recovered.status, 200)
     const signedOut = await browser.request('/logout', {})
     assert.equal(signedOut.status, 302)
     assert.equal(signedOut.headers.get('location'), '/login')

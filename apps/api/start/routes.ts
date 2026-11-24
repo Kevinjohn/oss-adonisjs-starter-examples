@@ -12,7 +12,7 @@
 
 import './notes_routes.js'
 import './reading_items_routes.js'
-import { middleware } from '#start/kernel'
+import { accountKitAccountBlocker, middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { allowMutation } from '@kevinjohn/adonisjs-masquerade/http'
 import { controllers } from '#generated/controllers'
@@ -77,7 +77,7 @@ router
               .post('oauth/registration', [controllers.SocialAuth, 'completeRegistration'])
               .use(middleware.socialThrottle({ operation: 'registration' }))
           })
-          .use(middleware.accountKitAccountBlocker())
+          .use(accountKitAccountBlocker)
 
         // CSRF bootstrap must remain available while the account is masquerading.
         if (strategy === 'session') router.get('csrf', [controllers.Session, 'csrf'])
@@ -138,11 +138,9 @@ router
               .post('admissions/:id/revoke', [controllers.Admissions, 'revoke'])
               .use(middleware.admittedAccount())
           })
-          .use(middleware.accountKitAccountBlocker())
+          .use(accountKitAccountBlocker)
 
-        router
-          .delete('/', [controllers.AccountDeletion, 'destroy'])
-          .use(middleware.accountKitAccountBlocker())
+        router.delete('/', [controllers.AccountDeletion, 'destroy']).use(accountKitAccountBlocker)
 
         if (strategy === 'session') router.post('logout', [controllers.Session, 'destroy'])
         else router.post('logout', [controllers.AccessTokens, 'destroy'])
@@ -161,7 +159,7 @@ router
     router
       .post('teams', [controllers.Teams, 'store'])
       .as(strategy === 'session' ? 'teams.store' : 'business.teams.store')
-      .use(middleware.accountKitAccountBlocker())
+      .use(accountKitAccountBlocker)
       .use(middleware.auth({ guards: [resolveGuardName()] }))
       .use(middleware.admittedAccount())
     router

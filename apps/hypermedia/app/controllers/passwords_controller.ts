@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import kit from '@kevinjohn/adonisjs-account-kit/services/main'
 import { errors, passwordChangeRevision } from '@kevinjohn/adonisjs-account-kit'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -38,7 +39,9 @@ export default class PasswordsController {
     const unsent = notified ? '' : ' We could not send the confirmation email.'
     // Account Kit keeps this registered sign-in and ends the others. Refreshing the session gives
     // this browser a new cookie id and stores the new credential revision.
-    await ctx.auth.use('web').forRequest().refresh!(revision)
+    const guard = ctx.auth.use('web').forRequest()
+    assert(guard.strategy === 'session' && guard.refresh)
+    await guard.refresh(revision)
     ctx.session.flash('success', `Password changed. Other sessions have been signed out.${unsent}`)
     return ctx.response.redirect().toPath('/settings/password')
   }
