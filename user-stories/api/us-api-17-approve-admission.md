@@ -33,7 +33,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 ```mermaid
 flowchart TD
     A["AdmittedAccountMiddleware calls injected AccountAdmission.require"] --> B["AdmissionsController.approve"]
-    B --> C{"decide reads raw actor.id. Does userIdParam accept target?"}
+    B --> C{"decide reads raw actor.id. Does requireUserIdParam accept target?"}
     C -->|No| I["Return 422"]
     C -->|Yes| D["Injected AccountAdmission.approve({ actorId, userId })"]
     D --> E{"Owner policy allows decision and actor differs from target?"}

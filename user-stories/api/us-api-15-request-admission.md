@@ -11,7 +11,7 @@ As an API account holder, I want to submit my admission request so that the owne
 
 ## Acceptance criteria
 
-- No operation-specific editable fields exist. The handler passes complete `accountInput(ctx)` rather than a caller-selected user ID to `this.admission.request`.
+- No operation-specific editable fields exist. The handler passes complete `readAccountInput(ctx)` rather than a caller-selected user ID to `this.admission.request`.
 - Success returns `{ requestedAt }`. Requesting approval does not grant approval, invitation evidence or domain eligibility.
 - A refused/stale credential or inadmissible request is an error. The account holder reads US-API-14 to learn the subsequent decision; no notification is sent by this handler.
 
@@ -31,7 +31,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["AdmissionsController.request"] --> B["Injected AccountAdmission.request(accountInput(ctx))"]
+    A["AdmissionsController.request"] --> B["Injected AccountAdmission.request(readAccountInput(ctx))"]
     B --> C["Return requestedAt from record"]
 ```
 

@@ -44,7 +44,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SocialAuthController.redirect"] --> B["providerParam, socialRedirectValidator and beginBrowserTransaction"]
+    A["SocialAuthController.redirect"] --> B["requireProviderParam, socialRedirectValidator and beginBrowserTransaction"]
     B --> C["socialAuthentication.begin({ provider, intent, clientChallenge, context })"]
     C --> D["SocialAuthController.callback validates state and pending session transaction"]
     D --> E["socialAuthentication.callback({ state, provider, callback: ctx, current, intent })"]

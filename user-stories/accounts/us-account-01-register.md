@@ -47,7 +47,7 @@ flowchart TD
     A["Browser or API signup route"] --> B["Hypermedia applies its limiter; API applies accountPublicLimit; React/Vue do not apply this signup limiter"]
     B --> C["kit.registration.register / accountKit.registration.register"]
     C --> D{"Delivery or post-commit failure?"}
-    D -->|No| E["Continue to browser session login or API authStrategy branch"]
+    D -->|No| E["Continue to browser session login or API readAuthStrategy branch"]
     D -->|Yes| F["Browser logs failure then attempts login; API reports committed failure and returns 202"]
     E --> G["Browser redirects to dashboard; API serializes user and optional token"]
 ```

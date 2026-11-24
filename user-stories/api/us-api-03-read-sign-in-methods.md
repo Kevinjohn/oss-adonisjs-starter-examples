@@ -12,7 +12,7 @@ As an API account holder, I want to inspect my password and confirmed social met
 ## Acceptance criteria
 
 - No editable input exists. The controller returns password availability, configured provider names, a last-used-method hint, and confirmed identities as `{ id, provider }`.
-- `accountInput` derives identity and credential context from the selected raw guard. The controller calls both `authentication.current(current)` and `socialAuthentication.list({ current })`; a stale/refused credential does not expose another account's methods.
+- `readAccountInput` derives identity and credential context from the selected raw guard. The controller calls both `authentication.current(current)` and `socialAuthentication.list({ current })`; a stale/refused credential does not expose another account's methods.
 - The last-used-method hint is filtered against currently available password/provider methods; it is presentation data and does not grant authentication.
 
 ## User flow
@@ -30,9 +30,9 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["AuthMethodsController.methods"] --> B["accountInput(ctx)"]
+    A["AuthMethodsController.methods"] --> B["readAccountInput(ctx)"]
     B --> C["authentication.current and socialAuthentication.list({ current })"]
-    C --> D["Read configured providers and lastUsedMethod"]
+    C --> D["Read configured providers and call readLastUsedMethod"]
     D --> E["Map confirmed identities to id/provider and respond"]
 ```
 

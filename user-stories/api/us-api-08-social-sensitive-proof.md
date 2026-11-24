@@ -12,7 +12,7 @@ As an API account holder, I want to reauthenticate with a linked provider for on
 ## Acceptance criteria
 
 - Supply configured `provider`, `intent: reauth`, and one `purpose`: `social_link`, `social_unlink`, `password_change`, `email_change`, `account_export`, or `account_delete`. Token clients supply a 43-character base64url S256 `clientChallenge`; session clients use server-held verifier state.
-- `currentIfAuthenticated` binds the current raw account. The package callback decides whether the provider proves that account/purpose; a callback result for reauthentication is not permission to act as another account.
+- `readCurrentAccountIfAuthenticated` binds the current raw account. The package callback decides whether the provider proves that account/purpose; a callback result for reauthentication is not permission to act as another account.
 - Return the resulting proof to the intended sensitive API. A refused/mismatched callback does not authorize the action; the proof remains purpose-bound according to the package contract.
 
 ## User flow
@@ -31,7 +31,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SocialAuthController.redirect intent reauth"] --> B["socialRedirectValidator checks purpose; currentIfAuthenticated resolves credential"]
+    A["SocialAuthController.redirect intent reauth"] --> B["socialRedirectValidator checks purpose; readCurrentAccountIfAuthenticated resolves credential"]
     B --> C["socialAuthentication.begin({ intent, purpose, current, clientChallenge })"]
     C --> D["SocialAuthController.callback"]
     D --> E["socialAuthentication.callback validates provider/current/state"]

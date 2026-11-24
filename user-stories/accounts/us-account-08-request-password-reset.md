@@ -45,7 +45,7 @@ flowchart TD
     C --> D["kit.passwordReset.request / accountKit.passwordReset.request"]
     D --> E{"Recognized delivery or post-commit failure?"}
     E -->|No| F["Return the same generic browser flash or API 202 body"]
-    E -->|Yes| G["Browser logs delivery failure; API committedFollowUp logs it; both keep generic acknowledgement"]
+    E -->|Yes| G["Browser logs delivery failure; API runCommittedFollowUp logs it; both keep generic acknowledgement"]
 ```
 
 **Code references:** [Hypermedia route](../../apps/hypermedia/start/routes.ts), [Hypermedia controller](../../apps/hypermedia/app/controllers/password_resets_controller.ts), [Hypermedia form validator](../../apps/hypermedia/app/validators/account.ts), [API route](../../apps/api/start/routes.ts), [API controller](../../apps/api/app/controllers/password_resets_controller.ts), [API validator](../../apps/api/app/validators/account_kit.ts), [Committed-failure handling](../../apps/api/app/services/committed_failure_diagnostic.ts), [Password-reset functional tests](../../apps/api/tests/functional/account_password_reset.spec.ts), [Inertia React controller](../../apps/inertia-react/app/controllers/password_resets_controller.ts), [Inertia Vue controller](../../apps/inertia-vue/app/controllers/password_resets_controller.ts).

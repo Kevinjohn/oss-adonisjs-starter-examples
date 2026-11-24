@@ -12,7 +12,7 @@ As an API scope manager, I want to resend an existing invitation so that the rec
 ## Acceptance criteria
 
 - The route ID must convert to a positive safe integer. No recipient/role replacement field is accepted by this handler; it resends the selected invitation under package authorization.
-- On normal completion, return 200 `{ id }`. A recognized delivery/post-commit failure is logged by `committedFollowUp` and returns 202 `{ requested: true }`; this acknowledges committed work without claiming delivery.
+- On normal completion, return 200 `{ id }`. A recognized delivery/post-commit failure is logged by `runCommittedFollowUp` and returns 202 `{ requested: true }`; this acknowledges committed work without claiming delivery.
 - A completed resend invalidates the previous invitation link and makes a replacement proof current. The recipient uses the newest link available through configured delivery. If delivery is uncertain or an old link is opened, the manager checks the resend outcome and requests another resend if needed; the recipient must use only the newest proof. A 202 does not restore the previous link or confirm delivery.
 - Invalid identity, authorization or other unexpected failure propagates. Resend does not allow the caller to manage a foreign scope merely by knowing an ID.
 
@@ -41,8 +41,8 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["InvitationsController.resend"] --> B["invitationIdParam and raw actor.id"]
-    B --> C["committedFollowUp wraps invitations.resend({ actorId, invitationId })"]
+    A["InvitationsController.resend"] --> B["requireInvitationIdParam and raw actor.id"]
+    B --> C["runCommittedFollowUp wraps invitations.resend({ actorId, invitationId })"]
     C --> D{"Result returned?"}
     D -->|Yes| E["response.ok({ id })"]
     D -->|Recognized committed failure| F["response.accepted({ requested: true })"]

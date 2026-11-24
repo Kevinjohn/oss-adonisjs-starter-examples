@@ -39,7 +39,7 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["SocialAuthController.completeRegistration"] --> B["socialRegistrationValidator and pendingBrowserContinuation"]
+    A["SocialAuthController.completeRegistration"] --> B["socialRegistrationValidator and readPendingBrowserContinuation"]
     B --> C["socialAuthentication.completeRegistration"]
     C --> D{"Matching pending session continuation?"}
     D -->|Yes| E["forgetBrowserContinuation and finishCallback with pending verifier"]

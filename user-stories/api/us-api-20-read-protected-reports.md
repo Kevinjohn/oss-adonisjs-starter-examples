@@ -12,7 +12,7 @@ As an admitted API account holder, I want to access the protected-data sample so
 ## Acceptance criteria
 
 - There are no editable fields. The current sample returns `{ reports: [] }`; it does not contain a populated report-management feature.
-- Authentication runs before `AdmittedAccountMiddleware`, which invokes `AccountAdmission.require(accountInput(ctx))`. Only then does the report handler return its sample.
+- Authentication runs before `AdmittedAccountMiddleware`, which invokes `AccountAdmission.require(readAccountInput(ctx))`. Only then does the report handler return its sample.
 - An authenticated but not admitted account is refused; it can read/request its own admission through US-API-14/15. This sample uses the selected raw guard, not the team route's effective Masquerade guard.
 
 ## User flow
@@ -30,8 +30,8 @@ Scope: API route and controller through the named Account Kit service boundary; 
 
 ```mermaid
 flowchart TD
-    A["Route authentication with selectedGuardName"] --> B["AdmittedAccountMiddleware.handle"]
-    B --> C["Injected AccountAdmission.require(accountInput(ctx))"]
+    A["Route authentication with resolveGuardName"] --> B["AdmittedAccountMiddleware.handle"]
+    B --> C["Injected AccountAdmission.require(readAccountInput(ctx))"]
     C --> D["ReportsController.index"]
     D --> E["response.ok({ reports: [] })"]
 ```

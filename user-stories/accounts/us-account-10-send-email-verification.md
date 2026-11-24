@@ -13,7 +13,7 @@ As a signed-in account owner, I want to request a verification link so that I ca
 
 - There are no editable fields; an authenticated owner invokes the action from email settings or sends the API request.
 - The account kit may reuse a recent link instead of sending another message. All three browser controllers distinguish `already_verified` with **Your email address is already confirmed.** Other React/Vue results explain the one-minute reuse window and retry wait. API returns `{ result: ... }`, defaulting a missing follow-up result to `sent`.
-- Hypermedia catches delivery failure, logs it, flashes a retryable error and redirects back. React/Vue controllers await the send without a local catch; the shared exception handler flashes that the change was saved but email delivery or a follow-up failed, advises waiting one minute before another verification request, and redirects back. API recognized delivery/post-commit failure is logged by `committedFollowUp`. No response proves inbox delivery; see the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary).
+- Hypermedia catches delivery failure, logs it, flashes a retryable error and redirects back. React/Vue controllers await the send without a local catch; the shared exception handler flashes that the change was saved but email delivery or a follow-up failed, advises waiting one minute before another verification request, and redirects back. API recognized delivery/post-commit failure is logged by `runCommittedFollowUp`. No response proves inbox delivery; see the [supplied proof-delivery boundary](../REFERENCE.md#proof-delivery-boundary).
 - Requesting a link does not itself mark the email verified; verification requires completing the token flow.
 
 ## User flow
@@ -47,7 +47,7 @@ flowchart TD
     D -->|React/Vue returned| G["Flash already-confirmed or one-minute reuse guidance; redirect back"]
     D -->|React/Vue error| H["HttpExceptionHandler flashes saved-change email/follow-up failure with one-minute wait; redirects back"]
     D -->|API returned| K["Return { result } from service outcome"]
-    D -->|API delivery or post-commit error| I["committedFollowUp logs failure and response uses fallback result"]
+    D -->|API delivery or post-commit error| I["runCommittedFollowUp logs failure and response uses fallback result"]
     E --> J["Verification remains a separate token-completion action"]
     F --> J
     G --> J
