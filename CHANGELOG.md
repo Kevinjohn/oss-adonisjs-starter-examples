@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.17.1
+
+- All four starters adopt Account Kit 0.8.0, Access Control 0.4.1, Masquerade 0.7.1
+  and Duplicate Request Guard 0.3.1.
+- Hypermedia, React and Vue adopt Confirm Action with Password 0.6.0. The API keeps bearer
+  tokens as its default.
+
 ## v0.17.0
 
 - All four starters adopt Account Kit 0.7.0, Access Control 0.4.0, Masquerade 0.7.0,
