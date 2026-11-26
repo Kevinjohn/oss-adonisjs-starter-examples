@@ -15,57 +15,57 @@ const password = 'CombinedPass123!'
 
 type ModeView = { isMasquerading: boolean; contextToken: string }
 
-async function createAdmittedUser(email: string) {
-  const user = await User.create({
-    fullName: email.split('@')[0],
-    email,
-    password,
-    emailVerifiedAt: DateTime.utc(),
-  })
-  await grantAdmission(user)
-  return user
-}
-
-async function login(client: ApiClient, email: string) {
-  const response = await client.post('/api/v1/auth/login').json({ email, password })
-  response.assertStatus(200)
-  return responseBody<{ data: { token: string } }>(response).data.token
-}
-
-async function mode(client: ApiClient, actorToken: string) {
-  const response = await client.get('/masquerade').bearerToken(actorToken)
-  response.assertStatus(200)
-  return responseBody<ModeView>(response)
-}
-
-async function start(client: ApiClient, actorToken: string, contextToken: string, target: User) {
-  return client
-    .post('/masquerade/start')
-    .bearerToken(actorToken)
-    .header('X-Masquerade-Context', contextToken)
-    .json({ targetId: String(target.id), access: 'edit' })
-}
-
-async function stop(client: ApiClient, actorToken: string, contextToken: string) {
-  return client
-    .post('/masquerade/stop')
-    .bearerToken(actorToken)
-    .header('X-Masquerade-Context', contextToken)
-}
-
-async function createOwnedTeam(owner: User) {
-  return transaction(db, async (trx) => {
-    const created = await Team.create({ name: 'Rockets' }, { client: trx })
-    await accessControl.memberships.createFirstMember({
-      scopeId: created.id,
-      userId: owner.id,
-      trx,
-    })
-    return created
-  })
-}
-
 test.group('masquerade with access control', (group) => {
+  async function createAdmittedUser(email: string) {
+    const user = await User.create({
+      fullName: email.split('@')[0],
+      email,
+      password,
+      emailVerifiedAt: DateTime.utc(),
+    })
+    await grantAdmission(user)
+    return user
+  }
+
+  async function login(client: ApiClient, email: string) {
+    const response = await client.post('/api/v1/auth/login').json({ email, password })
+    response.assertStatus(200)
+    return responseBody<{ data: { token: string } }>(response).data.token
+  }
+
+  async function mode(client: ApiClient, actorToken: string) {
+    const response = await client.get('/masquerade').bearerToken(actorToken)
+    response.assertStatus(200)
+    return responseBody<ModeView>(response)
+  }
+
+  async function start(client: ApiClient, actorToken: string, contextToken: string, target: User) {
+    return client
+      .post('/masquerade/start')
+      .bearerToken(actorToken)
+      .header('X-Masquerade-Context', contextToken)
+      .json({ targetId: String(target.id), access: 'edit' })
+  }
+
+  async function stop(client: ApiClient, actorToken: string, contextToken: string) {
+    return client
+      .post('/masquerade/stop')
+      .bearerToken(actorToken)
+      .header('X-Masquerade-Context', contextToken)
+  }
+
+  async function createOwnedTeam(owner: User) {
+    return transaction(db, async (trx) => {
+      const created = await Team.create({ name: 'Rockets' }, { client: trx })
+      await accessControl.memberships.createFirstMember({
+        scopeId: created.id,
+        userId: owner.id,
+        trx,
+      })
+      return created
+    })
+  }
+
   group.each.setup(truncateDatabase)
   group.each.setup(async () => {
     const originalOperators = [...masqueradeOperatorEmails]

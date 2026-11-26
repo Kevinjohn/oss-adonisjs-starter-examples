@@ -19,6 +19,6 @@ test.group('reading list in the browser', (group) => {
     await page.getByLabel('Title').fill('Lucid guide')
     await page.getByLabel('Label').selectOption('reference')
     await page.getByRole('button', { name: 'Add item' }).click()
-    await page.getByText('Lucid guide — reference').waitFor()
+    await page.getByText('Lucid guide — reference', { exact: false }).waitFor()
   })
 })

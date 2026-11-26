@@ -10,25 +10,25 @@ type RecipeDelivery = { sentInvitations: string[] }
 
 type Snapshot = { accounts: unknown[]; access: unknown[] }
 
-async function truncateRecipeDatabase() {
-  const truncate = await testUtils.db().truncate()
-  await truncate()
-  await db.table('account_transaction_lock').insert({ id: 1, version: 0 })
-}
-
-async function snapshot(): Promise<Snapshot> {
-  return {
-    accounts: await db.from('users').orderBy('id'),
-    access: await db.from('app_user_roles').orderBy('id'),
-  }
-}
-
-async function tokenFor(user: User, abilities: string[] = ['*']): Promise<string> {
-  const token = await User.accessTokens.create(user, abilities, { expiresIn: '1d' })
-  return token.value!.release()
-}
-
 test.group('existing app invitations', (group) => {
+  async function truncateRecipeDatabase() {
+    const truncate = await testUtils.db().truncate()
+    await truncate()
+    await db.table('account_transaction_lock').insert({ id: 1, version: 0 })
+  }
+
+  async function snapshot(): Promise<Snapshot> {
+    return {
+      accounts: await db.from('users').orderBy('id'),
+      access: await db.from('app_user_roles').orderBy('id'),
+    }
+  }
+
+  async function tokenFor(user: User, abilities: string[] = ['*']): Promise<string> {
+    const token = await User.accessTokens.create(user, abilities, { expiresIn: '1d' })
+    return token.value!.release()
+  }
+
   group.setup(truncateRecipeDatabase)
   group.teardown(truncateRecipeDatabase)
 

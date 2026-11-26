@@ -36,7 +36,7 @@ test.group('secure note confirmation', (group) => {
     )
     await page.getByRole('button', { name: 'Confirm password' }).click()
     await rejected
-    await page.getByText('The password is incorrect.').waitFor()
+    await page.getByText('The password is incorrect.', { exact: false }).waitFor()
     const beforeSave = await db.from('secure_notes')
     assert.equal(beforeSave.length, 0)
     await page.goto('/settings/secure-note')
@@ -44,7 +44,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByLabel('Current password').fill('SignupPass123!')
     await page.getByRole('button', { name: 'Confirm password' }).click()
     await page.getByRole('button', { name: 'Save confirmed note' }).click()
-    await page.getByText('Saved note: Remember this').waitFor()
+    await page.getByText('Saved note: Remember this', { exact: false }).waitFor()
     const notes = await db.from('secure_notes').select('body')
     assert.equal(notes.length, 1)
     assert.equal(notes[0].body, 'Remember  this')
@@ -62,7 +62,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByLabel('New note').fill('Third note')
     await page.getByLabel('Current password').fill('WrongPassword!')
     await page.getByRole('button', { name: 'Confirm password' }).click()
-    await page.getByText('The password is incorrect.').waitFor()
+    await page.getByText('The password is incorrect.', { exact: false }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Save confirmed note' }).count(), 0)
     const unchanged = await db.from('secure_notes').first()
     assert.equal(unchanged.body, 'Remember  this')
@@ -97,7 +97,9 @@ test.group('secure note confirmation', (group) => {
     await body.fill('x'.repeat(501))
     await page.getByLabel('Current password').fill(password)
     await page.getByRole('button', { name: 'Confirm password' }).click()
-    await page.getByText('Enter a note of 1 to 500 characters and your password.').waitFor()
+    await page
+      .getByText('Enter a note of 1 to 500 characters and your password.', { exact: false })
+      .waitFor()
     assert.deepEqual(await db.from('pending_secure_notes'), [draft])
     assert.lengthOf(await db.from('password_confirmations'), 1)
 
@@ -115,7 +117,9 @@ test.group('secure note confirmation', (group) => {
       .update({ expires_at: 1 })
     await save.click()
     await page
-      .getByText('Confirmation expired or was already used. Confirm your password again.')
+      .getByText('Confirmation expired or was already used. Confirm your password again.', {
+        exact: false,
+      })
       .waitFor()
     assert.lengthOf(await db.from('pending_secure_notes'), 0)
     assert.lengthOf(await db.from('secure_notes'), 0)
@@ -136,7 +140,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByLabel('New note').fill('Note from the first tab')
     await page.getByLabel('Current password').fill(password)
     await page.getByRole('button', { name: 'Confirm password' }).click()
-    await page.getByText('Confirmed note: Note from the first tab').waitFor()
+    await page.getByText('Confirmed note: Note from the first tab', { exact: false }).waitFor()
 
     const secondTab = await page.context().newPage()
     try {
@@ -144,15 +148,17 @@ test.group('secure note confirmation', (group) => {
       await secondTab.getByLabel('New note').fill('Note from the second tab')
       await secondTab.getByLabel('Current password').fill(password)
       await secondTab.getByRole('button', { name: 'Confirm password' }).click()
-      await secondTab.getByText('Confirmed note: Note from the second tab').waitFor()
+      await secondTab
+        .getByText('Confirmed note: Note from the second tab', { exact: false })
+        .waitFor()
 
-      await page.getByText('Confirmed note: Note from the first tab').waitFor()
+      await page.getByText('Confirmed note: Note from the first tab', { exact: false }).waitFor()
       await page.getByRole('button', { name: 'Save confirmed note' }).click()
-      await page.getByText('Confirm your password again before saving.').waitFor()
+      await page.getByText('Confirm your password again before saving.', { exact: false }).waitFor()
       assert.lengthOf(await db.from('secure_notes'), 0)
 
       await secondTab.getByRole('button', { name: 'Save confirmed note' }).click()
-      await secondTab.getByText('Saved note: Note from the second tab').waitFor()
+      await secondTab.getByText('Saved note: Note from the second tab', { exact: false }).waitFor()
       const notes = await db.from('secure_notes').select('body')
       assert.deepEqual(notes, [{ body: 'Note from the second tab' }])
     } finally {
@@ -176,7 +182,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByLabel('New note').fill('Private pending note')
     await page.getByLabel('Current password').fill(password)
     await page.getByRole('button', { name: 'Confirm password' }).click()
-    await page.getByText('Confirmed note: Private pending note').waitFor()
+    await page.getByText('Confirmed note: Private pending note', { exact: false }).waitFor()
 
     await page.goto('/account/delete')
     await page.getByRole('button', { name: 'Delete my account' }).click()
@@ -207,7 +213,7 @@ test.group('secure note confirmation', (group) => {
     await page.getByLabel('New note').fill('First confirmed note')
     await page.getByLabel('Current password').fill(password)
     await page.getByRole('button', { name: 'Confirm password' }).click()
-    await page.getByText('Confirmed note: First confirmed note').waitFor()
+    await page.getByText('Confirmed note: First confirmed note', { exact: false }).waitFor()
 
     const secondTab = await page.context().newPage()
     const saveFinished = Promise.withResolvers<void>()
@@ -247,20 +253,25 @@ test.group('secure note confirmation', (group) => {
       await secondTab.getByLabel('New note').fill('Second confirmed note')
       await secondTab.getByLabel('Current password').fill(password)
       await secondTab.getByRole('button', { name: 'Confirm password' }).click()
-      await secondTab.getByText('Confirmed note: Second confirmed note').waitFor()
+      await secondTab.getByText('Confirmed note: Second confirmed note', { exact: false }).waitFor()
 
       releaseResponse.resolve()
       SecureNotesController.prototype.update = update
       await firstSave
       const response = await firstResponse
       assert.oneOf(response.status(), [302, 303])
-      await page.getByText('Saved note: First confirmed note').waitFor()
+      await page.getByText('Saved note: First confirmed note', { exact: false }).waitFor()
 
       await secondTab.reload()
       await secondTab.getByLabel('New note').waitFor()
-      assert.equal(await secondTab.getByText('Confirmed note: Second confirmed note').count(), 1)
+      assert.equal(
+        await secondTab
+          .getByText('Confirmed note: Second confirmed note', { exact: false })
+          .count(),
+        1
+      )
       await secondTab.getByRole('button', { name: 'Save confirmed note' }).click()
-      await secondTab.getByText('Saved note: Second confirmed note').waitFor()
+      await secondTab.getByText('Saved note: Second confirmed note', { exact: false }).waitFor()
       assert.deepEqual(await db.from('secure_notes').select('body'), [
         { body: 'Second confirmed note' },
       ])
@@ -288,7 +299,7 @@ test.group('secure note confirmation', (group) => {
     await page.goto('/masquerade/accounts')
     await page.getByRole('button', { name: 'Act as customer@example.test' }).click()
     const banner = page.getByRole('status').filter({ hasText: 'You are viewing as account' })
-    await banner.getByText(`You are viewing as account ${customer.id}.`).waitFor()
+    await banner.getByText(`You are viewing as account ${customer.id}.`, { exact: false }).waitFor()
     await page.goto('/masquerade/accounts')
     const serialized = await page.locator('script[data-page="app"]').textContent()
     assert.isString(serialized)

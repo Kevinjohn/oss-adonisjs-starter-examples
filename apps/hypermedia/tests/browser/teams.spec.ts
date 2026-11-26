@@ -25,7 +25,7 @@ test.group('teams in the browser', (group) => {
     await page.getByLabel('Team name').fill('Rockets')
     await page.getByRole('button', { name: 'Create team' }).click()
     await page.getByRole('heading', { name: 'Rockets' }).waitFor()
-    await page.getByText('owner@example.test (owner)').waitFor()
+    await page.getByText('owner@example.test (owner)', { exact: false }).waitFor()
 
     await page.getByLabel('Team name').fill('Comets')
     await page.getByRole('button', { name: 'Rename team' }).click()

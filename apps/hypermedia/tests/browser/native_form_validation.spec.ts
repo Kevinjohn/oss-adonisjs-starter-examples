@@ -5,14 +5,14 @@ import { Session } from '@adonisjs/session'
 import User from '#models/user'
 import { setupAccountDatabase } from '../helpers/account_database.js'
 
-/** Session.commit flattens input fields beside the framework validation bags. */
-function oldInputFromFlash(flash: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.entries(flash).filter(([key]) => !['errorsBag', 'inputErrorsBag'].includes(key))
-  )
-}
-
 test.group('native form validation', (group) => {
+  /** Session.commit flattens input fields beside the framework validation bags. */
+  function oldInputFromFlash(flash: Record<string, unknown>) {
+    return Object.fromEntries(
+      Object.entries(flash).filter(([key]) => !['errorsBag', 'inputErrorsBag'].includes(key))
+    )
+  }
+
   group.each.setup(setupAccountDatabase)
 
   test('signup rejects an overlong name and keeps credential markers out of old input', async ({
@@ -177,7 +177,7 @@ test.group('native form validation and theme controls', (group) => {
         assert.equal(response.status(), 302)
         assert.equal(new URL(response.headers().location, origin).pathname, `/${route}`)
         await page.goto(`/${route}`)
-        await page.getByText('Enter your email address.').waitFor()
+        await page.getByText('Enter your email address.', { exact: false }).waitFor()
         assert.equal(
           await page.getByLabel('Email', { exact: true }).getAttribute('aria-invalid'),
           'true'

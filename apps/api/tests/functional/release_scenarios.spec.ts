@@ -9,23 +9,23 @@ import { cookies } from '#tests/helpers/cookies'
 import { truncateDatabase } from '#tests/helpers/database'
 import { grantAdmittedOwner } from '#tests/helpers/admission'
 
-function bearerFromLogin(response: { body(): unknown }): string {
-  const body = response.body()
-  if (typeof body !== 'object' || body === null || !('data' in body)) {
-    throw new Error('Login response is missing its data envelope')
-  }
-  const data = body.data
-  if (typeof data !== 'object' || data === null || !('token' in data)) {
-    throw new Error('Token login response is missing its token')
-  }
-  const token = data.token
-  if (typeof token !== 'string' || token.length === 0) {
-    throw new Error('Token login response contains an invalid token')
-  }
-  return token
-}
-
 test.group('Release scenarios', (group) => {
+  function bearerFromLogin(response: { body(): unknown }): string {
+    const body = response.body()
+    if (typeof body !== 'object' || body === null || !('data' in body)) {
+      throw new Error('Login response is missing its data envelope')
+    }
+    const data = body.data
+    if (typeof data !== 'object' || data === null || !('token' in data)) {
+      throw new Error('Token login response is missing its token')
+    }
+    const token = data.token
+    if (typeof token !== 'string' || token.length === 0) {
+      throw new Error('Token login response contains an invalid token')
+    }
+    return token
+  }
+
   group.each.setup(truncateDatabase)
 
   test('a recipient can accept after the inviter loses issuance permission', async ({

@@ -13,54 +13,54 @@ const invitationUrls = new Map<string, string>()
 
 type AccountsProps = { mode: { contextToken: string } }
 
-async function createActingSession(access: 'view' | 'edit') {
-  masqueradeOperatorEmails.add('operator@example.test')
-  const actor = await User.create({ email: 'operator@example.test', password })
-  const target = await User.create({ email: 'target@example.test', password })
-  const session = new InertiaSession()
-  await session.login(actor.email, password)
-  await startMasquerade(session, target, access)
-  return { actor, target, session }
-}
-
-async function startMasquerade(session: InertiaSession, target: User, access: 'view' | 'edit') {
-  const page = await session.props<AccountsProps>('/masquerade/accounts')
-  const started = await session.request('/masquerade/start', {
-    _masqueradeContext: page.mode.contextToken,
-    targetId: String(target.id),
-    access,
-  })
-  assert.equal(started.headers.get('location'), '/dashboard')
-}
-
-async function createInvitation(session: InertiaSession) {
-  await session.props('/teams')
-  const created = await session.request('/teams', { name: 'Rockets' })
-  const teamId = Number(created.headers.get('location')!.split('/').at(-1))
-  await session.props(`/teams/${teamId}`)
-  await session.request(`/teams/${teamId}/invitations`, {
-    email: 'new-member@example.test',
-    role: 'viewer',
-  })
-  const url = invitationUrls.get('new-member@example.test')
-  if (!url) throw new Error('Team invitation did not produce a link')
-  return { teamId, path: new URL(url).pathname }
-}
-
-async function assertBlocked(response: Response) {
-  assert.equal(response.status, 403)
-  assert.deepEqual(await response.json(), {
-    errors: [
-      {
-        code: 'E_MASQUERADE_ACTION_BLOCKED',
-        message: 'Action is blocked while masquerading',
-        blockedBy: 'sensitive',
-      },
-    ],
-  })
-}
-
 test.group('Masquerade blocks actor-owned Inertia routes', (group) => {
+  async function createActingSession(access: 'view' | 'edit') {
+    masqueradeOperatorEmails.add('operator@example.test')
+    const actor = await User.create({ email: 'operator@example.test', password })
+    const target = await User.create({ email: 'target@example.test', password })
+    const session = new InertiaSession()
+    await session.login(actor.email, password)
+    await startMasquerade(session, target, access)
+    return { actor, target, session }
+  }
+
+  async function startMasquerade(session: InertiaSession, target: User, access: 'view' | 'edit') {
+    const page = await session.props<AccountsProps>('/masquerade/accounts')
+    const started = await session.request('/masquerade/start', {
+      _masqueradeContext: page.mode.contextToken,
+      targetId: String(target.id),
+      access,
+    })
+    assert.equal(started.headers.get('location'), '/dashboard')
+  }
+
+  async function createInvitation(session: InertiaSession) {
+    await session.props('/teams')
+    const created = await session.request('/teams', { name: 'Rockets' })
+    const teamId = Number(created.headers.get('location')!.split('/').at(-1))
+    await session.props(`/teams/${teamId}`)
+    await session.request(`/teams/${teamId}/invitations`, {
+      email: 'new-member@example.test',
+      role: 'viewer',
+    })
+    const url = invitationUrls.get('new-member@example.test')
+    if (!url) throw new Error('Team invitation did not produce a link')
+    return { teamId, path: new URL(url).pathname }
+  }
+
+  async function assertBlocked(response: Response) {
+    assert.equal(response.status, 403)
+    assert.deepEqual(await response.json(), {
+      errors: [
+        {
+          code: 'E_MASQUERADE_ACTION_BLOCKED',
+          message: 'Action is blocked while masquerading',
+          blockedBy: 'sensitive',
+        },
+      ],
+    })
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])

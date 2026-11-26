@@ -12,30 +12,30 @@ const password = 'CombinedPass123!'
 
 type ModeView = { isMasquerading: boolean; contextToken: string }
 
-async function createAdmittedUser(email: string) {
-  const user = await User.create({
-    fullName: email.split('@')[0],
-    email,
-    password,
-    emailVerifiedAt: DateTime.utc(),
-  })
-  await grantAdmission(user)
-  return user
-}
-
-async function login(client: ApiClient, email: string) {
-  const response = await client.post('/api/v1/auth/login').json({ email, password })
-  response.assertStatus(200)
-  return responseBody<{ data: { token: string } }>(response).data.token
-}
-
-async function mode(client: ApiClient, actorToken: string) {
-  const response = await client.get('/masquerade').bearerToken(actorToken)
-  response.assertStatus(200)
-  return responseBody<ModeView>(response)
-}
-
 test.group('masquerade with soft delete', (group) => {
+  async function createAdmittedUser(email: string) {
+    const user = await User.create({
+      fullName: email.split('@')[0],
+      email,
+      password,
+      emailVerifiedAt: DateTime.utc(),
+    })
+    await grantAdmission(user)
+    return user
+  }
+
+  async function login(client: ApiClient, email: string) {
+    const response = await client.post('/api/v1/auth/login').json({ email, password })
+    response.assertStatus(200)
+    return responseBody<{ data: { token: string } }>(response).data.token
+  }
+
+  async function mode(client: ApiClient, actorToken: string) {
+    const response = await client.get('/masquerade').bearerToken(actorToken)
+    response.assertStatus(200)
+    return responseBody<ModeView>(response)
+  }
+
   group.each.setup(truncateDatabase)
   group.each.setup(async () => {
     const originalOperators = [...masqueradeOperatorEmails]

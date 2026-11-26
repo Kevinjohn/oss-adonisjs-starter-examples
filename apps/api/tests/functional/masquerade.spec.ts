@@ -13,24 +13,24 @@ type ModeView = {
   contextToken: string
 }
 
-async function createAdmittedUser(email: string, password: string) {
-  const user = await User.create({
-    fullName: email.split('@')[0],
-    email,
-    password,
-    emailVerifiedAt: DateTime.utc(),
-  })
-  await grantAdmission(user)
-  return user
-}
-
-async function login(client: ApiClient, email: string, password: string) {
-  const response = await client.post('/api/v1/auth/login').json({ email, password })
-  response.assertStatus(200)
-  return responseBody<{ data: { token: string } }>(response).data.token
-}
-
 test.group('Masquerade HTTP API', (group) => {
+  async function createAdmittedUser(email: string, password: string) {
+    const user = await User.create({
+      fullName: email.split('@')[0],
+      email,
+      password,
+      emailVerifiedAt: DateTime.utc(),
+    })
+    await grantAdmission(user)
+    return user
+  }
+
+  async function login(client: ApiClient, email: string, password: string) {
+    const response = await client.post('/api/v1/auth/login').json({ email, password })
+    response.assertStatus(200)
+    return responseBody<{ data: { token: string } }>(response).data.token
+  }
+
   group.each.setup(truncateDatabase)
   group.each.setup(async () => {
     const originalOperators = [...masqueradeOperatorEmails]
