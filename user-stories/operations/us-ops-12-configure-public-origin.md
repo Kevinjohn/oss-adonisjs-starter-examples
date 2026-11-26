@@ -6,7 +6,7 @@ As an app operator, I want to set the public origin so that account proof links 
 **Access:** Operator configuring an app environment before boot.
 **Entry:** Set `APP_URL` before starting any of the four apps.
 **Documentation:** [Public origin recipe](../../docs/cookbook/public-origin.md).
-**Source:** [api](../../apps/api/start/public_origin.ts), [hypermedia](../../apps/hypermedia/start/public_origin.ts), [inertia-react](../../apps/inertia-react/start/public_origin.ts), [inertia-vue](../../apps/inertia-vue/start/public_origin.ts)
+**Source:** [api](../../apps/api/config/public_origin.ts), [hypermedia](../../apps/hypermedia/config/public_origin.ts), [inertia-react](../../apps/inertia-react/config/public_origin.ts), [inertia-vue](../../apps/inertia-vue/config/public_origin.ts)
 **Coverage:** [api](../../apps/api/tests/functional/public_origin.spec.ts), [hypermedia](../../apps/hypermedia/tests/functional/public_origin.spec.ts), [inertia-react](../../apps/inertia-react/tests/functional/public_origin.spec.ts), [inertia-vue](../../apps/inertia-vue/tests/functional/public_origin.spec.ts)
 
 ## Acceptance criteria
@@ -27,10 +27,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["start/public_origin.ts reads APP_URL and NODE_ENV"] --> B["Pass value to Origin Guard resolvePublicOrigin"]
+    A["config/public_origin.ts reads APP_URL and NODE_ENV"] --> B["Pass value to Origin Guard resolvePublicOrigin"]
     B -->|Refused| C["Config import fails and application boot stops"]
     B -->|Validated| D["config/account_kit.ts uses publicOrigin for account links"]
     B -->|Validated API origin| E["API config/ally.ts uses publicOrigin for provider callback URLs"]
 ```
 
-**Code references:** [api](../../apps/api/start/public_origin.ts), [hypermedia](../../apps/hypermedia/start/public_origin.ts), [inertia-react](../../apps/inertia-react/start/public_origin.ts), [inertia-vue](../../apps/inertia-vue/start/public_origin.ts), [ally.ts](../../apps/api/config/ally.ts), [account_kit.ts](../../apps/api/config/account_kit.ts).
+**Code references:** [api](../../apps/api/config/public_origin.ts), [hypermedia](../../apps/hypermedia/config/public_origin.ts), [inertia-react](../../apps/inertia-react/config/public_origin.ts), [inertia-vue](../../apps/inertia-vue/config/public_origin.ts), [ally.ts](../../apps/api/config/ally.ts), [account_kit.ts](../../apps/api/config/account_kit.ts).

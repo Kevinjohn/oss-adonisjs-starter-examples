@@ -1,8 +1,8 @@
-import { authStrategy } from '#config/auth_strategy'
+import { readConfiguredAuthStrategy } from '#config/auth_strategy'
 
 /** The example's selected auth strategy. Tests switch it; an application keeps one. */
 export function readAuthStrategy() {
-  return authStrategy
+  return readConfiguredAuthStrategy()
 }
 
 /** The AdonisJS guard for the selected auth strategy. */
