@@ -5,12 +5,15 @@ import { accountErrorResponse, errors } from '@kevinjohn/adonisjs-account-kit'
 import { E_ACCOUNT_KIT_ADMISSION_REQUIRED } from '@kevinjohn/adonisjs-account-kit/admission'
 import { errors as shieldErrors } from '@adonisjs/shield'
 import { sendAccountError } from '#services/http_responses'
-import { SocialProviderExchangeError } from '#services/social_provider'
+import SocialProviderExchangeException from '#exceptions/social_provider_exchange_exception'
 import { isSocialPath } from '#services/social_path'
 
 function extractProviderFailure(error: unknown) {
-  if (error instanceof SocialProviderExchangeError) return error
-  if (error instanceof errors.E_ACCOUNT_KIT && error.cause instanceof SocialProviderExchangeError) {
+  if (error instanceof SocialProviderExchangeException) return error
+  if (
+    error instanceof errors.E_ACCOUNT_KIT &&
+    error.cause instanceof SocialProviderExchangeException
+  ) {
     return error.cause
   }
   return undefined
@@ -18,7 +21,7 @@ function extractProviderFailure(error: unknown) {
 
 function logSocialFailure(
   ctx: HttpContext,
-  provider: SocialProviderExchangeError | undefined,
+  provider: SocialProviderExchangeException | undefined,
   unexpected: boolean
 ) {
   const correlationId = randomUUID()
