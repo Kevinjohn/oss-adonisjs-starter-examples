@@ -104,11 +104,14 @@ The integration tests exercise this recipe in [API](../../apps/api/tests/functio
 
 ## Replay the schema
 
-The initial migrations use the fixed `createMasqueradeSchemaV1` and `dropMasqueradeSchemaV1`
-exports. Keep these versioned calls when updating the runtime package. Apply future schema changes
-through new migrations.
+Each example creates the modes and events tables in separate migrations using the Masquerade v1
+schema. Apply future schema changes through new migrations.
 
-See the committed migrations for [API](../../apps/api/database/migrations/1800000001003_create_masquerade_tables.ts),
-[Hypermedia](../../apps/hypermedia/database/migrations/1792342558358_create_masquerade_tables.ts),
-[React](../../apps/inertia-react/database/migrations/1792342558358_create_masquerade_tables.ts) and
-[Vue](../../apps/inertia-vue/database/migrations/1792342558358_create_masquerade_tables.ts).
+- API [modes](../../apps/api/database/migrations/1800000001003_create_masquerade_modes_table.ts)
+  and [events](../../apps/api/database/migrations/1800000001004_create_masquerade_events_table.ts)
+- Hypermedia [modes](../../apps/hypermedia/database/migrations/1792342558358_create_masquerade_modes_table.ts)
+  and [events](../../apps/hypermedia/database/migrations/1792342558359_create_masquerade_events_table.ts)
+- React [modes](../../apps/inertia-react/database/migrations/1792342558358_create_masquerade_modes_table.ts)
+  and [events](../../apps/inertia-react/database/migrations/1792342558359_create_masquerade_events_table.ts)
+- Vue [modes](../../apps/inertia-vue/database/migrations/1792342558358_create_masquerade_modes_table.ts)
+  and [events](../../apps/inertia-vue/database/migrations/1792342558359_create_masquerade_events_table.ts)
