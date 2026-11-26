@@ -12,27 +12,27 @@ import {
 import { confirmSecureNoteValidator, saveSecureNoteValidator } from '#validators/secure_note'
 
 export default class SecureNotesController {
-  async edit(ctx: HttpContext) {
+  async edit({ session, auth, view }: HttpContext) {
     // Discard drafts written by the previous session-based implementation.
-    if (ctx.session.has('pendingSecureNote')) ctx.session.forget('pendingSecureNote')
-    const input = await ctx.auth.use('web').current()
+    if (session.has('pendingSecureNote')) session.forget('pendingSecureNote')
+    const input = await auth.use('web').current()
     const props = await kit.authentication.withCurrent(input, readSecureNote)
-    return ctx.view.render('pages/settings/secure_note', props)
+    return view.render('pages/settings/secure_note', props)
   }
 
-  async confirm(ctx: HttpContext) {
-    const [validationError, note] = await ctx.request.tryValidateUsing(confirmSecureNoteValidator, {
+  async confirm({ request, session, response, auth }: HttpContext) {
+    const [validationError, note] = await request.tryValidateUsing(confirmSecureNoteValidator, {
       data: {
-        body: ctx.request.input('body'),
-        password: ctx.request.input('password'),
+        body: request.input('body'),
+        password: request.input('password'),
       },
     })
     if (validationError) {
-      ctx.session.flash('error', 'Enter a note of 1 to 500 characters and your password.')
-      return ctx.response.redirect().back()
+      session.flash('error', 'Enter a note of 1 to 500 characters and your password.')
+      return response.redirect().back()
     }
     const { body, password } = note
-    const input = await ctx.auth.use('web').current()
+    const input = await auth.use('web').current()
     await kit.authentication.withCurrent(input, clearSecureNoteDraft)
     let confirmationId: string
     try {
@@ -43,48 +43,48 @@ export default class SecureNotesController {
       confirmationId = issued.confirmationId
     } catch (error) {
       if (error instanceof errors.PasswordConfirmationDeniedException) {
-        ctx.session.flash('error', 'The password is incorrect.')
-        return ctx.response.redirect().back()
+        session.flash('error', 'The password is incorrect.')
+        return response.redirect().back()
       }
       if (error instanceof errors.PasswordConfirmationThrottledException) {
-        ctx.session.flash('error', 'Too many attempts. Wait before trying again.')
-        return ctx.response.redirect().back()
+        session.flash('error', 'Too many attempts. Wait before trying again.')
+        return response.redirect().back()
       }
       if (error instanceof errors.PasswordConfirmationStaleException) {
-        ctx.session.flash('error', 'Confirmation timed out. Try again.')
-        return ctx.response.redirect().back()
+        session.flash('error', 'Confirmation timed out. Try again.')
+        return response.redirect().back()
       }
       throw error
     }
     await kit.authentication.withCurrent(input, (context) =>
       storeSecureNoteDraft(context, confirmationId, body)
     )
-    return ctx.response.redirect().toPath('/settings/secure-note')
+    return response.redirect().toPath('/settings/secure-note')
   }
 
-  async update(ctx: HttpContext) {
-    const [validationError, proof] = await ctx.request.tryValidateUsing(saveSecureNoteValidator, {
-      data: { confirmationId: ctx.request.input('confirmationId') },
+  async update({ request, session, response, auth }: HttpContext) {
+    const [validationError, proof] = await request.tryValidateUsing(saveSecureNoteValidator, {
+      data: { confirmationId: request.input('confirmationId') },
     })
     if (validationError) {
-      ctx.session.flash('error', 'Confirm your password again before saving.')
-      return ctx.response.redirect().toPath('/settings/secure-note')
+      session.flash('error', 'Confirm your password again before saving.')
+      return response.redirect().toPath('/settings/secure-note')
     }
-    const input = await ctx.auth.use('web').current()
+    const input = await auth.use('web').current()
     const status = await kit.authentication.withCurrent(input, (context) =>
       saveSecureNote(context, proof.confirmationId)
     )
 
     if (status === 'saved') {
-      ctx.session.flash('success', 'Secure note saved.')
+      session.flash('success', 'Secure note saved.')
     } else if (status === 'expired') {
-      ctx.session.flash(
+      session.flash(
         'error',
         'Confirmation expired or was already used. Confirm your password again.'
       )
     } else {
-      ctx.session.flash('error', 'Confirm your password again before saving.')
+      session.flash('error', 'Confirm your password again before saving.')
     }
-    return ctx.response.redirect().toPath('/settings/secure-note')
+    return response.redirect().toPath('/settings/secure-note')
   }
 }

@@ -66,7 +66,13 @@ test.group('masquerade', (group) => {
 
     const started = await start(session, customer)
     assert.equal(started.headers.get('location'), '/dashboard')
-    const acting = await session.props<AppProps>('/dashboard')
+    const actingResponse = await session.request('/dashboard')
+    assert.equal(actingResponse.status, 200)
+    const { clearHistory: clearActingHistory, props: acting } = (await actingResponse.json()) as {
+      clearHistory?: boolean
+      props: AppProps
+    }
+    assert.isTrue(clearActingHistory)
     assert.equal(acting.user?.email, 'customer@example.test')
     assert.deepInclude(acting.masquerade, { isMasquerading: true, targetId: String(customer.id) })
 
@@ -107,7 +113,14 @@ test.group('masquerade', (group) => {
       _masqueradeContext: page.mode.contextToken,
     })
     assert.equal(stopped.headers.get('location'), '/masquerade/accounts')
-    const restored = await session.props<AppProps>('/dashboard')
+    const restoredResponse = await session.request('/dashboard')
+    assert.equal(restoredResponse.status, 200)
+    const { clearHistory: clearRestoredHistory, props: restored } =
+      (await restoredResponse.json()) as {
+        clearHistory?: boolean
+        props: AppProps
+      }
+    assert.isTrue(clearRestoredHistory)
     assert.equal(restored.user?.email, 'operator@example.test')
     assert.isFalse(restored.masquerade?.isMasquerading)
   })

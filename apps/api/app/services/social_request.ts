@@ -4,7 +4,7 @@ import { readAccountInput } from '#services/account_input'
 import { resolveGuardName } from '#services/auth_strategy'
 
 export async function readCurrentAccountIfAuthenticated(
-  ctx: HttpContext
+  ctx: Pick<HttpContext, 'auth' | 'session'>
 ): Promise<CurrentAccountInput | undefined> {
   const guard = ctx.auth.use(resolveGuardName())
   return (await guard.check()) ? readAccountInput(ctx) : undefined

@@ -7,23 +7,23 @@ export default class SessionController {
     return inertia.render('auth/login', {})
   }
 
-  async store(ctx: HttpContext) {
-    const { email, password } = await ctx.request.validateUsing(loginValidator)
+  async store({ request, auth, session, response }: HttpContext) {
+    const { email, password } = await request.validateUsing(loginValidator)
     await kit.authentication.login(
-      { email, password, clientKey: ctx.request.ip() },
-      ctx.auth.use('web').forRequest()
+      { email, password, clientKey: request.ip() },
+      auth.use('web').forRequest()
     )
-    ctx.session.flash('masqueradeClearHistory', true)
-    return ctx.response.redirect().toRoute('dashboard')
+    session.flash('masqueradeClearHistory', true)
+    return response.redirect().toRoute('dashboard')
   }
 
-  async destroy(ctx: HttpContext) {
+  async destroy({ auth, session, response }: HttpContext) {
     await kit.authentication.logout(
-      ctx.auth.use('web').forRequest(),
+      auth.use('web').forRequest(),
       undefined,
-      await ctx.auth.use('web').current()
+      await auth.use('web').current()
     )
-    ctx.session.flash('masqueradeClearHistory', true)
-    return ctx.response.redirect().toRoute('session.create')
+    session.flash('masqueradeClearHistory', true)
+    return response.redirect().toRoute('session.create')
   }
 }

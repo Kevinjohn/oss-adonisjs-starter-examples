@@ -14,25 +14,25 @@ export default class EmailVerificationsController {
     return response.ok({ result: result ?? 'sent' })
   }
 
-  async inspect(ctx: HttpContext) {
-    setProofResponseHeaders(ctx)
-    if (!(await accountKit.emailVerification.inspect({ token: ctx.params.token }))) {
-      return sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN')
+  async inspect({ response, request, params }: HttpContext) {
+    setProofResponseHeaders({ response })
+    if (!(await accountKit.emailVerification.inspect({ token: params.token }))) {
+      return sendProofFailure({ request, response }, 'E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN')
     }
-    return ctx.response.ok({ confirmation: true })
+    return response.ok({ confirmation: true })
   }
 
-  async complete(ctx: HttpContext) {
-    setProofResponseHeaders(ctx)
-    const { password } = await ctx.request.validateUsing(passwordValidator)
+  async complete({ response, request, logger, params }: HttpContext) {
+    setProofResponseHeaders({ response })
+    const { password } = await request.validateUsing(passwordValidator)
     try {
-      const result = await runCommittedFollowUp(ctx.logger, 'email_verification.complete', () =>
-        accountKit.emailVerification.complete({ token: ctx.params.token, password })
+      const result = await runCommittedFollowUp(logger, 'email_verification.complete', () =>
+        accountKit.emailVerification.complete({ token: params.token, password })
       )
-      return ctx.response.ok({ result: result ?? 'verified' })
+      return response.ok({ result: result ?? 'verified' })
     } catch (error) {
       if (error instanceof E_ACCOUNT_KIT_INVALID_TOKEN)
-        return sendProofFailure(ctx, 'E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN')
+        return sendProofFailure({ request, response }, 'E_ACCOUNT_KIT_INVALID_EMAIL_TOKEN')
       throw error
     }
   }

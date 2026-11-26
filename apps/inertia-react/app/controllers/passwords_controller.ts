@@ -10,10 +10,10 @@ export default class PasswordsController {
   }
 
   /** Account Kit keeps this registered sign-in and ends the others. */
-  async update(ctx: HttpContext) {
-    const { currentPassword, password } = await ctx.request.validateUsing(changePasswordValidator)
-    const user = ctx.auth.getUserOrFail()
-    const current = await ctx.auth.use('web').current()
+  async update({ request, auth, logger, session, response }: HttpContext) {
+    const { currentPassword, password } = await request.validateUsing(changePasswordValidator)
+    const user = auth.getUserOrFail()
+    const current = await auth.use('web').current()
     let revision: string | null
     let followUp = ''
     try {
@@ -28,7 +28,7 @@ export default class PasswordsController {
       const committed = passwordChangeRevision(error)
       if (committed === undefined) throw error
       revision = committed
-      ctx.logger.error(
+      logger.error(
         { event: 'password_change_follow_up_failed' },
         'Password changed but a follow-up failed'
       )
@@ -37,10 +37,10 @@ export default class PasswordsController {
           ? ' The notification email could not be sent.'
           : ' A follow-up step failed.'
     }
-    const guard = ctx.auth.use('web').forRequest()
+    const guard = auth.use('web').forRequest()
     assert(guard.strategy === 'session' && guard.refresh)
     await guard.refresh(revision)
-    ctx.session.flash('success', `Password changed. Other devices have been signed out.${followUp}`)
-    return ctx.response.redirect().withQs(false).toPath('/settings/password')
+    session.flash('success', `Password changed. Other devices have been signed out.${followUp}`)
+    return response.redirect().withQs(false).toPath('/settings/password')
   }
 }

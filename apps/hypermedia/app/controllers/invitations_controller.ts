@@ -7,36 +7,36 @@ import { acceptInvitationValidator } from '#validators/team'
 
 /** The invitation link: choose a password to create the account and join the team. */
 export default class InvitationsController {
-  async edit(ctx: HttpContext) {
-    sendTokenPageHeaders(ctx.response)
-    const invitation = await kit.invitations.inspect({ token: ctx.params.token })
-    return ctx.view.render('pages/auth/accept_invitation', {
-      token: ctx.params.token,
+  async edit({ response, params, view }: HttpContext) {
+    sendTokenPageHeaders(response)
+    const invitation = await kit.invitations.inspect({ token: params.token })
+    return view.render('pages/auth/accept_invitation', {
+      token: params.token,
       email: invitation?.email,
     })
   }
 
-  async update(ctx: HttpContext) {
-    sendTokenPageHeaders(ctx.response)
-    const { fullName, password } = await ctx.request.validateUsing(acceptInvitationValidator)
+  async update({ response, request, params, session, logger }: HttpContext) {
+    sendTokenPageHeaders(response)
+    const { fullName, password } = await request.validateUsing(acceptInvitationValidator)
     try {
       await kit.invitations.accept({
-        token: ctx.params.token,
+        token: params.token,
         password,
         registrationData: { fullName },
       })
     } catch (error) {
       if (error instanceof errors.E_ACCOUNT_KIT_INVALID_TOKEN) {
-        ctx.session.flash('error', 'This invitation is invalid, already used, or expired.')
-        return ctx.response.redirect().withQs(false).toRoute('session.create')
+        session.flash('error', 'This invitation is invalid, already used, or expired.')
+        return response.redirect().withQs(false).toRoute('session.create')
       }
       if (!isDeliveryFailure(error)) throw error
-      ctx.logger.error(
+      logger.error(
         { event: 'invitation_follow_up_failed' },
         'Acceptance committed but a follow-up failed'
       )
     }
-    ctx.session.flash('success', 'Your account is ready. Sign in to open your team.')
-    return ctx.response.redirect().withQs(false).toRoute('session.create')
+    session.flash('success', 'Your account is ready. Sign in to open your team.')
+    return response.redirect().withQs(false).toRoute('session.create')
   }
 }
