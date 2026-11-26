@@ -3,7 +3,7 @@ import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
 import { lstatSync, statSync } from 'node:fs'
 
-const testing = env.get('NODE_ENV') === 'test'
+const testing = app.inTest
 const demoSqlite = app.tmpPath('db.sqlite3')
 const testSqlite = app.tmpPath('test-db.sqlite3')
 
@@ -54,6 +54,7 @@ const dbConfig = defineConfig({
       useNullAsDefault: true,
 
       migrations: {
+        disableRollbacksInProduction: true,
         /**
          * Sort migration files naturally by filename.
          */
@@ -90,7 +91,11 @@ const dbConfig = defineConfig({
         password: env.get('DB_PASSWORD') || undefined,
         database: postgresDatabase,
       },
-      migrations: { naturalSort: true, paths: ['database/migrations'] },
+      migrations: {
+        disableRollbacksInProduction: true,
+        naturalSort: true,
+        paths: ['database/migrations'],
+      },
       debug: app.inDev,
     },
   },

@@ -1,6 +1,8 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
+  protected tableName = 'users'
+
   async up() {
     if (this.db.dialect.name === 'better-sqlite3') {
       // ALTER COLUMN ... DROP NOT NULL needs SQLite 3.53, bundled from better-sqlite3 12.10.
@@ -13,7 +15,7 @@ export default class extends BaseSchema {
             ' cannot make the users password column nullable; upgrade better-sqlite3 to 12.10 or later (SQLite 3.53)'
         )
     }
-    this.schema.alterTable('users', (table) => {
+    this.schema.alterTable(this.tableName, (table) => {
       table.timestamp('email_verified_at', { useTz: true, precision: 3 }).nullable()
       table.string('unverified_email', 254).nullable()
       // Milliseconds: two credential changes within one second must give different revisions.
@@ -22,18 +24,18 @@ export default class extends BaseSchema {
     if (this.db.dialect.name === 'better-sqlite3') {
       this.defer(async (db) => {
         await db
-          .rawQuery('ALTER TABLE "' + 'users' + '" ALTER COLUMN password DROP NOT NULL')
+          .rawQuery('ALTER TABLE ?? ALTER COLUMN password DROP NOT NULL', [this.tableName])
           .exec()
       })
     } else {
-      this.schema.alterTable('users', (table) => {
+      this.schema.alterTable(this.tableName, (table) => {
         table.string('password').nullable().alter()
       })
     }
   }
 
   async down() {
-    this.schema.alterTable('users', (table) => {
+    this.schema.alterTable(this.tableName, (table) => {
       table.dropColumn('credentials_changed_at')
       table.dropColumn('unverified_email')
       table.dropColumn('email_verified_at')
