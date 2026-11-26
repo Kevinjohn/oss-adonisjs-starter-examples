@@ -13,63 +13,6 @@ import { accountKitNotifications } from '#services/account_kit_notifications'
 
 const origin = process.env.APP_URL!
 
-/** Real native form session with manual redirects and the server-rendered hidden CSRF token. */
-class ProofSession {
-  private cookies = new Map<string, string>()
-  private csrf?: string
-
-  async request(
-    path: string,
-    options: {
-      form?: Record<string, string>
-      malformed?: boolean
-      csrf?: boolean
-      referer?: string
-    } = {}
-  ) {
-    const post = options.form !== undefined || options.malformed
-    const headers = new Headers({
-      accept: 'text/html',
-      cookie: [...this.cookies].map(([key, value]) => `${key}=${value}`).join('; '),
-    })
-    if (post)
-      headers.set(
-        'content-type',
-        options.malformed ? 'application/json' : 'application/x-www-form-urlencoded'
-      )
-    if (options.referer) headers.set('referer', options.referer)
-    const response = await fetch(new URL(path, origin), {
-      method: post ? 'POST' : 'GET',
-      headers,
-      body: options.malformed
-        ? '{"broken":'
-        : options.form
-          ? new URLSearchParams({
-              ...options.form,
-              ...(options.csrf === false ? {} : { _csrf: this.csrf ?? '' }),
-            })
-          : undefined,
-      redirect: 'manual',
-    })
-    for (const cookie of response.headers.getSetCookie()) {
-      const [name, value] = cookie.split(';')[0].split('=', 2)
-      this.cookies.set(name, value ?? '')
-    }
-    if (response.headers.get('content-type')?.includes('text/html')) {
-      const html = await response.clone().text()
-      const input = html.match(/<input\b[^>]*\bname=(["'])_csrf\1[^>]*>/)?.[0]
-      const token = input?.match(/\bvalue=(["'])([^"']+)\1/)?.[2]
-      if (token) this.csrf = token
-    }
-    return response
-  }
-
-  async prime() {
-    await this.request('/login')
-    if (!this.csrf) throw new Error('The native login form did not render a CSRF token')
-  }
-}
-
 test.group('existing Edge application password reset', (group) => {
   group.each.setup(async () => {
     const cleanup = await testUtils.db().truncate()
@@ -124,7 +67,9 @@ test.group('existing Edge application password reset', (group) => {
       await requester.getByLabel('Email').fill(user.email)
       await requester.getByRole('button', { name: 'Send reset link' }).click()
       await requester
-        .getByText('If an account exists for that address, we have sent a reset link.')
+        .getByText('If an account exists for that address, we have sent a reset link.', {
+          exact: false,
+        })
         .waitFor()
       const token = accountKitNotifications.tokenFor('passwordResetProvision', user.email)
       const resetPath = `/reset-password/${encodeURIComponent(token)}`
@@ -147,7 +92,7 @@ test.group('existing Edge application password reset', (group) => {
       await requester.getByRole('button', { name: 'Reset password' }).click()
       await requester.waitForURL('**/login')
       await requester
-        .getByText('Your password has been reset. Sign in with the new password.')
+        .getByText('Your password has been reset. Sign in with the new password.', { exact: false })
         .waitFor()
       const newPasswordHash = (await db
         .from('users')
@@ -252,7 +197,9 @@ test.group('existing Edge application password reset', (group) => {
       await page.getByLabel('Email').fill(formOwner.email)
       await page.getByRole('button', { name: 'Send reset link' }).click()
       await page
-        .getByText('If an account exists for that address, we have sent a reset link.')
+        .getByText('If an account exists for that address, we have sent a reset link.', {
+          exact: false,
+        })
         .waitFor()
       const valid = accountKitNotifications.tokenFor('passwordResetProvision', formOwner.email)
       const validHash = createHash('sha256').update(valid).digest('hex')
@@ -350,14 +297,18 @@ test.group('existing Edge application password reset', (group) => {
       await page.getByLabel('Email').fill(user.email)
       await page.getByRole('button', { name: 'Send reset link' }).click()
       await page
-        .getByText('If an account exists for that address, we have sent a reset link.')
+        .getByText('If an account exists for that address, we have sent a reset link.', {
+          exact: false,
+        })
         .waitFor()
       const first = accountKitNotifications.tokenFor('passwordResetProvision', user.email)
       await page.goto('/forgot-password')
       await page.getByLabel('Email').fill(user.email)
       await page.getByRole('button', { name: 'Send reset link' }).click()
       await page
-        .getByText('If an account exists for that address, we have sent a reset link.')
+        .getByText('If an account exists for that address, we have sent a reset link.', {
+          exact: false,
+        })
         .waitFor()
       const replacement = accountKitNotifications.tokenFor('passwordResetProvision', user.email)
       const originalHash = (await db.from('users').select('password').where('id', user.id).first())!
@@ -440,7 +391,9 @@ test.group('existing Edge application password reset', (group) => {
       await page.getByLabel('Confirm password').fill('ReplacementPass123!')
       await page.getByRole('button', { name: 'Reset password' }).click()
       await page.waitForURL('**/login')
-      await page.getByText('Your password has been reset. Sign in with the new password.').waitFor()
+      await page
+        .getByText('Your password has been reset. Sign in with the new password.', { exact: false })
+        .waitFor()
       assert.equal((await User.verifyCredentials(user.email, 'ReplacementPass123!')).id, user.id)
       assert.notExists(
         await db.from('password_reset_tokens').where('hash', replacementHash).first()
@@ -454,69 +407,126 @@ test.group('existing Edge application password reset', (group) => {
   })
 })
 
-async function recipeProof(expired = false) {
-  const token = randomBytes(40).toString('base64url')
-  const owner = await User.create({
-    fullName: 'Boundary Owner',
-    email: 'boundary@example.test',
-    password: 'OriginalPass123!',
-  })
-  const hash = createHash('sha256').update(token).digest('hex')
-  const now = new Date()
-  await db.table('password_reset_tokens').insert({
-    tokenable_id: owner.id,
-    email: owner.email,
-    hash,
-    created_at: now.toISOString(),
-    expires_at: new Date(now.getTime() + (expired ? -1000 : 3600000)).toISOString(),
-  })
-  return { owner, token, hash, path: `/reset-password/${token}` }
-}
-
-function protectedResponse(assert: Assert, response: Response) {
-  assert.equal(response.headers.get('cache-control'), 'no-store')
-  assert.equal(response.headers.get('referrer-policy'), 'no-referrer')
-}
-
-async function destination(
-  assert: Assert,
-  session: ProofSession,
-  response: Response,
-  path: string
-) {
-  assert.equal(response.status, 302)
-  const location = new URL(response.headers.get('location')!, origin)
-  assert.equal(location.origin, origin)
-  assert.equal(location.pathname, path)
-  assert.equal(location.search, '')
-  const followed = await session.request(path)
-  assert.equal(followed.status, 200)
-  if (path.startsWith('/reset-password/')) protectedResponse(assert, followed)
-  return followed
-}
-
-/** Read the real database session after the request commits and before following consumes flash. */
-async function storedFeedback(assert: Assert, expected: string, secrets: string[]) {
-  const rows = await db.from('sessions').select('id', 'data')
-  assert.isNotEmpty(rows)
-  const flashes = rows
-    .map((row) => {
-      const data = new MessageBuilder().verify(row.data, row.id)
-      assert.isNotNull(data)
-      return (data as { __flash__?: Record<string, unknown> }).__flash__
-    })
-    .filter(Boolean)
-  assert.isNotEmpty(flashes)
-  const stored = JSON.stringify(flashes)
-  assert.include(stored, expected)
-  assert.notInclude(stored, '"input"')
-  for (const secret of secrets) assert.notInclude(stored, secret)
-}
-
 const resetForm = { password: 'CorrectedPass123!', passwordConfirmation: 'CorrectedPass123!' }
 const csrfMessage = 'Invalid or expired CSRF token'
 
 test.group('native reset recipe response boundary', (group) => {
+  /** Real native form session with manual redirects and the server-rendered hidden CSRF token. */
+  class ProofSession {
+    private cookies = new Map<string, string>()
+    private csrf?: string
+
+    async request(
+      path: string,
+      options: {
+        form?: Record<string, string>
+        malformed?: boolean
+        csrf?: boolean
+        referer?: string
+      } = {}
+    ) {
+      const post = options.form !== undefined || options.malformed
+      const headers = new Headers({
+        accept: 'text/html',
+        cookie: [...this.cookies].map(([key, value]) => `${key}=${value}`).join('; '),
+      })
+      if (post)
+        headers.set(
+          'content-type',
+          options.malformed ? 'application/json' : 'application/x-www-form-urlencoded'
+        )
+      if (options.referer) headers.set('referer', options.referer)
+      const response = await fetch(new URL(path, origin), {
+        method: post ? 'POST' : 'GET',
+        headers,
+        body: options.malformed
+          ? '{"broken":'
+          : options.form
+            ? new URLSearchParams({
+                ...options.form,
+                ...(options.csrf === false ? {} : { _csrf: this.csrf ?? '' }),
+              })
+            : undefined,
+        redirect: 'manual',
+      })
+      for (const cookie of response.headers.getSetCookie()) {
+        const [name, value] = cookie.split(';')[0].split('=', 2)
+        this.cookies.set(name, value ?? '')
+      }
+      if (response.headers.get('content-type')?.includes('text/html')) {
+        const html = await response.clone().text()
+        const input = html.match(/<input\b[^>]*\bname=(["'])_csrf\1[^>]*>/)?.[0]
+        const token = input?.match(/\bvalue=(["'])([^"']+)\1/)?.[2]
+        if (token) this.csrf = token
+      }
+      return response
+    }
+
+    async prime() {
+      await this.request('/login')
+      if (!this.csrf) throw new Error('The native login form did not render a CSRF token')
+    }
+  }
+
+  async function recipeProof(expired = false) {
+    const token = randomBytes(40).toString('base64url')
+    const owner = await User.create({
+      fullName: 'Boundary Owner',
+      email: 'boundary@example.test',
+      password: 'OriginalPass123!',
+    })
+    const hash = createHash('sha256').update(token).digest('hex')
+    const now = new Date()
+    await db.table('password_reset_tokens').insert({
+      tokenable_id: owner.id,
+      email: owner.email,
+      hash,
+      created_at: now.toISOString(),
+      expires_at: new Date(now.getTime() + (expired ? -1000 : 3600000)).toISOString(),
+    })
+    return { owner, token, hash, path: `/reset-password/${token}` }
+  }
+
+  function protectedResponse(assert: Assert, response: Response) {
+    assert.equal(response.headers.get('cache-control'), 'no-store')
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer')
+  }
+
+  async function destination(
+    assert: Assert,
+    session: ProofSession,
+    response: Response,
+    path: string
+  ) {
+    assert.equal(response.status, 302)
+    const location = new URL(response.headers.get('location')!, origin)
+    assert.equal(location.origin, origin)
+    assert.equal(location.pathname, path)
+    assert.equal(location.search, '')
+    const followed = await session.request(path)
+    assert.equal(followed.status, 200)
+    if (path.startsWith('/reset-password/')) protectedResponse(assert, followed)
+    return followed
+  }
+
+  /** Read the real database session after the request commits and before following consumes flash. */
+  async function storedFeedback(assert: Assert, expected: string, secrets: string[]) {
+    const rows = await db.from('sessions').select('id', 'data')
+    assert.isNotEmpty(rows)
+    const flashes = rows
+      .map((row) => {
+        const data = new MessageBuilder().verify(row.data, row.id)
+        assert.isNotNull(data)
+        return (data as { __flash__?: Record<string, unknown> }).__flash__
+      })
+      .filter(Boolean)
+    assert.isNotEmpty(flashes)
+    const stored = JSON.stringify(flashes)
+    assert.include(stored, expected)
+    assert.notInclude(stored, '"input"')
+    for (const secret of secrets) assert.notInclude(stored, secret)
+  }
+
   group.each.setup(async () => {
     const cleanup = await testUtils.db().truncate()
     await cleanup()

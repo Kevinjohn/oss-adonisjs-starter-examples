@@ -6,17 +6,17 @@ import env from '#start/env'
 import { responseBody } from '#tests/helpers/response_body'
 import { truncateDatabase } from '#tests/helpers/database'
 
-function storedLoginKey(operation: string, value: string) {
-  const secret = env.get('APP_KEY').release()
-  const derived = Buffer.from(
-    hkdfSync('sha256', secret, 'adonisjs-account-kit', 'limiter-key-v1', 32)
-  )
-  return `account-kit:v1:${createHmac('sha256', derived)
-    .update(JSON.stringify(['default', operation, value]))
-    .digest('hex')}`
-}
-
 test.group('Login throttling', (group) => {
+  function storedLoginKey(operation: string, value: string) {
+    const secret = env.get('APP_KEY').release()
+    const derived = Buffer.from(
+      hkdfSync('sha256', secret, 'adonisjs-account-kit', 'limiter-key-v1', 32)
+    )
+    return `account-kit:v1:${createHmac('sha256', derived)
+      .update(JSON.stringify(['default', operation, value]))
+      .digest('hex')}`
+  }
+
   group.each.setup(truncateDatabase)
 
   test('login limits known and unknown identities independently after normalization', async ({

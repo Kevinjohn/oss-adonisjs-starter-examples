@@ -14,48 +14,48 @@ const password = 'TeamsPass123!'
 
 type TeamIdentity = { token: string; contextToken: string }
 
-/** Get an API bearer and its idle Masquerade context, bound to the same bearer. */
-async function teamIdentity(client: ApiClient, email: string): Promise<TeamIdentity> {
-  const login = await client.post('/api/v1/auth/login').json({ email, password })
-  login.assertStatus(200)
-  const token = responseBody<{ data: { token: string } }>(login).data.token
-  const status = await client.get('/masquerade').bearerToken(token)
-  status.assertStatus(200)
-  return { token, contextToken: responseBody<{ contextToken: string }>(status).contextToken }
-}
-
-/** The owner invites `email` to the team; the invitee accepts and the owner admits them. */
-async function join(client: ApiClient, owner: User, scope: string, email: string, role: string) {
-  const sent = await client
-    .post('/api/v1/account/invitations')
-    .loginAs(owner)
-    .json({ email, role, scope })
-  if (sent.status() !== 201) throw new Error(`Invite failed: ${JSON.stringify(sent.body())}`)
-  const notice = notifications.events.findLast(
-    (event) => event.kind === 'invitation' && event.recipient === email
-  )
-  const accepted = await client
-    .post(`/api/v1/auth/invitations/${encodeURIComponent(tokenFrom(notice!.value))}`)
-    .json({ password, passwordConfirmation: password })
-  if (accepted.status() !== 201)
-    throw new Error(`Accept failed: ${JSON.stringify(accepted.body())}`)
-  const member = await User.findByOrFail('email', email)
-  const approved = await client
-    .post(`/api/v1/account/admissions/${member.id}/approve`)
-    .loginAs(owner)
-    .json({})
-  if (approved.status() !== 200)
-    throw new Error(`Approve failed: ${JSON.stringify(approved.body())}`)
-  return member
-}
-
-/** The stored team name. */
-async function teamName(scope: string) {
-  const team = await Team.findOrFail(scope)
-  return team.name
-}
-
 test.group('teams', (group) => {
+  /** Get an API bearer and its idle Masquerade context, bound to the same bearer. */
+  async function teamIdentity(client: ApiClient, email: string): Promise<TeamIdentity> {
+    const login = await client.post('/api/v1/auth/login').json({ email, password })
+    login.assertStatus(200)
+    const token = responseBody<{ data: { token: string } }>(login).data.token
+    const status = await client.get('/masquerade').bearerToken(token)
+    status.assertStatus(200)
+    return { token, contextToken: responseBody<{ contextToken: string }>(status).contextToken }
+  }
+
+  /** The owner invites `email` to the team; the invitee accepts and the owner admits them. */
+  async function join(client: ApiClient, owner: User, scope: string, email: string, role: string) {
+    const sent = await client
+      .post('/api/v1/account/invitations')
+      .loginAs(owner)
+      .json({ email, role, scope })
+    if (sent.status() !== 201) throw new Error(`Invite failed: ${JSON.stringify(sent.body())}`)
+    const notice = notifications.events.findLast(
+      (event) => event.kind === 'invitation' && event.recipient === email
+    )
+    const accepted = await client
+      .post(`/api/v1/auth/invitations/${encodeURIComponent(tokenFrom(notice!.value))}`)
+      .json({ password, passwordConfirmation: password })
+    if (accepted.status() !== 201)
+      throw new Error(`Accept failed: ${JSON.stringify(accepted.body())}`)
+    const member = await User.findByOrFail('email', email)
+    const approved = await client
+      .post(`/api/v1/account/admissions/${member.id}/approve`)
+      .loginAs(owner)
+      .json({})
+    if (approved.status() !== 200)
+      throw new Error(`Approve failed: ${JSON.stringify(approved.body())}`)
+    return member
+  }
+
+  /** The stored team name. */
+  async function teamName(scope: string) {
+    const team = await Team.findOrFail(scope)
+    return team.name
+  }
+
   group.each.setup(truncateDatabase)
 
   test('a viewer reads the team but cannot rename it; an editor can', async ({

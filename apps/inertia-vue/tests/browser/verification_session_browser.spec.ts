@@ -5,22 +5,22 @@ import User from '#models/user'
 import { setupAccountDatabase } from '../helpers/account_database.js'
 import { lifecycleOverrides } from '../../config/account_kit.js'
 
-async function proofFor(owner: User) {
-  const token = randomBytes(40).toString('base64url')
-  const now = new Date()
-  await db.table('email_verification_tokens').insert({
-    tokenable_id: owner.id,
-    email: owner.email,
-    current_email: owner.email,
-    purpose: 'activation',
-    hash: createHash('sha256').update(token).digest('hex'),
-    created_at: now.toISOString(),
-    expires_at: new Date(now.getTime() + 3600000).toISOString(),
-  })
-  return token
-}
-
 test.group('verification session browser journey', (group) => {
+  async function proofFor(owner: User) {
+    const token = randomBytes(40).toString('base64url')
+    const now = new Date()
+    await db.table('email_verification_tokens').insert({
+      tokenable_id: owner.id,
+      email: owner.email,
+      current_email: owner.email,
+      purpose: 'activation',
+      hash: createHash('sha256').update(token).digest('hex'),
+      created_at: now.toISOString(),
+      expires_at: new Date(now.getTime() + 3600000).toISOString(),
+    })
+    return token
+  }
+
   group.each.setup(setupAccountDatabase)
 
   for (const identity of ['same account', 'different account', 'guest']) {

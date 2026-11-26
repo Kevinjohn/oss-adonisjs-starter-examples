@@ -12,11 +12,12 @@ import {
 import { ACCESS_TOKENS_ONLY, isSessionStrategy } from '#tests/helpers/strategy'
 import { truncateDatabase } from '#tests/helpers/database'
 
-const stateFrom = (url: string) => new URL(url).searchParams.get('state')!
-
 type Body = Record<string, unknown>
-const body = (response: { body(): unknown }) => response.body() as Body
 test.group('Social reference policy', (group) => {
+  const stateFrom = (url: string) => new URL(url).searchParams.get('state')!
+
+  const body = (response: { body(): unknown }) => response.body() as Body
+
   group.each.setup(truncateDatabase)
 
   test('social request input is rejected by VineJS validators', async ({ client, assert }) => {

@@ -6,11 +6,11 @@ import { truncateDatabase } from '#tests/helpers/database'
 // Lucid Soft Delete's example spec, on Account Kit's test database and sign-in.
 const password = 'SoftDeletePass123!'
 
-function createUser(email: string) {
-  return User.create({ email, password, emailVerifiedAt: DateTime.utc() })
-}
-
 test.group('soft delete', (group) => {
+  function createUser(email: string) {
+    return User.create({ email, password, emailVerifiedAt: DateTime.utc() })
+  }
+
   group.each.setup(async () => {
     const cleanup = await truncateDatabase()
     return async () => {

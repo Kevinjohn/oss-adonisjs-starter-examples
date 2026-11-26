@@ -170,7 +170,9 @@ test.group('notes in the browser', (group) => {
     const create = page.getByRole('button', { name: 'Create and retry' })
     await draft.fill('Rejected draft')
     await create.click()
-    await page.getByText('The server rejected the note. Edit it and try again.').waitFor()
+    await page
+      .getByText('The server rejected the note. Edit it and try again.', { exact: false })
+      .waitFor()
     assert.isTrue(await draft.isEditable())
     assert.equal(await draft.inputValue(), 'Rejected draft')
 

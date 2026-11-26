@@ -11,18 +11,19 @@ import {
 import { ACCESS_TOKENS_ONLY, isSessionStrategy } from '#tests/helpers/strategy'
 import { truncateDatabase } from '#tests/helpers/database'
 
-const stateFrom = (url: string) => new URL(url).searchParams.get('state')!
-
 type Body = Record<string, unknown>
-const body = (response: { body(): unknown }) => response.body() as Body
-
-const continuationFrom = (response: { body(): unknown }): string => {
-  const continuation = body(response).continuation
-  if (typeof continuation !== 'string') throw new Error('Expected social continuation')
-  return continuation
-}
 
 test.group('Social reference', (group) => {
+  const stateFrom = (url: string) => new URL(url).searchParams.get('state')!
+
+  const body = (response: { body(): unknown }) => response.body() as Body
+
+  const continuationFrom = (response: { body(): unknown }): string => {
+    const continuation = body(response).continuation
+    if (typeof continuation !== 'string') throw new Error('Expected social continuation')
+    return continuation
+  }
+
   group.each.setup(truncateDatabase)
 
   test('token client completes a verified social registration through one PKCE exchange', async ({

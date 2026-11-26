@@ -7,21 +7,21 @@ import User from '#models/user'
 import { setupAccountDatabase } from '#tests/helpers/account_database'
 import { FormSession } from '#tests/helpers/form_session'
 
-async function requestWithSession(request: () => Promise<Response>) {
-  let sessionId: string | undefined
-  const unsubscribe = emitter.on('session:committed', ({ session }) => {
-    sessionId = session.sessionId
-  })
-  try {
-    const response = await request()
-    if (!sessionId) throw new Error('Expected the HTTP request to commit a session')
-    return { response, sessionId }
-  } finally {
-    unsubscribe()
-  }
-}
-
 test.group('browser session', (group) => {
+  async function requestWithSession(request: () => Promise<Response>) {
+    let sessionId: string | undefined
+    const unsubscribe = emitter.on('session:committed', ({ session }) => {
+      sessionId = session.sessionId
+    })
+    try {
+      const response = await request()
+      if (!sessionId) throw new Error('Expected the HTTP request to commit a session')
+      return { response, sessionId }
+    } finally {
+      unsubscribe()
+    }
+  }
+
   group.each.setup(setupAccountDatabase)
 
   test('a stale credential clears the registry sign-in and the browser session', async ({

@@ -20,32 +20,32 @@ type AppProps = {
   masquerade?: { isMasquerading: boolean; targetId: string }
 }
 
-async function createAccounts() {
-  masqueradeOperatorEmails.add('operator@example.test')
-  masqueradeOperatorEmails.add('second-operator@example.test')
-  return {
-    operator: await User.create({ email: 'operator@example.test', password }),
-    // A changed password gives the customer a credential revision the operator's session lacks.
-    customer: await User.create({
-      email: 'customer@example.test',
-      password,
-      credentialsChangedAt: DateTime.now().minus({ days: 1 }),
-    }),
-    secondOperator: await User.create({ email: 'second-operator@example.test', password }),
-  }
-}
-
-/** Opens the operator page and submits its start form for one account. */
-async function start(session: InertiaSession, target: User) {
-  const page = await session.props<AccountsProps>('/masquerade/accounts')
-  return session.request('/masquerade/start', {
-    _masqueradeContext: page.mode.contextToken,
-    targetId: String(target.id),
-    access: 'view',
-  })
-}
-
 test.group('masquerade', (group) => {
+  async function createAccounts() {
+    masqueradeOperatorEmails.add('operator@example.test')
+    masqueradeOperatorEmails.add('second-operator@example.test')
+    return {
+      operator: await User.create({ email: 'operator@example.test', password }),
+      // A changed password gives the customer a credential revision the operator's session lacks.
+      customer: await User.create({
+        email: 'customer@example.test',
+        password,
+        credentialsChangedAt: DateTime.now().minus({ days: 1 }),
+      }),
+      secondOperator: await User.create({ email: 'second-operator@example.test', password }),
+    }
+  }
+
+  /** Opens the operator page and submits its start form for one account. */
+  async function start(session: InertiaSession, target: User) {
+    const page = await session.props<AccountsProps>('/masquerade/accounts')
+    return session.request('/masquerade/start', {
+      _masqueradeContext: page.mode.contextToken,
+      targetId: String(target.id),
+      access: 'view',
+    })
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])

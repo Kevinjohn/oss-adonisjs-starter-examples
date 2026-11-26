@@ -9,32 +9,32 @@ import { FormSession } from '#tests/helpers/form_session'
 
 const password = 'MasqueradePass123!'
 
-async function createAccounts() {
-  masqueradeOperatorEmails.add('operator@example.test')
-  masqueradeOperatorEmails.add('second-operator@example.test')
-  return {
-    operator: await User.create({ email: 'operator@example.test', password }),
-    // A changed password gives the customer a credential revision the operator's session lacks.
-    customer: await User.create({
-      email: 'customer@example.test',
-      password,
-      credentialsChangedAt: DateTime.now().minus({ days: 1 }),
-    }),
-    secondOperator: await User.create({ email: 'second-operator@example.test', password }),
-  }
-}
-
-/** Opens the operator page and submits its start form for one account. */
-async function start(session: FormSession, target: User, access: 'view' | 'edit' = 'view') {
-  await session.request('/masquerade/accounts')
-  return session.request('/masquerade/start', {
-    _masqueradeContext: session.field('_masqueradeContext') ?? '',
-    targetId: String(target.id),
-    access,
-  })
-}
-
 test.group('masquerade', (group) => {
+  async function createAccounts() {
+    masqueradeOperatorEmails.add('operator@example.test')
+    masqueradeOperatorEmails.add('second-operator@example.test')
+    return {
+      operator: await User.create({ email: 'operator@example.test', password }),
+      // A changed password gives the customer a credential revision the operator's session lacks.
+      customer: await User.create({
+        email: 'customer@example.test',
+        password,
+        credentialsChangedAt: DateTime.now().minus({ days: 1 }),
+      }),
+      secondOperator: await User.create({ email: 'second-operator@example.test', password }),
+    }
+  }
+
+  /** Opens the operator page and submits its start form for one account. */
+  async function start(session: FormSession, target: User, access: 'view' | 'edit' = 'view') {
+    await session.request('/masquerade/accounts')
+    return session.request('/masquerade/start', {
+      _masqueradeContext: session.field('_masqueradeContext') ?? '',
+      targetId: String(target.id),
+      access,
+    })
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])

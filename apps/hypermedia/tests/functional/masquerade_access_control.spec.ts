@@ -11,63 +11,64 @@ import { FormSession } from '#tests/helpers/form_session'
 
 const password = 'CombinedPass123!'
 
-/** A team with an owner, a viewer and an editor, and an operator who belongs to none of it. */
-async function createTeam() {
-  masqueradeOperatorEmails.add('operator@example.test')
-  const operator = await User.create({ email: 'operator@example.test', password })
-  const owner = await User.create({ email: 'owner@example.test', password })
-  const viewer = await User.create({ email: 'viewer@example.test', password })
-  const editor = await User.create({ email: 'editor@example.test', password })
-  const team = await transaction(db, async (trx) => {
-    const created = await Team.create({ name: 'Rockets' }, { client: trx })
-    await accessControl.memberships.createFirstMember({
-      scopeId: created.id,
-      userId: owner.id,
-      trx,
-    })
-    for (const [user, role] of [
-      [viewer, 'viewer'],
-      [editor, 'editor'],
-    ] as const) {
-      await accessControl.memberships.grant({ scopeId: created.id, userId: user.id, role, trx })
-    }
-    return created
-  })
-  return { operator, viewer, editor, team }
-}
-
-/** Starts an editable masquerade as `target` from the operator page. */
-async function actAs(session: FormSession, target: User) {
-  await session.request('/masquerade/accounts')
-  const started = await session.request('/masquerade/start', {
-    _masqueradeContext: session.field('_masqueradeContext') ?? '',
-    targetId: String(target.id),
-    access: 'edit',
-  })
-  if (started.headers.get('location') !== '/dashboard') throw new Error('Masquerade did not start')
-  await session.request('/dashboard')
-}
-
-/** Ends the masquerade from the operator page. */
-async function stop(session: FormSession) {
-  await session.request('/masquerade/accounts')
-  await session.request('/masquerade/stop', {
-    _masqueradeContext: session.field('_masqueradeContext') ?? '',
-  })
-}
-
-/** Submits the rename form, asking for JSON:API so a refusal carries its code. */
-async function rename(session: FormSession, teamId: number, name: string) {
-  await session.request(`/teams/${teamId}`)
-  return session.request(`/teams/${teamId}`, { name }, 'application/vnd.api+json')
-}
-
-async function teamName(teamId: number) {
-  const team = await Team.findOrFail(teamId)
-  return team.name
-}
-
 test.group('masquerade with access control', (group) => {
+  /** A team with an owner, a viewer and an editor, and an operator who belongs to none of it. */
+  async function createTeam() {
+    masqueradeOperatorEmails.add('operator@example.test')
+    const operator = await User.create({ email: 'operator@example.test', password })
+    const owner = await User.create({ email: 'owner@example.test', password })
+    const viewer = await User.create({ email: 'viewer@example.test', password })
+    const editor = await User.create({ email: 'editor@example.test', password })
+    const team = await transaction(db, async (trx) => {
+      const created = await Team.create({ name: 'Rockets' }, { client: trx })
+      await accessControl.memberships.createFirstMember({
+        scopeId: created.id,
+        userId: owner.id,
+        trx,
+      })
+      for (const [user, role] of [
+        [viewer, 'viewer'],
+        [editor, 'editor'],
+      ] as const) {
+        await accessControl.memberships.grant({ scopeId: created.id, userId: user.id, role, trx })
+      }
+      return created
+    })
+    return { operator, viewer, editor, team }
+  }
+
+  /** Starts an editable masquerade as `target` from the operator page. */
+  async function actAs(session: FormSession, target: User) {
+    await session.request('/masquerade/accounts')
+    const started = await session.request('/masquerade/start', {
+      _masqueradeContext: session.field('_masqueradeContext') ?? '',
+      targetId: String(target.id),
+      access: 'edit',
+    })
+    if (started.headers.get('location') !== '/dashboard')
+      throw new Error('Masquerade did not start')
+    await session.request('/dashboard')
+  }
+
+  /** Ends the masquerade from the operator page. */
+  async function stop(session: FormSession) {
+    await session.request('/masquerade/accounts')
+    await session.request('/masquerade/stop', {
+      _masqueradeContext: session.field('_masqueradeContext') ?? '',
+    })
+  }
+
+  /** Submits the rename form, asking for JSON:API so a refusal carries its code. */
+  async function rename(session: FormSession, teamId: number, name: string) {
+    await session.request(`/teams/${teamId}`)
+    return session.request(`/teams/${teamId}`, { name }, 'application/vnd.api+json')
+  }
+
+  async function teamName(teamId: number) {
+    const team = await Team.findOrFail(teamId)
+    return team.name
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])

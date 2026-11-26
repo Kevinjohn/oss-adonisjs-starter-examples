@@ -12,35 +12,35 @@ const invitationUrls = new Map<string, string>()
 
 type TeamProps = { role: string; canWrite: boolean; canInvite: boolean }
 
-/** The stored team name. */
-async function teamName(teamId: number) {
-  const team = await Team.findOrFail(teamId)
-  return team.name
-}
-
-/** The owner creates a team through the page and lands on it. */
-async function createTeam(owner: InertiaSession, name: string) {
-  await owner.props('/teams')
-  const created = await owner.request('/teams', { name })
-  return Number(created.headers.get('location')!.split('/').at(-1))
-}
-
-/** The owner invites an address to a role; the invitee accepts and signs in. */
-async function inviteAndJoin(owner: InertiaSession, teamId: number, email: string, role: string) {
-  await owner.props(`/teams/${teamId}`)
-  await owner.request(`/teams/${teamId}/invitations`, { email, role })
-  const url = invitationUrls.get(email)
-  if (!url) throw new Error(`No invitation for ${email}`)
-  const path = new URL(url).pathname
-  const member = new InertiaSession()
-  await member.props(path)
-  const accepted = await member.request(path, { password, passwordConfirmation: password })
-  if (accepted.headers.get('location') !== '/login') throw new Error(`${email} did not join`)
-  await member.login(email, password)
-  return member
-}
-
 test.group('teams', (group) => {
+  /** The stored team name. */
+  async function teamName(teamId: number) {
+    const team = await Team.findOrFail(teamId)
+    return team.name
+  }
+
+  /** The owner creates a team through the page and lands on it. */
+  async function createTeam(owner: InertiaSession, name: string) {
+    await owner.props('/teams')
+    const created = await owner.request('/teams', { name })
+    return Number(created.headers.get('location')!.split('/').at(-1))
+  }
+
+  /** The owner invites an address to a role; the invitee accepts and signs in. */
+  async function inviteAndJoin(owner: InertiaSession, teamId: number, email: string, role: string) {
+    await owner.props(`/teams/${teamId}`)
+    await owner.request(`/teams/${teamId}/invitations`, { email, role })
+    const url = invitationUrls.get(email)
+    if (!url) throw new Error(`No invitation for ${email}`)
+    const path = new URL(url).pathname
+    const member = new InertiaSession()
+    await member.props(path)
+    const accepted = await member.request(path, { password, passwordConfirmation: password })
+    if (accepted.headers.get('location') !== '/login') throw new Error(`${email} did not join`)
+    await member.login(email, password)
+    return member
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])

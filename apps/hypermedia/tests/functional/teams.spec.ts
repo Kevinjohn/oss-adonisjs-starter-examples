@@ -9,43 +9,43 @@ import { FormSession } from '#tests/helpers/form_session'
 
 const password = 'TeamsPass123!'
 
-/** The owner creates a team through the page and lands on it. */
-async function createTeam(owner: FormSession, name: string) {
-  await owner.request('/teams')
-  const created = await owner.request('/teams', { name })
-  const location = created.headers.get('location')!
-  return Number(location.split('/').at(-1))
-}
-
-/** The owner invites an address to a role; the invitee accepts and signs in. */
-async function inviteAndJoin(owner: FormSession, teamId: number, email: string, role: string) {
-  await owner.request(`/teams/${teamId}`)
-  await owner.request(`/teams/${teamId}/invitations`, { email, role })
-  const token = accountKitNotifications.tokenFor('invitationProvision', email)
-  const member = new FormSession()
-  await member.request(`/invitation/${token}`)
-  const accepted = await member.request(`/invitation/${token}`, {
-    password,
-    passwordConfirmation: password,
-  })
-  if (accepted.headers.get('location') !== '/login') throw new Error(`${email} did not join`)
-  await member.login(email, password)
-  return member
-}
-
-/** The stored team name. */
-async function teamName(teamId: number) {
-  const team = await Team.findOrFail(teamId)
-  return team.name
-}
-
-/** Submits the rename form, asking for JSON:API so Bouncer's refusal carries its code. */
-async function rename(session: FormSession, teamId: number, name: string) {
-  await session.request(`/teams/${teamId}`)
-  return session.request(`/teams/${teamId}`, { name }, 'application/vnd.api+json')
-}
-
 test.group('teams', (group) => {
+  /** The owner creates a team through the page and lands on it. */
+  async function createTeam(owner: FormSession, name: string) {
+    await owner.request('/teams')
+    const created = await owner.request('/teams', { name })
+    const location = created.headers.get('location')!
+    return Number(location.split('/').at(-1))
+  }
+
+  /** The owner invites an address to a role; the invitee accepts and signs in. */
+  async function inviteAndJoin(owner: FormSession, teamId: number, email: string, role: string) {
+    await owner.request(`/teams/${teamId}`)
+    await owner.request(`/teams/${teamId}/invitations`, { email, role })
+    const token = accountKitNotifications.tokenFor('invitationProvision', email)
+    const member = new FormSession()
+    await member.request(`/invitation/${token}`)
+    const accepted = await member.request(`/invitation/${token}`, {
+      password,
+      passwordConfirmation: password,
+    })
+    if (accepted.headers.get('location') !== '/login') throw new Error(`${email} did not join`)
+    await member.login(email, password)
+    return member
+  }
+
+  /** The stored team name. */
+  async function teamName(teamId: number) {
+    const team = await Team.findOrFail(teamId)
+    return team.name
+  }
+
+  /** Submits the rename form, asking for JSON:API so Bouncer's refusal carries its code. */
+  async function rename(session: FormSession, teamId: number, name: string) {
+    await session.request(`/teams/${teamId}`)
+    return session.request(`/teams/${teamId}`, { name }, 'application/vnd.api+json')
+  }
+
   group.each.setup(async () => {
     const cleanup = await setupAccountDatabase()
     await limiter.clear(['memory'])
