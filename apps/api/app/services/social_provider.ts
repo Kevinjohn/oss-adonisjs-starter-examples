@@ -1,21 +1,18 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { RuntimeException } from '@adonisjs/core/exceptions'
+import SocialProviderExchangeException from '#exceptions/social_provider_exchange_exception'
+import { socialProviderCallbackValidator } from '#validators/social'
 import {
   createAllySocialProvider,
   type SocialProvider,
   type SocialProviderName,
 } from '@kevinjohn/adonisjs-account-kit'
 
-export class SocialProviderExchangeError extends Error {
-  constructor(readonly category: 'denied' | 'missing_code' | 'unavailable' | 'provider_mismatch') {
-    super('Social provider exchange failed')
-  }
-}
-
-function requireRequestContext(value: unknown): HttpContext {
+function requireRequestContext(value: unknown): Pick<HttpContext, 'ally' | 'request' | 'params'> {
   if (!value || typeof value !== 'object' || !('ally' in value)) {
-    throw new Error('A request-scoped Ally context is required')
+    throw new RuntimeException('A request-scoped Ally context is required')
   }
-  return value as HttpContext
+  return value as Pick<HttpContext, 'ally' | 'request' | 'params'>
 }
 
 export function createAllyProviderAdapter(name: SocialProviderName): SocialProvider {
@@ -27,18 +24,20 @@ export function createAllyProviderAdapter(name: SocialProviderName): SocialProvi
           .stateless()
           .redirectUrl((request) => request.param('state', state))
       } catch {
-        throw new SocialProviderExchangeError('unavailable')
+        throw new SocialProviderExchangeException('unavailable')
       }
     },
     async user(callback) {
       const ctx = requireRequestContext(callback)
-      if (ctx.params.provider !== name) throw new SocialProviderExchangeError('provider_mismatch')
-      if (ctx.request.input('error')) throw new SocialProviderExchangeError('denied')
-      if (!ctx.request.input('code')) throw new SocialProviderExchangeError('missing_code')
+      if (ctx.params.provider !== name)
+        throw new SocialProviderExchangeException('provider_mismatch')
+      const { error, code } = await ctx.request.validateUsing(socialProviderCallbackValidator)
+      if (error) throw new SocialProviderExchangeException('denied')
+      if (!code) throw new SocialProviderExchangeException('missing_code')
       try {
         return await ctx.ally.use(name).stateless().user()
       } catch {
-        throw new SocialProviderExchangeError('unavailable')
+        throw new SocialProviderExchangeException('unavailable')
       }
     },
   })

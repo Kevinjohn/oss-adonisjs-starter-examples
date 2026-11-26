@@ -51,3 +51,9 @@ export const passwordProofValidator = vine.create({
 export const socialUnlinkValidator = vine.create({
   proof: vine.string().minLength(1),
 })
+
+/** Provider callbacks are untrusted even after the state parameter has been validated. */
+export const socialProviderCallbackValidator = vine.create({
+  code: vine.string().optional(),
+  error: vine.string().optional(),
+})
