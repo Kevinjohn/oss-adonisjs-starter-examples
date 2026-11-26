@@ -7,9 +7,9 @@
 |
 */
 
-import './notes_routes.js'
-import './reading_items_routes.js'
-import './secure_note_routes.js'
+import '#start/notes_routes'
+import '#start/reading_items_routes'
+import '#start/secure_note_routes'
 import { middleware } from '#start/kernel'
 import { controllers } from '#generated/controllers'
 import router from '@adonisjs/core/services/router'

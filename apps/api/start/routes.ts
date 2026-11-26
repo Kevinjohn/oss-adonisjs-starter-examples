@@ -10,8 +10,8 @@
 |
 */
 
-import './notes_routes.js'
-import './reading_items_routes.js'
+import '#start/notes_routes'
+import '#start/reading_items_routes'
 import { accountKitAccountBlocker, middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { allowMutation } from '@kevinjohn/adonisjs-masquerade/http'

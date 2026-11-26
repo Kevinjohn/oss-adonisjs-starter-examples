@@ -5,7 +5,7 @@ import type {
   AdmissionAuthorizeCallbacks,
 } from '@kevinjohn/adonisjs-account-kit/admission'
 
-export { exportAccountData } from './account_kit_export.js'
+export { exportAccountData } from '#services/account_kit_export'
 
 /**
  * True when the user holds the instance owner role in the example's `role_assignments` table.

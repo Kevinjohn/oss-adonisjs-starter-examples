@@ -1,4 +1,4 @@
-import { publicOrigin } from '#start/public_origin'
+import { publicOrigin } from '#config/public_origin'
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
 

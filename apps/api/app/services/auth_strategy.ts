@@ -1,8 +1,8 @@
-import env from '#start/env'
+import { authStrategy } from '#config/auth_strategy'
 
 /** The example's selected auth strategy. Tests switch it; an application keeps one. */
 export function readAuthStrategy() {
-  return env.get('ACCOUNT_KIT_AUTH_STRATEGY') ?? 'access_tokens'
+  return authStrategy
 }
 
 /** The AdonisJS guard for the selected auth strategy. */
