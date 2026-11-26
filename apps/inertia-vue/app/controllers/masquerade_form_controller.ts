@@ -1,7 +1,7 @@
 import { inject } from '@adonisjs/core'
 import { HttpContext } from '@adonisjs/core/http'
 import { MasqueradeController } from '@kevinjohn/adonisjs-masquerade/http'
-import MasqueradeForm from '#services/masquerade_form'
+import { MasqueradeFormService } from '#services/masquerade_form_service'
 import { startMasqueradeValidator, stopMasqueradeValidator } from '#validators/masquerade'
 
 const accountsPath = '/masquerade/accounts'
@@ -9,8 +9,11 @@ const accountsPath = '/masquerade/accounts'
 /** Host-owned HTML form adapter. Edit redirect paths and flash handling for this application. */
 @inject()
 export default class MasqueradeFormController extends MasqueradeController {
-  constructor(private readonly form: MasqueradeForm) {
+  #form: MasqueradeFormService
+
+  constructor(form: MasqueradeFormService) {
     super()
+    this.#form = form
   }
 
   override async start({
@@ -26,8 +29,9 @@ export default class MasqueradeFormController extends MasqueradeController {
     })
 
     setControlResponseHeaders(response)
-    const outcome = await this.form.transition('start', form?.body)
+    const outcome = await this.#form.transition('start', form?.body)
     session.flash({ masquerade: outcome })
+    if (outcome.type === 'success') session.flash('masqueradeClearHistory', true)
     response.redirect().toPath(outcome.type === 'success' ? '/dashboard' : accountsPath)
   }
 
@@ -44,8 +48,9 @@ export default class MasqueradeFormController extends MasqueradeController {
     })
 
     setControlResponseHeaders(response)
-    const outcome = await this.form.transition('stop', form?.body)
+    const outcome = await this.#form.transition('stop', form?.body)
     session.flash({ masquerade: outcome })
+    if (outcome.type === 'success') session.flash('masqueradeClearHistory', true)
     response.redirect().toPath(accountsPath)
   }
 }

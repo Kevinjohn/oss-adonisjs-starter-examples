@@ -13,24 +13,28 @@ export type MasqueradeFormFlash =
 const invalidInput = { __invalidHttpInput: true }
 
 @inject()
-export default class MasqueradeForm {
-  constructor(private readonly context: HttpContext) {}
+export class MasqueradeFormService {
+  #context: HttpContext
+
+  constructor(context: HttpContext) {
+    this.#context = context
+  }
 
   async transition(action: FormAction, body: FormBody | undefined): Promise<MasqueradeFormFlash> {
-    const { containerResolver, request } = this.context
+    const { containerResolver, request } = this.#context
     try {
       const runtime = (await containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
       // Like the package controller, control only from a route on the operator's raw guard.
-      if (runtime.selectGuard(this.context).kind !== 'raw')
+      if (runtime.selectGuard(this.#context).kind !== 'raw')
         throw new errors.E_MASQUERADE_UNAVAILABLE()
 
       // The marker has no control fields, so the package records the denied outcome.
       if (action === 'start') {
         const input = body ? startInput(request, body) : invalidInput
-        await runtime.service.start(this.context, input as StartInput)
+        await runtime.service.start(this.#context, input as StartInput)
       } else {
         const input = body ? stopInput(request, body) : invalidInput
-        await runtime.service.stop(this.context, input as StopInput)
+        await runtime.service.stop(this.#context, input as StopInput)
       }
 
       return { type: 'success', action: action === 'start' ? 'started' : 'stopped' }

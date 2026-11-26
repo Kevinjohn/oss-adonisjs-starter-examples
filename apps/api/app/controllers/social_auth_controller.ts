@@ -1,10 +1,11 @@
+import { inject } from '@adonisjs/core'
 import type { HttpContext } from '@adonisjs/core/http'
 import {
   E_ACCOUNT_KIT_INVALID_INPUT,
   type SocialProviderName,
 } from '@kevinjohn/adonisjs-account-kit'
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
-import { finishSocialCallback } from '#services/social_callback_response'
+import { SocialCallbackResponseService } from '#services/social_callback_response_service'
 import {
   beginBrowserTransaction,
   forgetBrowserContinuation,
@@ -27,7 +28,14 @@ function requireProviderParam(value: string): SocialProviderName {
   return value
 }
 
+@inject()
 export default class SocialAuthController {
+  #callbackResponse: SocialCallbackResponseService
+
+  constructor(callbackResponse: SocialCallbackResponseService) {
+    this.#callbackResponse = callbackResponse
+  }
+
   async redirect({ auth, session, params, request, ally, response }: HttpContext) {
     const provider = requireProviderParam(params.provider)
     const input = await request.validateUsing(socialRedirectValidator)
@@ -88,7 +96,11 @@ export default class SocialAuthController {
       if (pending) rememberBrowserContinuation({ session }, result.continuation, pending)
       return response.ok({ status: 'new', continuation: result.continuation })
     }
-    return finishSocialCallback({ auth, session, response, serialize }, result, pending?.verifier)
+    return this.#callbackResponse.finish(
+      { auth, session, response, serialize },
+      result,
+      pending?.verifier
+    )
   }
 
   async completeRegistration({ session, auth, response, serialize, request }: HttpContext) {
@@ -104,7 +116,11 @@ export default class SocialAuthController {
     })
     if (pending) {
       forgetBrowserContinuation({ session })
-      return finishSocialCallback({ auth, session, response, serialize }, result, pending.verifier)
+      return this.#callbackResponse.finish(
+        { auth, session, response, serialize },
+        result,
+        pending.verifier
+      )
     }
     return response.ok(result)
   }

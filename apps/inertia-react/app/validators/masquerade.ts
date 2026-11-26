@@ -40,7 +40,9 @@ function hasValidFormFraming(
   body: Record<string, unknown>
 ): boolean {
   const contentType = request.header('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
-  if (contentType !== 'application/x-www-form-urlencoded') return false
+  // Inertia's <Form> posts JSON; a native form posts URL-encoded fields.
+  const inertiaJson = contentType === 'application/json' && request.header('x-inertia') === 'true'
+  if (contentType !== 'application/x-www-form-urlencoded' && !inertiaJson) return false
 
   const raw = request.raw()
   if (raw !== null) return Buffer.byteLength(raw, 'utf8') <= bodyLimit

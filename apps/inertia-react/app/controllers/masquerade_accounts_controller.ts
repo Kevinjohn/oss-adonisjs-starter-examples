@@ -1,7 +1,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import type { MasqueradeRuntime } from '@kevinjohn/adonisjs-masquerade/masquerade_provider'
 import User from '#models/user'
-import type { MasqueradeFormFlash } from '#services/masquerade_form'
+import type { MasqueradeFormFlash } from '#services/masquerade_form_service'
 import { isMasqueradeOperator, masqueradeOperatorEmails } from '#services/masquerade_operators'
 
 /** The operator's own page, on the raw `web` guard: start and stop forms. */

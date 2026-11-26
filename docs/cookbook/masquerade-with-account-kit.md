@@ -61,13 +61,13 @@ router
 
 <!-- source: apps/hypermedia/app/controllers/session_controller.ts -->
 ```ts
-  async destroy(ctx: HttpContext) {
+  async destroy({ auth, response }: HttpContext) {
     await kit.authentication.logout(
-      ctx.auth.use('web').forRequest(),
+      auth.use('web').forRequest(),
       undefined,
-      await ctx.auth.use('web').current()
+      await auth.use('web').current()
     )
-    return ctx.response.redirect().toRoute('session.create')
+    return response.redirect().toRoute('session.create')
   }
 ```
 

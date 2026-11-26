@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 import { readAccountInput } from '#services/account_input'
-import { decideAdmission } from '#services/admission_decision'
+import { AdmissionDecisionService } from '#services/admission_decision_service'
 import { admissionListValidator } from '#validators/admission'
 
 /**
@@ -12,7 +12,14 @@ import { admissionListValidator } from '#validators/admission'
  */
 @inject()
 export default class AdmissionsController {
-  constructor(private readonly admission: AccountAdmission) {}
+  #decisions: AdmissionDecisionService
+
+  constructor(
+    private readonly admission: AccountAdmission,
+    decisions: AdmissionDecisionService
+  ) {
+    this.#decisions = decisions
+  }
 
   async show({ auth, session, response }: HttpContext) {
     const { decision } = await this.admission.current(readAccountInput({ auth, session }))
@@ -32,16 +39,16 @@ export default class AdmissionsController {
 
   async approve({ auth, response, params }: HttpContext) {
     const actor = await auth.getUserOrFail()
-    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'approve'))
+    return response.ok(await this.#decisions.apply(actor.id, params.id, 'approve'))
   }
 
   async reject({ auth, response, params }: HttpContext) {
     const actor = await auth.getUserOrFail()
-    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'reject'))
+    return response.ok(await this.#decisions.apply(actor.id, params.id, 'reject'))
   }
 
   async revoke({ auth, response, params }: HttpContext) {
     const actor = await auth.getUserOrFail()
-    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'revoke'))
+    return response.ok(await this.#decisions.apply(actor.id, params.id, 'revoke'))
   }
 }
