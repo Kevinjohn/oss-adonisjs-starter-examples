@@ -23,7 +23,10 @@ export const derivePkceChallenge = (verifier: string) =>
  * which the social validators require for them.
  * Call `remember` with the begin result's state to keep the verifier for the callback.
  */
-export function beginBrowserTransaction(ctx: HttpContext, clientChallenge?: string) {
+export function beginBrowserTransaction(
+  ctx: Pick<HttpContext, 'session'>,
+  clientChallenge?: string
+) {
   const verifier = isBrowser() ? generatePkceVerifier() : undefined
   return {
     clientChallenge: verifier ? derivePkceChallenge(verifier) : (clientChallenge ?? ''),
@@ -35,7 +38,7 @@ export function beginBrowserTransaction(ctx: HttpContext, clientChallenge?: stri
 
 /** The pending session transaction for this callback state; undefined for token clients. */
 export function readPendingBrowserTransaction(
-  ctx: HttpContext,
+  ctx: Pick<HttpContext, 'session'>,
   state: string
 ): BrowserTransaction | undefined {
   if (!isBrowser()) return undefined
@@ -44,13 +47,13 @@ export function readPendingBrowserTransaction(
   return pending
 }
 
-export function forgetBrowserTransaction(ctx: HttpContext) {
+export function forgetBrowserTransaction(ctx: Pick<HttpContext, 'session'>) {
   ctx.session.forget(transactionKey)
 }
 
 /** Carries the transaction's verifier over to the registration continuation. */
 export function rememberBrowserContinuation(
-  ctx: HttpContext,
+  ctx: Pick<HttpContext, 'session'>,
   continuation: string,
   pending: BrowserTransaction
 ) {
@@ -59,7 +62,7 @@ export function rememberBrowserContinuation(
 
 /** The pending session continuation for this request; undefined for token clients. */
 export function readPendingBrowserContinuation(
-  ctx: HttpContext,
+  ctx: Pick<HttpContext, 'session'>,
   continuation: string
 ): BrowserContinuation | undefined {
   if (!isBrowser()) return undefined
@@ -70,6 +73,6 @@ export function readPendingBrowserContinuation(
   return pending
 }
 
-export function forgetBrowserContinuation(ctx: HttpContext) {
+export function forgetBrowserContinuation(ctx: Pick<HttpContext, 'session'>) {
   ctx.session.forget(continuationKey)
 }

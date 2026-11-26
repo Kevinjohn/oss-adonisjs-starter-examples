@@ -1,18 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
-import { E_ACCOUNT_KIT_INVALID_INPUT } from '@kevinjohn/adonisjs-account-kit'
 import { AccountAdmission } from '@kevinjohn/adonisjs-account-kit/admission'
 import { readAccountInput } from '#services/account_input'
+import { decideAdmission } from '#services/admission_decision'
 import { admissionListValidator } from '#validators/admission'
-
-/** Integer ids must be positive integers, so a database never receives a malformed id. */
-function requireUserIdParam(value: string): number {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 64)
-    throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid user ID')
-  const id = /^[1-9]\d*$/.test(value) ? Number(value) : Number.NaN
-  if (!Number.isSafeInteger(id)) throw new E_ACCOUNT_KIT_INVALID_INPUT('Invalid user ID')
-  return id
-}
 
 /**
  * The account's own admission status and request, reachable while not admitted, and the owner's
@@ -23,38 +14,34 @@ function requireUserIdParam(value: string): number {
 export default class AdmissionsController {
   constructor(private readonly admission: AccountAdmission) {}
 
-  async show(ctx: HttpContext) {
-    const { decision } = await this.admission.current(readAccountInput(ctx))
-    return ctx.response.ok(decision)
+  async show({ auth, session, response }: HttpContext) {
+    const { decision } = await this.admission.current(readAccountInput({ auth, session }))
+    return response.ok(decision)
   }
 
-  async request(ctx: HttpContext) {
-    const record = await this.admission.request(readAccountInput(ctx))
-    return ctx.response.ok({ requestedAt: record.requestedAt })
+  async request({ auth, session, response }: HttpContext) {
+    const record = await this.admission.request(readAccountInput({ auth, session }))
+    return response.ok({ requestedAt: record.requestedAt })
   }
 
-  async index(ctx: HttpContext) {
-    const actor = await ctx.auth.getUserOrFail()
-    const { status, cursor, limit } = await ctx.request.validateUsing(admissionListValidator)
-    return ctx.response.ok(await this.admission.list({ actorId: actor.id, status, cursor, limit }))
+  async index({ auth, request, response }: HttpContext) {
+    const actor = await auth.getUserOrFail()
+    const { status, cursor, limit } = await request.validateUsing(admissionListValidator)
+    return response.ok(await this.admission.list({ actorId: actor.id, status, cursor, limit }))
   }
 
-  async approve(ctx: HttpContext) {
-    return this.decide(ctx, 'approve')
+  async approve({ auth, response, params }: HttpContext) {
+    const actor = await auth.getUserOrFail()
+    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'approve'))
   }
 
-  async reject(ctx: HttpContext) {
-    return this.decide(ctx, 'reject')
+  async reject({ auth, response, params }: HttpContext) {
+    const actor = await auth.getUserOrFail()
+    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'reject'))
   }
 
-  async revoke(ctx: HttpContext) {
-    return this.decide(ctx, 'revoke')
-  }
-
-  private async decide(ctx: HttpContext, decision: 'approve' | 'reject' | 'revoke') {
-    const actor = await ctx.auth.getUserOrFail()
-    const userId = requireUserIdParam(ctx.params.id)
-    const record = await this.admission[decision]({ actorId: actor.id, userId })
-    return ctx.response.ok({ userId: record.userId, approval: record.approval })
+  async revoke({ auth, response, params }: HttpContext) {
+    const actor = await auth.getUserOrFail()
+    return response.ok(await decideAdmission(this.admission, actor.id, params.id, 'revoke'))
   }
 }

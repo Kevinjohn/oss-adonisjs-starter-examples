@@ -1,14 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import {
   E_ACCOUNT_KIT_INVALID_INPUT,
-  type SocialCallbackResult,
   type SocialProviderName,
 } from '@kevinjohn/adonisjs-account-kit'
 import accountKit from '@kevinjohn/adonisjs-account-kit/services/main'
-import User from '#models/user'
-import UserTransformer from '#transformers/user_transformer'
-import { accountKitSessionGuard } from '#services/account_kit_guards'
-import { rememberLastUsedMethod } from '#services/last_used_method'
+import { finishSocialCallback } from '#services/social_callback_response'
 import {
   beginBrowserTransaction,
   forgetBrowserContinuation,
@@ -32,12 +28,13 @@ function requireProviderParam(value: string): SocialProviderName {
 }
 
 export default class SocialAuthController {
-  async redirect(ctx: HttpContext) {
-    const provider = requireProviderParam(ctx.params.provider)
-    const input = await ctx.request.validateUsing(socialRedirectValidator)
+  async redirect({ auth, session, params, request, ally, response }: HttpContext) {
+    const provider = requireProviderParam(params.provider)
+    const input = await request.validateUsing(socialRedirectValidator)
     const intent = input.intent ?? 'login'
-    const current = intent === 'login' ? undefined : await readCurrentAccountIfAuthenticated(ctx)
-    const transaction = beginBrowserTransaction(ctx, input.clientChallenge)
+    const current =
+      intent === 'login' ? undefined : await readCurrentAccountIfAuthenticated({ auth, session })
+    const transaction = beginBrowserTransaction({ session }, input.clientChallenge)
     const result = await accountKit.socialAuthentication.begin({
       provider,
       intent,
@@ -45,88 +42,70 @@ export default class SocialAuthController {
       clientChallenge: transaction.clientChallenge,
       purpose: input.purpose,
       proof: input.proof,
-      context: ctx,
+      context: { ally },
     })
     transaction.remember(result.state)
-    return ctx.response.ok({ authorizationUrl: result.url })
+    return response.ok({ authorizationUrl: result.url })
   }
 
-  async confirm(ctx: HttpContext) {
-    const provider = requireProviderParam(ctx.params.provider)
+  async confirm({ session, params, request, ally, response }: HttpContext) {
+    const provider = requireProviderParam(params.provider)
     const { verificationToken, clientChallenge } =
-      await ctx.request.validateUsing(socialConfirmValidator)
-    const transaction = beginBrowserTransaction(ctx, clientChallenge)
+      await request.validateUsing(socialConfirmValidator)
+    const transaction = beginBrowserTransaction({ session }, clientChallenge)
     const result = await accountKit.socialAuthentication.beginConfirmation({
       provider,
       verificationToken,
       clientChallenge: transaction.clientChallenge,
-      context: ctx,
+      context: { ally },
     })
     transaction.remember(result.state)
-    return ctx.response.ok({ authorizationUrl: result.url })
+    return response.ok({ authorizationUrl: result.url })
   }
 
-  async verificationEntry(ctx: HttpContext) {
-    ctx.response.header('Cache-Control', 'no-store')
-    ctx.response.header('Referrer-Policy', 'no-referrer')
-    return ctx.response.ok({ verificationToken: ctx.params.token })
+  async verificationEntry({ response, params }: HttpContext) {
+    response.header('Cache-Control', 'no-store')
+    response.header('Referrer-Policy', 'no-referrer')
+    return response.ok({ verificationToken: params.token })
   }
 
-  async callback(ctx: HttpContext) {
-    ctx.response.header('Cache-Control', 'no-store')
-    ctx.response.header('Referrer-Policy', 'no-referrer')
-    const provider = requireProviderParam(ctx.params.provider)
-    const { state, intent } = await ctx.request.validateUsing(socialCallbackValidator)
-    const pending = readPendingBrowserTransaction(ctx, state)
-    const current = await readCurrentAccountIfAuthenticated(ctx)
+  async callback({ session, auth, response, serialize, params, request, ally }: HttpContext) {
+    response.header('Cache-Control', 'no-store')
+    response.header('Referrer-Policy', 'no-referrer')
+    const provider = requireProviderParam(params.provider)
+    const { state, intent } = await request.validateUsing(socialCallbackValidator)
+    const pending = readPendingBrowserTransaction({ session }, state)
+    const current = await readCurrentAccountIfAuthenticated({ auth, session })
     const result = await accountKit.socialAuthentication.callback({
       state,
       provider,
-      callback: ctx,
+      callback: { ally, params, request },
       current,
       intent,
     })
-    if (pending) forgetBrowserTransaction(ctx)
+    if (pending) forgetBrowserTransaction({ session })
     if ('continuation' in result) {
-      if (pending) rememberBrowserContinuation(ctx, result.continuation, pending)
-      return ctx.response.ok({ status: 'new', continuation: result.continuation })
+      if (pending) rememberBrowserContinuation({ session }, result.continuation, pending)
+      return response.ok({ status: 'new', continuation: result.continuation })
     }
-    return this.finishCallback(ctx, result, pending?.verifier)
+    return finishSocialCallback({ auth, session, response, serialize }, result, pending?.verifier)
   }
 
-  private async finishCallback(
-    ctx: HttpContext,
-    result: SocialCallbackResult,
-    browserVerifier?: string
-  ) {
-    if ('handoffCode' in result && result.handoffCode && browserVerifier) {
-      const redeemed = await accountKit.socialAuthentication.redeemHandoff({
-        code: result.handoffCode,
-        verifier: browserVerifier,
-        guard: accountKitSessionGuard(ctx),
-      })
-      const user = await User.findOrFail(redeemed.account.id)
-      rememberLastUsedMethod(ctx, redeemed.provider)
-      return ctx.serialize({ status: result.status, user: UserTransformer.transform(user) })
-    }
-    return ctx.response.ok(result)
-  }
-
-  async completeRegistration(ctx: HttpContext) {
-    ctx.response.header('Cache-Control', 'no-store')
-    const { continuation, fullName, email } = await ctx.request.validateUsing(
+  async completeRegistration({ session, auth, response, serialize, request }: HttpContext) {
+    response.header('Cache-Control', 'no-store')
+    const { continuation, fullName, email } = await request.validateUsing(
       socialRegistrationValidator
     )
-    const pending = readPendingBrowserContinuation(ctx, continuation)
+    const pending = readPendingBrowserContinuation({ session }, continuation)
     const result = await accountKit.socialAuthentication.completeRegistration({
       continuation,
       email,
       registrationData: { fullName },
     })
     if (pending) {
-      forgetBrowserContinuation(ctx)
-      return this.finishCallback(ctx, result, pending.verifier)
+      forgetBrowserContinuation({ session })
+      return finishSocialCallback({ auth, session, response, serialize }, result, pending.verifier)
     }
-    return ctx.response.ok(result)
+    return response.ok(result)
   }
 }

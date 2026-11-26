@@ -5,7 +5,7 @@ export { wantsJsonApi }
 
 /** Public example responses for proof links and account errors. */
 export function sendAccountError(
-  ctx: HttpContext,
+  ctx: Pick<HttpContext, 'request' | 'response'>,
   status: number,
   code: string,
   message: string,
@@ -20,11 +20,11 @@ export function sendAccountError(
   return ctx.response.status(status).send({ errors: [error], ...members })
 }
 
-export function setProofResponseHeaders(ctx: HttpContext) {
+export function setProofResponseHeaders(ctx: Pick<HttpContext, 'response'>) {
   ctx.response.header('Cache-Control', 'no-store')
   ctx.response.header('Referrer-Policy', 'no-referrer')
 }
 
-export function sendProofFailure(ctx: HttpContext, code: string) {
+export function sendProofFailure(ctx: Pick<HttpContext, 'request' | 'response'>, code: string) {
   return sendAccountError(ctx, 400, code, 'This link is invalid or expired.')
 }

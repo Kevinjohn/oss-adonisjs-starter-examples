@@ -1,27 +1,27 @@
-import type { HttpContext } from '@adonisjs/core/http'
+import { HttpContext } from '@adonisjs/core/http'
 import type { MasqueradeRuntime } from '@kevinjohn/adonisjs-masquerade/masquerade_provider'
 import User from '#models/user'
-import type { MasqueradeFormFlash } from '#controllers/masquerade_form_controller'
+import type { MasqueradeFormFlash } from '#services/masquerade_form'
 import { isMasqueradeOperator, masqueradeOperatorEmails } from '#services/masquerade_operators'
 
 /** The operator's own page, on the raw `web` guard: start and stop forms. */
 export default class MasqueradeAccountsController {
-  async index(ctx: HttpContext) {
-    ctx.response.header('Cache-Control', 'private, no-store')
-    const operator = ctx.auth.use('web').getUserOrFail()
-    const runtime = (await ctx.containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
-    const mode = await runtime.service.status(ctx)
+  async index({ response, auth, containerResolver, view, session }: HttpContext) {
+    response.header('Cache-Control', 'private, no-store')
+    const operator = auth.use('web').getUserOrFail()
+    const runtime = (await containerResolver.make('masquerade.runtime')) as MasqueradeRuntime
+    const mode = await runtime.service.status(await containerResolver.make(HttpContext))
     const canMasquerade = isMasqueradeOperator(operator)
     const accounts = canMasquerade && !mode.isMasquerading ? await listCandidateAccounts() : []
     const target = mode.isMasquerading ? await User.find(mode.targetId) : null
-    return ctx.view.render('pages/masquerade/accounts', {
+    return view.render('pages/masquerade/accounts', {
       operator,
       canMasquerade,
       mode,
       expired: mode.isMasquerading && Date.parse(mode.expiresAt) <= Date.now(),
       accounts,
       target,
-      outcome: buildFormOutcome(ctx.session.flashMessages.get('masquerade')),
+      outcome: buildFormOutcome(session.flashMessages.get('masquerade')),
     })
   }
 }

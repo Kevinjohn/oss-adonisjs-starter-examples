@@ -9,10 +9,10 @@ export default class PasswordsController {
     return view.render('pages/settings/password')
   }
 
-  async update(ctx: HttpContext) {
-    const { currentPassword, password } = await ctx.request.validateUsing(changePasswordValidator)
-    const user = ctx.auth.getUserOrFail()
-    const current = await ctx.auth.use('web').current()
+  async update({ request, auth, session, response }: HttpContext) {
+    const { currentPassword, password } = await request.validateUsing(changePasswordValidator)
+    const user = auth.getUserOrFail()
+    const current = await auth.use('web').current()
     let notified = true
     let revision: string | null
     try {
@@ -32,17 +32,17 @@ export default class PasswordsController {
         error instanceof errors.E_INVALID_CREDENTIALS ||
         error instanceof errors.E_ACCOUNT_KIT_IDENTITY_NOT_CONFIRMED
       ) {
-        ctx.session.flash('error', 'Your current password is incorrect. Check it and try again.')
-        return ctx.response.redirect().back()
+        session.flash('error', 'Your current password is incorrect. Check it and try again.')
+        return response.redirect().back()
       } else throw error
     }
     const unsent = notified ? '' : ' We could not send the confirmation email.'
     // Account Kit keeps this registered sign-in and ends the others. Refreshing the session gives
     // this browser a new cookie id and stores the new credential revision.
-    const guard = ctx.auth.use('web').forRequest()
+    const guard = auth.use('web').forRequest()
     assert(guard.strategy === 'session' && guard.refresh)
     await guard.refresh(revision)
-    ctx.session.flash('success', `Password changed. Other sessions have been signed out.${unsent}`)
-    return ctx.response.redirect().toPath('/settings/password')
+    session.flash('success', `Password changed. Other sessions have been signed out.${unsent}`)
+    return response.redirect().toPath('/settings/password')
   }
 }

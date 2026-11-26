@@ -12,24 +12,24 @@ function requireIdentityIdParam(value: string): number {
 }
 
 export default class SocialIdentitiesController {
-  async provePassword(ctx: HttpContext) {
-    ctx.response.header('Cache-Control', 'no-store')
-    const { password, purpose } = await ctx.request.validateUsing(passwordProofValidator)
+  async provePassword({ auth, session, response, request }: HttpContext) {
+    response.header('Cache-Control', 'no-store')
+    const { password, purpose } = await request.validateUsing(passwordProofValidator)
     const proof = await accountKit.socialAuthentication.provePassword({
-      current: readAccountInput(ctx),
+      current: readAccountInput({ auth, session }),
       password,
       purpose,
     })
-    return ctx.response.ok({ proof })
+    return response.ok({ proof })
   }
 
-  async unlink(ctx: HttpContext) {
-    const { proof } = await ctx.request.validateUsing(socialUnlinkValidator)
+  async unlink({ auth, session, request, params, response }: HttpContext) {
+    const { proof } = await request.validateUsing(socialUnlinkValidator)
     await accountKit.socialAuthentication.unlink({
-      current: readAccountInput(ctx),
-      identityId: requireIdentityIdParam(ctx.params.id),
+      current: readAccountInput({ auth, session }),
+      identityId: requireIdentityIdParam(params.id),
       proof,
     })
-    return ctx.response.noContent()
+    return response.noContent()
   }
 }

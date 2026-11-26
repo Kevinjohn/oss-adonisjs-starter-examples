@@ -16,11 +16,10 @@ const createNote: Operation<{ body: string }, undefined, { noteId: number }> = {
 }
 
 export default class NotesController {
-  async index(ctx: HttpContext) {
-    const { auth, request } = ctx
+  async index({ auth, request, view }: HttpContext) {
     const user = auth.use('web').getUserOrFail()
     const notes = await db.from('notes').where('user_id', user.id).select('id', 'body')
-    return ctx.view.render('pages/notes', {
+    return view.render('pages/notes', {
       csrfToken: request.csrfToken,
       notes,
     })

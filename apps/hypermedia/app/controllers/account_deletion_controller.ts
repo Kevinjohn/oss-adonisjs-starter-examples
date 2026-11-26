@@ -11,10 +11,10 @@ export default class AccountDeletionController {
    * Soft deletes the signed-in account and signs it out. The row stays, so an administrator can
    * restore it, but normal queries no longer find it, so it cannot sign in again.
    */
-  async destroy(ctx: HttpContext) {
-    const current = await ctx.auth.use('web').current()
-    await ctx.auth.getUserOrFail().delete()
-    await kit.authentication.logout(ctx.auth.use('web').forRequest(), undefined, current)
-    return ctx.response.redirect().toRoute('session.create')
+  async destroy({ auth, response }: HttpContext) {
+    const current = await auth.use('web').current()
+    await auth.getUserOrFail().delete()
+    await kit.authentication.logout(auth.use('web').forRequest(), undefined, current)
+    return response.redirect().toRoute('session.create')
   }
 }

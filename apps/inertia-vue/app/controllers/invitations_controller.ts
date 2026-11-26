@@ -18,23 +18,23 @@ export default class InvitationsController {
     })
   }
 
-  async update(ctx: HttpContext) {
-    sendTokenPageHeaders(ctx.response)
-    const { fullName, password } = await ctx.request.validateUsing(acceptInvitationValidator)
+  async update({ response, request, params, logger, session }: HttpContext) {
+    sendTokenPageHeaders(response)
+    const { fullName, password } = await request.validateUsing(acceptInvitationValidator)
     try {
       await kit.invitations.accept({
-        token: ctx.params.token,
+        token: params.token,
         password,
         registrationData: { fullName },
       })
     } catch (error) {
       if (!isDeliveryFailure(error)) throw error
-      ctx.logger.error(
+      logger.error(
         { event: 'invitation_follow_up_failed' },
         'Acceptance committed but a follow-up failed'
       )
     }
-    ctx.session.flash('success', 'Your account is ready. Sign in to open your team.')
-    return ctx.response.redirect().withQs(false).toRoute('session.create')
+    session.flash('success', 'Your account is ready. Sign in to open your team.')
+    return response.redirect().withQs(false).toRoute('session.create')
   }
 }
