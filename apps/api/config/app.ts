@@ -1,4 +1,5 @@
-import { publicOrigin } from '#start/public_origin'
+import env from '#start/env'
+import { publicOrigin } from '#config/public_origin'
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
 
@@ -8,6 +9,9 @@ import { defineConfig } from '@adonisjs/core/http'
  * use absolute URLs.
  */
 export const appUrl = publicOrigin
+
+/** Signing secret shared with the application throttles. */
+export const appKey = env.get('APP_KEY')
 
 /**
  * The configuration settings used by the HTTP server

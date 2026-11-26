@@ -9,7 +9,7 @@ test.group('public origin configuration', () => {
         '--import=@poppinss/ts-exec',
         '--input-type=module',
         '-e',
-        "const { publicOrigin } = await import('#start/public_origin'); console.log(publicOrigin)",
+        "const { publicOrigin } = await import('#config/public_origin'); console.log(publicOrigin)",
       ],
       {
         encoding: 'utf8',

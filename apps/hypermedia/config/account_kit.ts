@@ -1,6 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
-import { publicOrigin } from '#start/public_origin'
+import { publicOrigin } from '#config/public_origin'
 import {
   createActionUrls,
   createLogNotifications,

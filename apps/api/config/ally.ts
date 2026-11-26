@@ -3,7 +3,7 @@ import type { InferSocialProviders } from '@adonisjs/ally/types'
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
 import type { SocialProviderName } from '@kevinjohn/adonisjs-account-kit'
-import { publicOrigin } from '#start/public_origin'
+import { publicOrigin } from '#config/public_origin'
 
 const tokenClientCallback = env.get('SOCIAL_CLIENT_CALLBACK_URL')
 if (!app.inTest) {

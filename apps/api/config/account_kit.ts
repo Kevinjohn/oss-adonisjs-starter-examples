@@ -3,15 +3,15 @@ import type { NotificationCallbacks } from '@kevinjohn/adonisjs-account-kit/type
 
 import app from '@adonisjs/core/services/app'
 import env from '#start/env'
-import { publicOrigin } from '#start/public_origin'
+import { publicOrigin } from '#config/public_origin'
 import { createLucidAdapter, defineConfig } from '@kevinjohn/adonisjs-account-kit'
 import {
   withAdmissionCleanup,
   withInvitationEvidence,
 } from '@kevinjohn/adonisjs-account-kit/admission'
 import { notifications } from '#services/account_kit_notifications'
-import { createNotify } from './account_kit_notifications.js'
-import { onCredentialsChangedTransaction } from './account_kit_credential_notice.js'
+import { createNotify } from '#config/account_kit_notifications'
+import { onCredentialsChangedTransaction } from '#config/account_kit_credential_notice'
 import { accessControlKitCallbacks } from '@kevinjohn/adonisjs-access-control/account-kit'
 import { canAccess, exportAccountData } from '#services/account_kit_authorization'
 import { readRegistrationFullName } from '#services/registration_fields'
