@@ -2,9 +2,6 @@
   "departures": {
     "file": "DECISIONS.md",
     "heading": "AdonisJS framework departures",
-    "entries": [
-      { "entry": 1, "item": "TST-15", "path": "apps/api/.env.test" },
-      { "entry": 1, "item": "TST-15", "path": "apps/hypermedia/.env.test" }
-    ]
+    "entries": [{ "entry": 1, "item": "TST-15", "path": "apps/hypermedia/.env.test" }]
   }
 }
