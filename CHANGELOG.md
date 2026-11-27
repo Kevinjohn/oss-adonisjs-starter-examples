@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Track `apps/api/.env.test` with `SESSION_DRIVER=memory` and narrow the `TST-15` convention
+  departure to `apps/hypermedia/.env.test`.
+
 ## v0.17.1
 
 - All four starters adopt Account Kit 0.8.0, Access Control 0.4.1, Masquerade 0.7.1

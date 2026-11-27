@@ -8,6 +8,7 @@ tmp/*
 .env
 .env.*
 !.env.example
+!.env.test
 
 # Frontend assets compiled code
 public/assets
